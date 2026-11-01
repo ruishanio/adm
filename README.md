@@ -51,6 +51,8 @@ ADM 将常用的 ADB 操作放进一个桌面工作台。通过 USB 或网络连
 
 ## 下载安装
 
+当前版本：**0.1.0**，对应标签 `v0.1.0`。
+
 目前通过 **[GitHub Actions → Package](https://github.com/ruishanio/adm/actions/workflows/package.yml)** 提供构建产物：打开一次成功的运行，在页面底部 **Artifacts** 下载对应平台文件。下载需要登录 GitHub，产物保留 **30 天**。
 
 | 平台        | 系统要求                                      | 安装方式                                                                            |

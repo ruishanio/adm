@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/context-menu';
 import { useWorkbench } from '@/composables/workbench';
 import { deviceName, deviceStatus, connection, targetKey, type Device } from '../../shared/contracts';
+import { APP_VERSION } from '../../shared/app-info';
 const w = useWorkbench(),
   s = w.state;
 const connected = computed(() => s.snapshot?.devices.filter((d) => d.state === 'device') || []);
@@ -124,7 +125,7 @@ function rowKey(e: KeyboardEvent) {
       <div class="sidebar-settings">
         <Button variant="ghost" class="quiet" :disabled="!!s.busy" @click="s.modal = 'settings'"
           ><Settings2 aria-hidden="true" />{{ t('设置') }}</Button
-        ><span>v{{ s.snapshot?.version || '1.0.0' }}</span>
+        ><span>v{{ s.snapshot?.version || APP_VERSION }}</span>
       </div>
     </footer>
   </aside>

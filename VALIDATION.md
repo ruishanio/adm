@@ -1,6 +1,16 @@
-# Tauri 迁移验证记录
+# ADM 验证记录
 
-日期：2026-11-01。版本：1.0.0。技术栈：Tauri 2、Vue 3、TypeScript、shadcn-vue、Tailwind CSS 4。目标：macOS Apple Silicon、Windows x64。
+日期：2026-11-01。当前版本：0.1.0。技术栈：Tauri 2、Vue 3、TypeScript、shadcn-vue、Tailwind CSS 4。目标：macOS Apple Silicon、Windows x64。
+
+## 0.1.0 版本整理（2026-11-01）
+
+- 当前功能按应用名称与图标、桌面交互与多语言、设备信息、文件操作和文档拆分提交；版本调整独立提交。保留历史测试 tag，不将其改写为本次版本。
+- `package.json`、npm 锁文件、Rust 包和 Cargo 锁文件统一为 0.1.0；原生窗口快照返回前的侧栏和设置页版本也读取同一构建元数据。
+- 前端类型检查、生产构建及 29 项测试通过；Rust 格式、Clippy 及 35 项测试通过。3 项需要指定设备的测试保持忽略，本次没有执行安装、设备所有者或文件写入验收。
+- 应用图标统一由 SVG 导出 ICNS、ICO 和 PNG。macOS 系统关于面板已在真正退出旧进程后确认新图标，Windows 图标资源已检查，尚未进行本地 Windows 桌面验证。
+- macOS ARM64 的 0.1.0 APP、DMG 与 ZIP 已构建，原生自检返回 0.1.0；架构、包内 ADB、ZIP 完整性和 ad-hoc 签名校验通过。Windows 安装包及本次远端 CI 结果以后续 `v0.1.0` 工作流为准。
+
+下文保留各轮验证时的状态；其中“未提交、未推送”和旧版本号仅指当时，不代表当前版本的状态。历史 CI 和安装包数据仍以对应 tag 为准。
 
 ## 设备所有者折叠与位置（2026-11-01）
 

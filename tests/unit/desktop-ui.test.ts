@@ -46,7 +46,7 @@ function setup() {
     settings: { adbPath: '', endpoint: 'host:5555', deviceNames: {}, hiddenDevices: [], sidebarWidth: 248 },
     adbPath: '/adb',
     platform: 'darwin',
-    version: '1.0.0',
+    version: '0.1.0',
   };
   w.state.selected = 'test@1';
   return w;

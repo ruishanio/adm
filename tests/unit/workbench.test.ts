@@ -14,7 +14,7 @@ beforeEach(() => {
     settings: { adbPath: '', endpoint: '', deviceNames: {}, hiddenDevices: [], sidebarWidth: 248 },
     adbPath: '/adb',
     platform: 'darwin',
-    version: '1.0.0',
+    version: '0.1.0',
   };
   api = {
     refresh: vi.fn(async () => structuredClone(snapshot)),

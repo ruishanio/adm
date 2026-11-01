@@ -100,7 +100,7 @@ macOS 最低 13.3，使用系统 WKWebView；Windows 使用 WebView2，安装器
 
 ### Tag 构建
 
-[Package 工作流](../.github/workflows/package.yml) 由 `v*` tag 触发。tag 需匹配 `package.json` 中的版本，可带测试后缀，例如版本 `1.0.0` 对应 `v1.0.0` 或 `v1.0.0-test.1`。
+[Package 工作流](../.github/workflows/package.yml) 由 `v*` tag 触发。tag 需匹配 `package.json` 中的版本，可带测试后缀，例如版本 `0.1.0` 对应 `v0.1.0` 或 `v0.1.0-test.1`。
 
 流程执行检查与测试、生产构建、打包、完整性检查及安装验证：macOS 挂载 DMG 检查应用和签名；Windows 在临时 Runner 上执行静默安装、文件回读和卸载。
 
