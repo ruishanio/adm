@@ -1,8 +1,12 @@
 # Android Device Manager（ADM）
 
+[![CI](https://github.com/ruishanio/ADM/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ruishanio/ADM/actions/workflows/ci.yml)
+
 正式名称 **Android Device Manager**，简称 **ADM**，不设中文名。项目目录继续使用 `android-tool/`。
 
 独立的 Android 设备管理桌面应用，使用 **Electron + React + TypeScript**，支持 macOS 和 Windows。运行时不依赖 .NET、Java 或 Android Studio。ADB 随发布包附带。
+
+源码仓库：[ruishanio/ADM](https://github.com/ruishanio/ADM)，SSH 地址为 `git@github.com:ruishanio/ADM.git`，主分支为 `main`。
 
 ## 开发
 
@@ -23,6 +27,12 @@ npm start
 ```
 
 开发时自动查找 Android SDK 的 platform-tools、环境变量 `ANDROID_SDK_ROOT` / `ANDROID_HOME` 或 PATH；也可在应用设置中选择 ADB。
+
+## 持续集成
+
+GitHub Actions 在推送到 `main`、提交面向 `main` 的 PR 或手动触发时运行。macOS 和 Windows 分别使用 Node.js 24，从锁文件安装依赖，执行 TypeScript 检查、生产构建和全部自动化测试；一个平台失败不会取消另一个平台的检查。
+
+CI 不连接真实设备，不执行 APK 安装或设备所有者设置。该工作流不生成分发包；包含 ADB 的应用打包仍使用下方打包命令，目标系统与硬件验收见 `VALIDATION.md`。
 
 ## 功能与操作
 
