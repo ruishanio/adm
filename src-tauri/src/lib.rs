@@ -307,18 +307,17 @@ impl Service {
                 let previous_menu = app
                     .set_menu(native_menu::build(&app, &language).map_err(|e| e.to_string())?)
                     .map_err(|e| e.to_string())?;
-                if let Err(error) = self.update(|s| s.language = language) {
+                let saved = self.update(|s| s.language = language);
+                #[cfg(target_os = "macos")]
+                if let Err(error) = &saved {
                     // 保存失败时前端保持原语言，原生菜单也恢复，避免两套界面语言不一致。
-                    #[cfg(target_os = "macos")]
-                    {
-                        let restored = match previous_menu {
-                            Some(menu) => app.set_menu(menu),
-                            None => app.remove_menu(),
-                        };
-                        restored.map_err(|e| format!("{error}；恢复菜单失败：{e}"))?;
-                    }
-                    return Err(error);
+                    let restored = match previous_menu {
+                        Some(menu) => app.set_menu(menu),
+                        None => app.remove_menu(),
+                    };
+                    restored.map_err(|e| format!("{error}；恢复菜单失败：{e}"))?;
                 }
+                saved?;
                 Ok(Value::Null)
             }
             "chooseAdb" => {
