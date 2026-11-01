@@ -1,0 +1,73 @@
+name: Package
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: package-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  package:
+    name: ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: mac-arm64
+            os: macos-latest
+            platform: mac
+            arch: arm64
+          - target: win-x64
+            os: windows-latest
+            platform: win
+            arch: x64
+    steps:
+      - name: 检出 tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: 配置 Node.js 与 npm 缓存
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: 校验 tag 并准备固定版本的 ADB
+        run: python scripts/package_ci.py prepare ${{ matrix.platform }} ${{ matrix.arch }}
+
+      - name: 安装锁定依赖及 Electron 运行时
+        run: npm ci --no-audit --no-fund
+
+      - name: 自动化测试
+        run: npm test
+
+      - name: 类型检查与生产构建
+        run: npm run build
+
+      - name: 生成应用分发包
+        run: node scripts/package.mjs ${{ matrix.platform }}
+
+      - name: 验证分发包并生成校验清单
+        run: python scripts/package_ci.py verify ${{ matrix.platform }} ${{ matrix.arch }}
+
+      # 上传已有的应用 ZIP，保留 macOS 应用内部权限与符号链接。
+      - name: 上传可下载产物
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: ADM-${{ github.ref_name }}-${{ matrix.target }}
+          path: |
+            release/ADM-*.zip
+            release/SHA256SUMS.txt
+            release/build-info.json
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30

@@ -4,7 +4,8 @@ import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 const platform = process.argv[2];
 const metadata = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
-if (!['mac', 'win'].includes(platform)) throw new Error('用法：node scripts/package.mjs mac|win [--x64]');
+if (!['mac', 'win'].includes(platform) || process.argv.length !== 3)
+  throw new Error('用法：node scripts/package.mjs mac|win（macOS ARM64 / Windows x64）');
 const source = resolve(
   process.env.ADB_DIR ||
     (platform === 'win'
@@ -30,9 +31,11 @@ if (
   throw new Error('ADB 与目标平台不匹配。');
 process.env.CSC_IDENTITY_AUTO_DISCOVERY = 'false';
 await build({
+  // tag 构建仅上传 Actions 产物，避免打包器自动创建 GitHub Release。
+  publish: 'never',
   targets:
     platform === 'mac'
-      ? Platform.MAC.createTarget(['dir', 'zip'], process.argv.includes('--x64') ? Arch.x64 : Arch.arm64)
+      ? Platform.MAC.createTarget(['dir', 'zip'], Arch.arm64)
       : Platform.WINDOWS.createTarget(['dir', 'zip'], Arch.x64),
   config: {
     // 保留原应用标识，让操作系统继续识别为同一应用，仅更新展示名称。

@@ -4,7 +4,7 @@
 
 正式名称 **Android Device Manager**，简称 **ADM**，不设中文名。项目目录继续使用 `android-tool/`。
 
-独立的 Android 设备管理桌面应用，使用 **Electron + React + TypeScript**，支持 macOS 和 Windows。运行时不依赖 .NET、Java 或 Android Studio。ADB 随发布包附带。
+独立的 Android 设备管理桌面应用，使用 **Electron + React + TypeScript**，仅支持 **macOS Apple Silicon（ARM64）和 Windows x64**。运行时不依赖 .NET、Java 或 Android Studio。ADB 随发布包附带。
 
 源码仓库：[ruishanio/adm](https://github.com/ruishanio/adm)，SSH 地址为 `git@github.com:ruishanio/adm.git`，主分支为 `master`。
 
@@ -32,7 +32,15 @@ npm start
 
 GitHub Actions 在推送到 `master`、提交面向 `master` 的 PR 或手动触发时运行。macOS 和 Windows 分别使用 Node.js 24，从锁文件安装依赖，执行 TypeScript 检查、生产构建和全部自动化测试；一个平台失败不会取消另一个平台的检查。
 
-CI 不连接真实设备，不执行 APK 安装或设备所有者设置。该工作流不生成分发包；包含 ADB 的应用打包仍使用下方打包命令，目标系统与硬件验收见 `VALIDATION.md`。
+CI 不连接真实设备，不执行 APK 安装或设备所有者设置。常规 CI 负责构建测试；推送版本 tag 时，另由 `Package` 工作流生成分发包。
+
+### tag 打包
+
+推送 `v<package.json 版本>` 或带测试后缀的 tag（例如 `v1.0.0-ci.1`）后，GitHub 分别生成 macOS Apple Silicon（ARM64）、Windows x64 ZIP。工作流使用固定版本 Platform-Tools 37.0.1 并校验 SHA-256，运行测试、生产构建、打包和产物完整性检查。
+
+在 [Package 运行记录](https://github.com/ruishanio/adm/actions/workflows/package.yml)底部的 Artifacts 下载对应平台产物，保留 30 天。下载文件中包含应用 ZIP、`SHA256SUMS.txt` 和记录 tag/commit 的 `build-info.json`；应用版本仍以 `package.json` 为准，测试后缀仅用于区分 tag。解压应用 ZIP 后运行 `.app` 或 `.exe`，包内附带 ADB。
+
+该流程上传测试产物，不自动创建 GitHub Release；macOS 使用临时签名，Windows 未签名，正式签名、公证与目标设备验收仍需独立完成。
 
 ## 功能与操作
 
@@ -74,7 +82,7 @@ ADB_DIR=/path/to/mac/platform-tools npm run package:mac
 ADB_DIR=/path/to/windows/platform-tools npm run package:win
 ```
 
-默认 macOS ARM64；Intel 版本执行 `npm run build` 后 `node scripts/package.mjs mac --x64`。macOS 默认 SDK 目录为 `~/Library/Android/sdk/platform-tools`，Windows 默认使用 `vendor/windows/platform-tools`。产物写入 `release/`，打包脚本校验 ADB 的平台格式。
+打包目标固定为 macOS ARM64 和 Windows x64。macOS 默认 SDK 目录为 `~/Library/Android/sdk/platform-tools`，Windows 默认使用 `vendor/windows/platform-tools`。产物写入 `release/`，打包脚本校验 ADB 的平台格式。
 
 打包生成 `Android Device Manager.app`、Windows 的 `Android Device Manager.exe`，ZIP 使用 `ADM-版本-mac/win-架构.zip`。当前为本地开发分发，正式外部分发需 Developer ID 签名与公证、Windows 代码签名。平台原生交互与真实 USB／无线配对应在目标系统和硬件上验收。
 
