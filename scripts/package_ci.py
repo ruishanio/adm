@@ -109,17 +109,20 @@ def verify(platform, arch):
     # 读取实际打包的应用版本与入口文件，避免只检查 ZIP 名称而漏掉错误内容。
     script = """
 import { extractFile } from '@electron/asar';
+import { normalize } from 'node:path';
 const archive = process.argv[1];
 const metadata = JSON.parse(extractFile(archive, 'package.json').toString());
 for (const path of [metadata.main, 'dist/preload/index.cjs', 'dist/renderer/index.html']) {
-    if (!extractFile(archive, path).length) throw new Error(`应用入口为空：${path}`);
+    // ASAR 读取器按宿主路径分隔符查找目录，Windows 下需要先规范化路径。
+    if (!extractFile(archive, normalize(path)).length) throw new Error(`应用入口为空：${path}`);
 }
 console.log(JSON.stringify(metadata));
 """
     result = subprocess.run(
         ["node", "--input-type=module", "-e", script, str(asar_path)],
-        cwd=ROOT, check=True, capture_output=True, text=True, encoding="utf-8",
+        cwd=ROOT, stdout=subprocess.PIPE, text=True, encoding="utf-8",
     )
+    result.check_returncode()
     packaged = json.loads(result.stdout)
     if (packaged["name"], packaged["version"]) != (METADATA["name"], METADATA["version"]):
         raise ValueError("实际打包的应用名称或版本与源码不一致")
