@@ -36,9 +36,9 @@ CI 不连接真实设备，不执行 APK 安装或设备所有者设置。常规
 
 ### tag 打包
 
-推送 `v<package.json 版本>` 或带测试后缀的 tag（例如 `v1.0.0-ci.1`）后，GitHub 分别生成 macOS Apple Silicon（ARM64）、Windows x64 ZIP。工作流使用固定版本 Platform-Tools 37.0.1 并校验 SHA-256，运行测试、生产构建、打包和产物完整性检查。
+推送 `v<package.json 版本>` 或带测试后缀的 tag（例如 `v1.0.0-ci.4`）后，GitHub 生成 macOS Apple Silicon（ARM64）的 DMG、Windows x64 的安装 EXE，同时保留两端应用 ZIP。工作流使用固定版本 Platform-Tools 37.0.1 并校验 SHA-256，运行测试、生产构建、打包和产物完整性检查；macOS 挂载 DMG 核对内容与签名，Windows 在临时 Runner 上实际执行静默安装、文件回读和卸载。
 
-在 [Package 运行记录](https://github.com/ruishanio/adm/actions/workflows/package.yml)底部的 Artifacts 下载对应平台产物，保留 30 天。下载文件中包含应用 ZIP、`SHA256SUMS.txt` 和记录 tag/commit 的 `build-info.json`；应用版本仍以 `package.json` 为准，测试后缀仅用于区分 tag。解压应用 ZIP 后运行 `.app` 或 `.exe`，包内附带 ADB。
+在 [Package 运行记录](https://github.com/ruishanio/adm/actions/workflows/package.yml)底部的 Artifacts 下载对应平台产物，保留 30 天。下载文件中包含安装包、应用 ZIP、`SHA256SUMS.txt` 和记录 tag/commit 的 `build-info.json`；应用版本仍以 `package.json` 为准，测试后缀仅用于区分 tag。打开 DMG 后将应用拖入 Applications；Windows 运行 `ADM-版本-win-x64-setup.exe` 按向导安装，可选择安装目录。所有应用包均附带 ADB，Windows 卸载时保留用户配置。
 
 该流程上传测试产物，不自动创建 GitHub Release；macOS 使用临时签名，Windows 未签名，正式签名、公证与目标设备验收仍需独立完成。
 
@@ -84,7 +84,7 @@ ADB_DIR=/path/to/windows/platform-tools npm run package:win
 
 打包目标固定为 macOS ARM64 和 Windows x64。macOS 默认 SDK 目录为 `~/Library/Android/sdk/platform-tools`，Windows 默认使用 `vendor/windows/platform-tools`。产物写入 `release/`，打包脚本校验 ADB 的平台格式。
 
-打包生成 `Android Device Manager.app`、Windows 的 `Android Device Manager.exe`，ZIP 使用 `ADM-版本-mac/win-架构.zip`。当前为本地开发分发，正式外部分发需 Developer ID 签名与公证、Windows 代码签名。平台原生交互与真实 USB／无线配对应在目标系统和硬件上验收。
+打包生成 `ADM-版本-mac-arm64.dmg` 和 `ADM-版本-win-x64-setup.exe`，同时保留 `ADM-版本-mac/win-架构.zip` 与解包应用目录。应用名称为 `Android Device Manager.app` / `Android Device Manager.exe`。当前为测试分发，正式外部分发需 Developer ID 签名与公证、Windows 代码签名。平台原生交互与真实 USB／无线配对应在目标系统和硬件上验收。
 
 ## 仓库内容
 

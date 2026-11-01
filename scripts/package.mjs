@@ -35,8 +35,8 @@ await build({
   publish: 'never',
   targets:
     platform === 'mac'
-      ? Platform.MAC.createTarget(['dir', 'zip'], Arch.arm64)
-      : Platform.WINDOWS.createTarget(['dir', 'zip'], Arch.x64),
+      ? Platform.MAC.createTarget(['dir', 'zip', 'dmg'], Arch.arm64)
+      : Platform.WINDOWS.createTarget(['dir', 'zip', 'nsis'], Arch.x64),
   config: {
     // 保留原应用标识，让操作系统继续识别为同一应用，仅更新展示名称。
     appId: 'com.ruinext.androidtool',
@@ -60,6 +60,15 @@ await build({
       artifactName: metadata.shortName + '-${version}-win-${arch}.${ext}',
       // 本地分发暂不签名，但仍写入 Windows 文件属性中的正式产品名与版本。
       signExecutable: false,
+    },
+    nsis: {
+      // 使用安装向导，默认按当前用户安装，并允许选择安装目录。
+      oneClick: false,
+      perMachine: false,
+      allowToChangeInstallationDirectory: true,
+      artifactName: metadata.shortName + '-${version}-win-${arch}-setup.${ext}',
+      // 卸载应用时保留设备备注、连接偏好等用户数据。
+      deleteAppDataOnUninstall: false,
     },
   },
 });

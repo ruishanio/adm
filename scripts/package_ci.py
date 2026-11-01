@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-"""为 tag 打包准备固定版本 ADB，并验证最终 ZIP、架构、运行时和校验清单。"""
+"""为 tag 打包准备固定版本 ADB，并验证分发包、安装流程和校验清单。"""
 import argparse
 import hashlib
 import json
 import os
 from pathlib import Path
+import plistlib
 import re
 import struct
 import subprocess
 import sys
+import tempfile
 import urllib.request
 import zipfile
 
@@ -20,6 +22,11 @@ SDK = {
     "mac": ("darwin", "ee39ad5967e95c2a07f04dbcbde96b1a0c916ba376096db5d2f498b7727a5d1d"),
     "win": ("win", "45f4d63113e895ebde0c90f194099a4676b6ac653bd28d54314a9e022bbc1a99"),
 }
+
+
+def installer_path(platform, arch):
+    suffix = ".dmg" if platform == "mac" else "-setup.exe"
+    return ROOT / "release" / f"{METADATA['shortName']}-{METADATA['version']}-{platform}-{arch}{suffix}"
 
 
 def prepare(platform):
@@ -131,8 +138,23 @@ console.log(JSON.stringify(metadata));
         subprocess.run([str(unpacked / resources / "platform-tools" / adb_name), "version"], check=True)
         if platform == "mac":
             subprocess.run(["codesign", "--verify", "--deep", "--strict", str(unpacked / app)], check=True)
-    digest = hashlib.sha256(archive_path.read_bytes()).hexdigest()
-    (ROOT / "release/SHA256SUMS.txt").write_text(f"{digest}  {filename}\n", encoding="utf-8")
+    installer = installer_path(platform, arch)
+    with installer.open("rb") as binary:
+        if platform == "mac":
+            # UDIF 镜像尾部有固定的 koly 签名，实际挂载检查另在宿主平台执行。
+            binary.seek(-512, os.SEEK_END)
+            if binary.read(4) != b"koly":
+                raise ValueError("DMG 文件格式不正确")
+        elif binary.read(2) != b"MZ":
+            raise ValueError("Windows 安装程序不是 EXE 文件")
+    files = [
+        {"file": path.name, "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+         "size": path.stat().st_size}
+        for path in [archive_path, installer]
+    ]
+    (ROOT / "release/SHA256SUMS.txt").write_text(
+        "".join(f"{entry['sha256']}  {entry['file']}\n" for entry in files), encoding="utf-8"
+    )
     info = {
         "product": name,
         "version": METADATA["version"],
@@ -141,12 +163,65 @@ console.log(JSON.stringify(metadata));
         "platform": platform,
         "arch": arch,
         "adbVersion": SDK_VERSION,
-        "file": filename,
-        "sha256": digest,
-        "size": archive_path.stat().st_size,
+        "files": files,
     }
     (ROOT / "release/build-info.json").write_text(json.dumps(info, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(info), flush=True)
+
+
+def smoke_install(platform, arch):
+    """按 platform/arch 验证安装包，无返回值；仅在临时 Runner 执行，失败抛错并清理安装或镜像。"""
+    # 本机运行校验脚本不应安装应用或影响已有安装；真实安装只在 CI 临时环境进行。
+    if os.environ.get("GITHUB_ACTIONS") != "true" or not os.environ.get("RUNNER_TEMP"):
+        raise RuntimeError("安装流程验证仅允许在 GitHub Actions Runner 执行")
+    expected_host = "darwin" if platform == "mac" else "win32"
+    if sys.platform != expected_host:
+        raise RuntimeError("安装包必须在对应平台验证")
+    installer = installer_path(platform, arch)
+    name = METADATA["productName"]
+    if platform == "mac":
+        subprocess.run(["hdiutil", "verify", str(installer)], check=True, timeout=120)
+        result = subprocess.run(
+            ["hdiutil", "attach", "-readonly", "-nobrowse", "-plist", str(installer)],
+            check=True, stdout=subprocess.PIPE, timeout=60,
+        )
+        entities = plistlib.loads(result.stdout)["system-entities"]
+        mount = Path(next(entity["mount-point"] for entity in entities if "mount-point" in entity))
+        try:
+            app = mount / f"{name}.app"
+            original = ROOT / "release/mac-arm64" / f"{name}.app"
+            for entry in [f"Contents/MacOS/{name}", "Contents/Resources/app.asar",
+                          "Contents/Resources/platform-tools/adb"]:
+                if (app / entry).read_bytes() != (original / entry).read_bytes():
+                    raise ValueError(f"DMG 中的应用内容不一致：{entry}")
+            if not (mount / "Applications").is_symlink() or os.readlink(mount / "Applications") != "/Applications":
+                raise ValueError("DMG 缺少应用程序目录的安装快捷方式")
+            subprocess.run(["codesign", "--verify", "--deep", "--strict", str(app)], check=True)
+        finally:
+            subprocess.run(["hdiutil", "detach", str(mount)], check=True, timeout=60)
+        print("DMG 完整性、只读挂载、应用内容、签名和 Applications 快捷方式验证通过", flush=True)
+    else:
+        with tempfile.TemporaryDirectory(prefix="adm-install-", dir=os.environ["RUNNER_TEMP"]) as directory:
+            install_dir = Path(directory) / "app"
+            executable = install_dir / f"{name}.exe"
+            uninstaller = install_dir / f"Uninstall {name}.exe"
+            try:
+                # NSIS 要求 /D 放在最后且不加引号；shell=False 直接交给 Windows 创建进程。
+                subprocess.run(f'"{installer}" /S /currentuser /D={install_dir}', check=True, timeout=180)
+                original = ROOT / "release/win-unpacked"
+                for entry in [f"{name}.exe", "resources/app.asar", "resources/platform-tools/adb.exe"]:
+                    if (install_dir / entry).read_bytes() != (original / entry).read_bytes():
+                        raise ValueError(f"安装后的应用内容不一致：{entry}")
+                if not uninstaller.is_file():
+                    raise ValueError("安装后缺少卸载程序")
+                subprocess.run([str(install_dir / "resources/platform-tools/adb.exe"), "version"], check=True)
+            finally:
+                if uninstaller.is_file():
+                    # _?= 在原目录运行卸载器，确保等待的是实际卸载进程，不误判后台卸载完成。
+                    subprocess.run(f'"{uninstaller}" /S /currentuser _?={install_dir}', check=True, timeout=120)
+            if executable.exists():
+                raise ValueError("卸载后应用主程序仍然存在")
+        print("Windows 安装程序静默安装、文件回读、内置 ADB 与卸载验证通过", flush=True)
 
 
 if __name__ == "__main__":
@@ -154,10 +229,15 @@ if __name__ == "__main__":
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=["prepare", "verify"])
+    parser.add_argument("action", choices=["prepare", "verify", "smoke-install"])
     parser.add_argument("platform", choices=["mac", "win"])
     parser.add_argument("arch", choices=["arm64", "x64"])
     args = parser.parse_args()
     if (args.platform, args.arch) not in [("mac", "arm64"), ("win", "x64")]:
         parser.error("仅支持 macOS ARM64 和 Windows x64")
-    prepare(args.platform) if args.action == "prepare" else verify(args.platform, args.arch)
+    if args.action == "prepare":
+        prepare(args.platform)
+    elif args.action == "verify":
+        verify(args.platform, args.arch)
+    else:
+        smoke_install(args.platform, args.arch)
