@@ -277,7 +277,8 @@ code {
   background: var(--surface);
   overflow: hidden;
 }
-.win32 {
+.win32,
+:root[data-platform='win32'] {
   --control-height: 32px;
 }
 .sidebar {

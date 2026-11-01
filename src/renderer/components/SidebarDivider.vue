@@ -12,6 +12,7 @@ const save = () =>
 function start(e: MouseEvent) {
   if (e.button !== 0) return;
   e.preventDefault();
+  (e.currentTarget as HTMLElement).focus();
   cleanup();
   const cursor = document.body.style.cursor,
     select = document.body.style.userSelect;
