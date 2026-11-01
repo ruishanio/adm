@@ -59,7 +59,7 @@ export interface Api {
   connect(endpoint: string): Promise<void>;
   pair(endpoint: string, code: string): Promise<void>;
   chooseApk(): Promise<Apk | null>;
-  dropApk(file: File): Promise<Apk>;
+  dropApk(path: string): Promise<Apk>;
   install(target: Target, apkId: string, allowTest: boolean): Promise<void>;
   checkOwner(target: Target, component: string): Promise<OwnerCheck>;
   setOwner(target: Target, component: string, consent: boolean): Promise<void>;
@@ -67,7 +67,7 @@ export interface Api {
   upload(target: Target, path: string): Promise<boolean>;
   download(target: Target, path: string): Promise<boolean>;
   mkdir(target: Target, path: string, name: string): Promise<void>;
-  deviceMenu(target: Target): Promise<'rename' | 'remove' | null>;
+  copySerial(serial: string): Promise<void>;
   rename(serial: string, name: string): Promise<void>;
   hide(serial: string): Promise<void>;
   restore(): Promise<void>;

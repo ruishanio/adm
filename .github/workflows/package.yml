@@ -15,7 +15,7 @@ jobs:
   package:
     name: ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
@@ -44,11 +44,22 @@ jobs:
       - name: 校验 tag 并准备固定版本的 ADB
         run: python scripts/package_ci.py prepare ${{ matrix.platform }} ${{ matrix.arch }}
 
-      - name: 安装锁定依赖及 Electron 运行时
+      - name: 安装锁定前端依赖
         run: npm ci --no-audit --no-fund
 
       - name: 自动化测试
         run: npm test
+
+      - name: 配置锁定的 Rust 工具链
+        run: rustup toolchain install 1.99.1 --profile minimal --component rustfmt --component clippy
+
+      - name: Rust 格式与静态检查
+        run: |
+          cargo fmt --manifest-path src-tauri/Cargo.toml --check
+          cargo clippy --manifest-path src-tauri/Cargo.toml --locked --all-targets -- -D warnings
+
+      - name: Rust 后端回归测试
+        run: cargo test --manifest-path src-tauri/Cargo.toml --locked
 
       - name: 类型检查与生产构建
         run: npm run build

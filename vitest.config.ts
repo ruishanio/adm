@@ -1,2 +1,8 @@
 import { defineConfig } from 'vitest/config';
-export default defineConfig({ test: { include: ['tests/unit/**/*.test.{ts,tsx}'], testTimeout: 10000 } });
+import vue from '@vitejs/plugin-vue';
+import { fileURLToPath, URL } from 'node:url';
+export default defineConfig({
+  plugins: [vue()],
+  resolve: { alias: { '@': fileURLToPath(new URL('./src/renderer', import.meta.url)) } },
+  test: { include: ['tests/unit/**/*.test.ts'], testTimeout: 10000 },
+});

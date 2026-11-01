@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import plistlib
 import re
+import shutil
 import struct
 import subprocess
 import sys
@@ -33,7 +34,7 @@ def prepare(platform):
     """校验 tag 与包版本，下载并验证 SDK，只提取打包实际使用的文件。"""
     tag = os.environ.get("GITHUB_REF_NAME", "")
     pattern = rf"v{re.escape(METADATA['version'])}(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?"
-    if not re.fullmatch(pattern, tag):
+    if os.environ.get("GITHUB_REF_TYPE") == "tag" and not re.fullmatch(pattern, tag):
         raise ValueError(f"tag {tag!r} 必须为 v{METADATA['version']} 或其测试版本后缀")
     suffix, expected = SDK[platform]
     directory = ROOT / "artifacts" / "ci-sdk"
@@ -46,8 +47,9 @@ def prepare(platform):
             archive.write_bytes(response.read())
     if hashlib.sha256(archive.read_bytes()).hexdigest() != expected:
         raise ValueError("ADB 下载文件的 SHA-256 校验失败")
-    adb_directory = directory / "platform-tools"
-    adb_directory.mkdir(exist_ok=True)
+    adb_directory = ROOT / "src-tauri/resources/platform-tools"
+    shutil.rmtree(adb_directory, ignore_errors=True)
+    adb_directory.mkdir(parents=True)
     names = ["NOTICE.txt", "source.properties"] + (
         ["adb.exe", "AdbWinApi.dll", "AdbWinUsbApi.dll"] if platform == "win" else ["adb"]
     )
@@ -70,22 +72,22 @@ def verify(platform, arch):
     archive_path = ROOT / "release" / filename
     if platform == "mac":
         app = f"{name}.app"
-        executable = f"{app}/Contents/MacOS/{name}"
+        executable = f"{app}/Contents/MacOS/adm"
         resources = f"{app}/Contents/Resources"
         unpacked = ROOT / "release" / "mac-arm64"
         adb_name = "adb"
     else:
-        executable, resources = f"{name}.exe", "resources"
+        executable, resources = "adm.exe", "."
         unpacked = ROOT / "release" / "win-unpacked"
         adb_name = "adb.exe"
-    required = [executable, f"{resources}/app.asar", f"{resources}/README.md"]
+    required = [executable]
     required += [
-        f"{resources}/platform-tools/{part}"
+        str(Path(resources) / "platform-tools" / part).replace("\\", "/")
         for part in [adb_name, "NOTICE.txt", "source.properties"]
     ]
     if platform == "win":
         required += [
-            f"{resources}/platform-tools/{part}"
+            str(Path(resources) / "platform-tools" / part).replace("\\", "/")
             for part in ["AdbWinApi.dll", "AdbWinUsbApi.dll"]
         ]
     with zipfile.ZipFile(archive_path) as archive:
@@ -94,12 +96,9 @@ def verify(platform, arch):
         for entry in required:
             if archive.getinfo(entry).file_size == 0:
                 raise ValueError(f"产物文件为空：{entry}")
-        properties = archive.read(f"{resources}/platform-tools/source.properties").decode("utf-8")
+        properties = archive.read(str(Path(resources) / "platform-tools/source.properties").replace("\\", "/")).decode("utf-8")
         if f"Pkg.Revision={SDK_VERSION}" not in properties:
             raise ValueError("包内 ADB 版本与固定版本不一致")
-        asar_path = unpacked / resources / "app.asar"
-        if archive.read(f"{resources}/app.asar") != asar_path.read_bytes():
-            raise ValueError("ZIP 中的应用源码与打包目录不一致")
         with archive.open(executable) as binary:
             header = binary.read(64)
             if platform == "mac":
@@ -113,26 +112,15 @@ def verify(platform, arch):
                 binary.seek(struct.unpack_from("<I", header, 0x3C)[0])
                 if binary.read(6) != b"PE\0\0\x64\x86":
                     raise ValueError("Windows 主程序不是 x64 架构")
-    # 读取实际打包的应用版本与入口文件，避免只检查 ZIP 名称而漏掉错误内容。
-    script = """
-import { extractFile } from '@electron/asar';
-import { normalize } from 'node:path';
-const archive = process.argv[1];
-const metadata = JSON.parse(extractFile(archive, 'package.json').toString());
-for (const path of [metadata.main, 'dist/preload/index.cjs', 'dist/renderer/index.html']) {
-    // ASAR 读取器按宿主路径分隔符查找目录，Windows 下需要先规范化路径。
-    if (!extractFile(archive, normalize(path)).length) throw new Error(`应用入口为空：${path}`);
-}
-console.log(JSON.stringify(metadata));
-"""
-    result = subprocess.run(
-        ["node", "--input-type=module", "-e", script, str(asar_path)],
-        cwd=ROOT, stdout=subprocess.PIPE, text=True, encoding="utf-8",
-    )
-    result.check_returncode()
-    packaged = json.loads(result.stdout)
-    if (packaged["name"], packaged["version"]) != (METADATA["name"], METADATA["version"]):
-        raise ValueError("实际打包的应用名称或版本与源码不一致")
+    # 执行原生主程序的只读自检，核对真实二进制版本和资源路径，不依赖宿主 SDK。
+    with tempfile.TemporaryDirectory(prefix="adm-self-check-") as directory:
+        report = Path(directory) / "result.json"
+        subprocess.run([str(unpacked / executable), "--adm-self-check", str(report)], check=True, timeout=30)
+        packaged = json.loads(report.read_text(encoding="utf-8"))
+    if packaged["version"] != METADATA["version"] or packaged["framework"] != "Tauri 2":
+        raise ValueError("原生程序版本或技术栈不匹配")
+    if packaged["arch"] != ("aarch64" if platform == "mac" else "x86_64"):
+        raise ValueError("原生程序自检架构不匹配")
     # 只在对应宿主运行包内 ADB；version 不连接设备，也不会启动 ADB 服务。
     if (platform == "mac" and sys.platform == "darwin") or (platform == "win" and sys.platform == "win32"):
         subprocess.run([str(unpacked / resources / "platform-tools" / adb_name), "version"], check=True)
@@ -157,6 +145,7 @@ console.log(JSON.stringify(metadata));
     )
     info = {
         "product": name,
+        "framework": "Tauri 2",
         "version": METADATA["version"],
         "tag": os.environ.get("GITHUB_REF_NAME"),
         "commit": os.environ.get("GITHUB_SHA"),
@@ -190,7 +179,7 @@ def smoke_install(platform, arch):
         try:
             app = mount / f"{name}.app"
             original = ROOT / "release/mac-arm64" / f"{name}.app"
-            for entry in [f"Contents/MacOS/{name}", "Contents/Resources/app.asar",
+            for entry in ["Contents/MacOS/adm",
                           "Contents/Resources/platform-tools/adb"]:
                 if (app / entry).read_bytes() != (original / entry).read_bytes():
                     raise ValueError(f"DMG 中的应用内容不一致：{entry}")
@@ -203,18 +192,22 @@ def smoke_install(platform, arch):
     else:
         with tempfile.TemporaryDirectory(prefix="adm-install-", dir=os.environ["RUNNER_TEMP"]) as directory:
             install_dir = Path(directory) / "app"
-            executable = install_dir / f"{name}.exe"
-            uninstaller = install_dir / f"Uninstall {name}.exe"
+            executable = install_dir / "adm.exe"
+            uninstaller = install_dir / "uninstall.exe"
             try:
                 # NSIS 要求 /D 放在最后且不加引号；shell=False 直接交给 Windows 创建进程。
                 subprocess.run(f'"{installer}" /S /currentuser /D={install_dir}', check=True, timeout=180)
                 original = ROOT / "release/win-unpacked"
-                for entry in [f"{name}.exe", "resources/app.asar", "resources/platform-tools/adb.exe"]:
+                for entry in ["adm.exe", "platform-tools/adb.exe"]:
                     if (install_dir / entry).read_bytes() != (original / entry).read_bytes():
                         raise ValueError(f"安装后的应用内容不一致：{entry}")
+                report = Path(directory) / "installed.json"
+                subprocess.run([str(executable), "--adm-self-check", str(report)], check=True, timeout=30)
+                if json.loads(report.read_text(encoding="utf-8"))["version"] != METADATA["version"]:
+                    raise ValueError("安装后的主程序版本错误")
                 if not uninstaller.is_file():
                     raise ValueError("安装后缺少卸载程序")
-                subprocess.run([str(install_dir / "resources/platform-tools/adb.exe"), "version"], check=True)
+                subprocess.run([str(install_dir / "platform-tools/adb.exe"), "version"], check=True)
             finally:
                 if uninstaller.is_file():
                     # _?= 在原目录运行卸载器，确保等待的是实际卸载进程，不误判后台卸载完成。

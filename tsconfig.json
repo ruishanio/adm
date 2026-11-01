@@ -4,15 +4,24 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "jsx": "react-jsx",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "noEmit": true,
     "types": ["node", "vite/client"],
-    "noUnusedLocals": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/renderer/*"]
+    }
   },
-  "include": ["src", "tests/unit", "scripts/*.ts", "vite.config.ts", "vitest.config.ts"]
+  "include": [
+    "src/renderer/**/*.ts",
+    "src/renderer/**/*.vue",
+    "src/shared",
+    "tests/unit/**/*.ts",
+    "vite.config.ts",
+    "vitest.config.ts"
+  ]
 }

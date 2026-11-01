@@ -1,3 +1,21 @@
+@import 'tailwindcss';
+@source "./**/*.{vue,ts}";
+@theme inline {
+  --color-background: var(--surface);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--on-accent);
+  --color-muted: var(--surface-subtle);
+  --color-muted-foreground: var(--muted);
+  --color-accent: var(--selection);
+  --color-accent-foreground: var(--foreground);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--foreground);
+  --color-border: var(--line);
+  --color-input: var(--control-border);
+  --color-ring: var(--focus);
+  --color-destructive: var(--error);
+}
 /* 中性底色承担层级，功能色只点缀图标；主操作与连接状态各自保持统一语义。 */
 :root {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
@@ -281,8 +299,6 @@ code {
   position: absolute;
   inset: 0 0 auto;
   height: 40px;
-  -webkit-app-region: drag;
-  app-region: drag;
 }
 .sidebar-heading {
   display: flex;
@@ -290,8 +306,6 @@ code {
   gap: 10px;
   padding: 0 8px;
   margin-bottom: 16px;
-  -webkit-app-region: drag;
-  app-region: drag;
   user-select: none;
 }
 .sidebar-heading h1 {
@@ -539,8 +553,6 @@ code {
   padding: 12px 20px;
   min-height: 72px;
   /* 沿用现有设备摘要作为窗口拖动区，标签、刷新和列表保持正常点击。 */
-  -webkit-app-region: drag;
-  app-region: drag;
   user-select: none;
 }
 .win32 .device-header {
@@ -599,6 +611,7 @@ code {
   flex-shrink: 0;
 }
 .tabs button {
+  flex: 0 0 auto;
   height: 30px;
   border: 1px solid transparent;
   border-radius: var(--radius-control);
@@ -628,7 +641,7 @@ code {
   container-type: inline-size;
   scrollbar-gutter: stable;
 }
-.task-content > section + section {
+.task-content > [data-slot='tabs-content'] > section + section {
   margin-top: 24px;
 }
 .section-heading {
@@ -1259,4 +1272,120 @@ code {
     animation: none !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* shadcn-vue 组件沿用同一套桌面密度与状态变量，不引入第二套视觉主题。 */
+.work-tabs {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 0;
+  min-height: 0;
+}
+.work-tabs > .tabs {
+  height: auto;
+  width: auto;
+  justify-content: flex-start;
+  background: transparent;
+  border-radius: 0;
+  padding: 0 20px 8px;
+}
+.task-content > [data-slot='tabs-content'] {
+  margin: 0;
+  outline: none;
+}
+.dialog {
+  display: block;
+  gap: 0;
+  overflow: auto;
+  animation: none;
+}
+[data-slot='dialog-overlay'] {
+  background: rgb(0 0 0 / 18%);
+  animation: none;
+}
+[data-slot='checkbox'] {
+  display: inline-flex;
+  min-height: 16px;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  flex: 0 0 16px;
+}
+[data-slot='checkbox'][data-state='checked'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+[data-slot='checkbox'] svg {
+  width: 13px;
+  height: 13px;
+}
+.device-context-menu {
+  min-width: 150px;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-size: 13px;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 12%);
+}
+.device-context-menu [data-slot='context-menu-item'] {
+  padding: 5px 10px;
+  border-radius: 3px;
+  outline: none;
+}
+.device-context-menu [data-highlighted] {
+  background: var(--selection);
+}
+.native-drag-area {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 36px;
+  width: var(--sidebar-width);
+}
+.win32 .native-drag-area {
+  display: none;
+}
+.window-controls {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 32px;
+  display: flex;
+  z-index: 10;
+}
+.window-controls button {
+  border: none;
+  border-radius: 0;
+  width: 46px;
+  height: 32px;
+  min-height: 32px;
+  background: transparent;
+  padding: 0;
+}
+.window-controls svg {
+  width: 13px;
+  height: 13px;
+}
+.window-controls .window-close:hover {
+  color: white;
+  background: #c42b1c;
+}
+.path-display {
+  overflow-wrap: anywhere;
+  padding: 8px 10px;
+  background: var(--surface-subtle);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+}
+.settings-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.settings-body hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 20px 0;
 }

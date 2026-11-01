@@ -17,16 +17,19 @@ concurrency:
 
 jobs:
   verify:
-    name: ${{ matrix.os }} / Node.js 24
+    name: ${{ matrix.os }} / Tauri 2
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest]
-    env:
-      # 此任务仅构建和测试代码，不启动桌面窗口，无需下载 Electron 运行时。
-      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+        include:
+          - os: macos-latest
+            platform: mac
+            arch: arm64
+          - os: windows-latest
+            platform: win
+            arch: x64
     steps:
       - name: 检出代码
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -40,6 +43,9 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
+      - name: 准备固定版本 ADB
+        run: python scripts/package_ci.py prepare ${{ matrix.platform }} ${{ matrix.arch }}
+
       - name: 安装锁定依赖
         run: npm ci --no-audit --no-fund
 
@@ -48,3 +54,14 @@ jobs:
 
       - name: 自动化测试
         run: npm test
+
+      - name: 配置锁定的 Rust 工具链
+        run: rustup toolchain install 1.99.1 --profile minimal --component rustfmt --component clippy
+
+      - name: Rust 格式与静态检查
+        run: |
+          cargo fmt --manifest-path src-tauri/Cargo.toml --check
+          cargo clippy --manifest-path src-tauri/Cargo.toml --locked --all-targets -- -D warnings
+
+      - name: Rust 后端回归测试
+        run: cargo test --manifest-path src-tauri/Cargo.toml --locked

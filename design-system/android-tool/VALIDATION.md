@@ -1,3 +1,5 @@
+> 本文记录迁移前 Electron 界面验收。当前 Tauri / Vue 验证见仓库根目录 `VALIDATION.md`，旧记录不代表新版实测结果。
+
 # UI / UX 约束落地验证
 
 日期：2026-11-01。宿主：macOS ARM64。

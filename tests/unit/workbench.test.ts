@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
-import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
+import { effectScope, nextTick } from 'vue';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { useWorkbenchState } from '../../src/renderer/hooks/useWorkbench';
+import { createWorkbench } from '../../src/renderer/composables/workbench';
 import { targetKey, type Api, type Snapshot } from '../../src/shared/contracts';
 const first = { serial: 'one', transportId: '1', model: '第一台', state: 'device' };
 const second = { serial: 'two', transportId: '2', model: '第二台', state: 'device' };
-let snapshot: Snapshot;
+let snapshot: Snapshot, api: Api;
+const scopes: ReturnType<typeof effectScope>[] = [];
 beforeEach(() => {
   snapshot = {
     devices: [first, second],
@@ -14,7 +15,7 @@ beforeEach(() => {
     platform: 'darwin',
     version: '1.0.0',
   };
-  const api = {
+  api = {
     refresh: vi.fn(async () => structuredClone(snapshot)),
     details: vi.fn(async (d) => ({
       android: '10',
@@ -39,65 +40,76 @@ beforeEach(() => {
       size: 5,
       admins: [],
     })),
+    install: vi.fn(async () => {}),
   } as unknown as Api;
-  window.androidTool = api;
 });
-afterEach(cleanup);
+afterEach(() => scopes.splice(0).forEach((scope) => scope.stop()));
 async function ready() {
-  const hook = renderHook(() => useWorkbenchState());
-  await waitFor(() => {
-    expect(hook.result.current.details?.serial).toBe('one');
-    expect(hook.result.current.busy).toBe('');
+  const scope = effectScope();
+  scopes.push(scope);
+  const w = scope.run(() => createWorkbench(api))!;
+  await w.refresh();
+  await vi.waitFor(() => {
+    expect(w.state.details?.serial).toBe('one');
+    expect(w.state.busy).toBe('');
   });
-  return hook;
+  return w;
 }
 it('文件页切换设备等待信息读取后再读取新目录', async () => {
-  const hook = await ready();
-  act(() => hook.result.current.setTab('files'));
-  await waitFor(() => expect(hook.result.current.files[0]?.name).toBe('one.txt'));
-  act(() => hook.result.current.select(second));
-  await waitFor(() => expect(hook.result.current.files[0]?.name).toBe('two.txt'));
-  act(() => hook.result.current.select(first));
-  await waitFor(() => expect(hook.result.current.files[0]?.name).toBe('one.txt'));
+  const w = await ready();
+  w.state.tab = 'files';
+  await vi.waitFor(() => expect(w.state.files[0]?.name).toBe('one.txt'));
+  w.select(second);
+  await vi.waitFor(() => expect(w.state.files[0]?.name).toBe('two.txt'));
+  w.select(first);
+  await vi.waitFor(() => expect(w.state.files[0]?.name).toBe('one.txt'));
 });
 it('切回曾访问的设备不会把空缓存误当作已加载', async () => {
-  const hook = await ready();
-  act(() => hook.result.current.setTab('files'));
-  await waitFor(() => expect(hook.result.current.files).toHaveLength(1));
-  act(() => {
-    hook.result.current.setTab('info');
-    hook.result.current.select(second);
-  });
-  await waitFor(() => expect(hook.result.current.details?.serial).toBe('two'));
-  act(() => hook.result.current.select(first));
-  await waitFor(() => expect(hook.result.current.details?.serial).toBe('one'));
-  act(() => hook.result.current.setTab('files'));
-  await waitFor(() => expect(hook.result.current.files[0]?.name).toBe('one.txt'));
+  const w = await ready();
+  w.state.tab = 'files';
+  await vi.waitFor(() => expect(w.state.files).toHaveLength(1));
+  w.state.tab = 'info';
+  w.select(second);
+  await vi.waitFor(() => expect(w.state.details?.serial).toBe('two'));
+  w.select(first);
+  await vi.waitFor(() => expect(w.state.details?.serial).toBe('one'));
+  w.state.tab = 'files';
+  await vi.waitFor(() => expect(w.state.files[0]?.name).toBe('one.txt'));
 });
 it('断连撤销所有者授权，重连要求重新选择传输会话', async () => {
-  const hook = await ready();
-  act(() => {
-    hook.result.current.setOwnerCheck({ canSet: true, alreadySet: false, summary: 'ok' });
-    hook.result.current.setConsent(true);
-  });
+  const w = await ready();
+  w.state.ownerCheck = { canSet: true, alreadySet: false, summary: 'ok' };
+  w.state.consent = true;
   snapshot.devices = [{ ...first, transportId: '99' }];
-  await act(async () => {
-    await hook.result.current.refresh();
-  });
-  expect(hook.result.current.device).toBeUndefined();
-  expect(hook.result.current.consent).toBe(false);
-  expect(hook.result.current.ownerCheck).toBeUndefined();
-  expect(hook.result.current.selected).toBe(targetKey(first));
+  await w.refresh();
+  expect(w.device.value).toBeUndefined();
+  expect(w.state.consent).toBe(false);
+  expect(w.state.ownerCheck).toBeUndefined();
+  expect(w.state.selected).toBe(targetKey(first));
 });
 it('跨页和换设备保留已选安装包', async () => {
-  const hook = await ready();
-  await act(async () => {
-    await hook.result.current.chooseApk();
-  });
-  act(() => {
-    hook.result.current.setTab('info');
-    hook.result.current.select(second);
-  });
-  await waitFor(() => expect(hook.result.current.details?.serial).toBe('two'));
-  expect(hook.result.current.apk?.fileName).toBe('test.apk');
+  const w = await ready();
+  await w.chooseApk();
+  w.state.tab = 'info';
+  w.select(second);
+  await vi.waitFor(() => expect(w.state.details?.serial).toBe('two'));
+  expect(w.state.apk?.fileName).toBe('test.apk');
+});
+it('安装后没有组件也展开手动填写入口且不自动授权', async () => {
+  const w = await ready();
+  await w.chooseApk();
+  w.state.ownerAfter = true;
+  await w.install();
+  expect(w.state.tab).toBe('info');
+  expect(w.state.ownerExpanded).toBe(true);
+  expect(w.state.consent).toBe(false);
+});
+it('变更组件撤销旧检查和授权', async () => {
+  const w = await ready();
+  w.state.ownerCheck = { canSet: true, alreadySet: false, summary: 'ok' };
+  w.state.consent = true;
+  w.state.component = 'com.test/.Other';
+  await nextTick();
+  expect(w.state.ownerCheck).toBeUndefined();
+  expect(w.state.consent).toBe(false);
 });

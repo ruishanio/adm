@@ -2,7 +2,7 @@
 
 ## 产品边界
 
-Electron 45 / React 19 / TypeScript，面向 macOS 和 Windows 的 Android 运维工具。以设备选择、信息查看、安装和文件操作为主。保留浅色双区和设备图标；不采用网页首页的 Hero、营销卡片或移动端底栏。
+Tauri 2 / Vue 3 / TypeScript / shadcn-vue / Tailwind CSS 4，面向 macOS 和 Windows 的 Android 运维工具。以设备选择、信息查看、安装和文件操作为主。保留浅色双区和设备图标；不采用网页首页的 Hero、营销卡片或移动端底栏。
 
 ## 技能依据与取舍
 
@@ -12,7 +12,7 @@ Electron 45 / React 19 / TypeScript，面向 macOS 和 Windows 的 Android 运�
 - 收窄检索 `Fluent 2 desktop utility --domain style -n 1`，命中 `fluent-2`：采用语义变量、低干扰层级、统一控件状态和平台适配原则；本项目为自定义桌面视觉，不宣称实现完整 Fluent 2。
 - `secondary text contrast --domain ux` 命中 Contrast Readability / Color Contrast；正常文字至少 4.5:1。
 - `form progressive disclosure --domain ux` 实际命中 Submit Feedback / Form Labels，只采纳标签和反馈规则；渐进展开来自技能 quick-reference 的 Forms 条目，不伪称检索命中。
-- `keyboard focus tabs --stack react` 命中焦点管理；沿用原生 dialog 和 React 共享状态，不新增 UI 框架。
+- Vue 使用组合式共享状态；标签页、复选框、对话框和右键菜单以 shadcn-vue / Reka UI 作为可访问交互基础，仍遵循本项目桌面尺寸与语义配色。
 
 ## 视觉与尺寸
 
@@ -30,7 +30,7 @@ Lucide 线性图标：控件 16px、设备 24px、页头 24px，统一 1.5px 笔
 
 ## 页面与交互
 
-- 左侧应用标题使用 ADM，搭配小型设备标识；正式名称 Android Device Manager 在设置页、窗口与应用菜单提供，不设中文名。不保留独立标题栏行。macOS 仅在侧栏顶部避让原生三色按钮；Windows 原生按钮融入工作区右上角，设备摘要按系统覆盖区域避让。应用标题与设备摘要可拖动窗口，列表和标签正常点击。
+- 左侧应用标题使用 ADM，搭配小型设备标识；正式名称 Android Device Manager 在设置页、窗口与应用菜单提供，不设中文名。不保留独立标题栏行。macOS 仅在侧栏顶部避让原生三色按钮；Windows 窗口按钮融入工作区右上角，通过 Tauri 窗口 API 最小化、最大化/还原和关闭；设备摘要避让按钮区域。应用标题与设备摘要可拖动窗口，列表和标签正常点击。
 - “已连接”分组右侧显示在线数量和刷新按钮；分组始终存在，零在线设备时刷新入口仍可用。
 - 侧栏设备行 52px，淡蓝灰选中底与细色标，显示名称、传输标识、图标和状态；分组标题和设备详情提供文字状态。离线设备图标保持中性灰。右键备注/隐藏保留，F2 保留。
 - 侧栏最小 220px，工作区最小 640px；分隔位置保留鼠标拖动和键盘替代，不添加明显凹槽。

@@ -6,42 +6,40 @@
   "private": true,
   "description": "Desktop Android device management via ADB",
   "author": "RuiNext",
-  "main": "dist/main/index.cjs",
+  "type": "module",
   "scripts": {
-    "dev": "node scripts/dev.mjs",
-    "typecheck": "tsc --noEmit",
-    "build": "npm run typecheck && node scripts/build.mjs",
-    "start": "electron .",
+    "dev": "tauri dev",
+    "dev:web": "vite",
+    "typecheck": "vue-tsc --noEmit",
+    "build": "npm run typecheck && vite build",
     "test": "vitest run",
-    "package:mac": "npm run build && node scripts/package.mjs mac",
-    "package:win": "npm run build && node scripts/package.mjs win",
-    "smoke:device": "tsx scripts/device-smoke.ts"
+    "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml",
+    "tauri": "tauri",
+    "package:mac": "node scripts/package.mjs mac",
+    "package:win": "node scripts/package.mjs win"
   },
   "dependencies": {
-    "lucide-react": "1.66.0",
-    "react": "19.3.1",
-    "react-dom": "19.3.1",
-    "yauzl": "3.4.0",
-    "zod": "4.6.7"
+    "@lucide/vue": "1.66.0",
+    "@tauri-apps/api": "2.12.4",
+    "@vueuse/core": "15.0.0",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "reka-ui": "2.11.0",
+    "tailwind-merge": "3.7.0",
+    "vue": "3.5.44"
   },
   "devDependencies": {
-    "@testing-library/react": "16.3.3",
+    "@tailwindcss/vite": "4.3.3",
+    "@tauri-apps/cli": "2.12.4",
     "@types/node": "26.6.6",
-    "@types/react": "19.3.0",
-    "@types/react-dom": "19.3.0",
-    "@types/yauzl": "3.4.0",
-    "@types/yazl": "3.3.1",
-    "@vitejs/plugin-react": "6.1.2",
-    "electron": "45.2.1",
-    "electron-builder": "26.18.0",
-    "esbuild": "0.28.2",
+    "@vitejs/plugin-vue": "6.0.10",
+    "@vue/test-utils": "2.5.1",
     "jsdom": "30.1.3",
     "prettier": "3.9.10",
-    "tsx": "4.23.15",
+    "tailwindcss": "4.3.3",
     "typescript": "5.9.3",
     "vite": "8.3.5",
     "vitest": "5.0.5",
-    "yazl": "3.3.1"
-  },
-  "type": "module"
+    "vue-tsc": "3.3.14"
+  }
 }
