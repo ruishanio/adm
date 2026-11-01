@@ -1,0 +1,16 @@
+# 本地生成内容
+node_modules/
+dist/
+release/
+artifacts/
+vendor/
+resources/platform-tools/
+coverage/
+test-results/
+playwright-report/
+blob-report/
+
+# 上游技能保留原始格式；二进制清单用于 APK 解析测试
+.agents/skills/
+tests/Fixtures/AndroidManifest.axml
+package-lock.json

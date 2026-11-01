@@ -1,0 +1,4 @@
+* text=auto eol=lf
+
+# aapt 输出的 Android 二进制清单，不参与换行转换或文本合并
+*.axml binary
