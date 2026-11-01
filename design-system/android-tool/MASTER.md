@@ -6,7 +6,7 @@ Electron 45 / React 19 / TypeScript，面向 macOS 和 Windows 的 Android 运�
 
 ## 技能依据与取舍
 
-使用项目内 `.agents/skills/ui-ux-pro-max/`，上游来源与固定提交见该目录 SOURCE.md。
+设计阶段使用的 UI UX Pro Max 位于本机 `.agents/skills/ui-ux-pro-max/`，仅作可选辅助工具，不随仓库提交；以下规则是项目保留的设计依据。上游来源为 https://github.com/nextlevelbuilder/ui-ux-pro-max-skill，采用版本为 `bf41cbc3ce63e30c922e58ef48741ba6133f9aa9`。
 
 - 已运行 `developer tool desktop utility --design-system --density 8 --variance 2`。Minimalism 的简洁层级符合目标；生成的 FAQ 落地页、深色绿色配色和外部字体不符合已确认需求，未照搬或作为默认规则保存。
 - 收窄检索 `Fluent 2 desktop utility --domain style -n 1`，命中 `fluent-2`：采用语义变量、低干扰层级、统一控件状态和平台适配原则；本项目为自定义桌面视觉，不宣称实现完整 Fluent 2。

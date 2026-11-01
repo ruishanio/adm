@@ -1,12 +1,12 @@
 # Android Device Manager（ADM）
 
-[![CI](https://github.com/ruishanio/ADM/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ruishanio/ADM/actions/workflows/ci.yml)
+[![CI](https://github.com/ruishanio/adm/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/ruishanio/adm/actions/workflows/ci.yml)
 
 正式名称 **Android Device Manager**，简称 **ADM**，不设中文名。项目目录继续使用 `android-tool/`。
 
 独立的 Android 设备管理桌面应用，使用 **Electron + React + TypeScript**，支持 macOS 和 Windows。运行时不依赖 .NET、Java 或 Android Studio。ADB 随发布包附带。
 
-源码仓库：[ruishanio/ADM](https://github.com/ruishanio/ADM)，SSH 地址为 `git@github.com:ruishanio/ADM.git`，主分支为 `main`。
+源码仓库：[ruishanio/adm](https://github.com/ruishanio/adm)，SSH 地址为 `git@github.com:ruishanio/adm.git`，主分支为 `master`。
 
 ## 开发
 
@@ -30,7 +30,7 @@ npm start
 
 ## 持续集成
 
-GitHub Actions 在推送到 `main`、提交面向 `main` 的 PR 或手动触发时运行。macOS 和 Windows 分别使用 Node.js 24，从锁文件安装依赖，执行 TypeScript 检查、生产构建和全部自动化测试；一个平台失败不会取消另一个平台的检查。
+GitHub Actions 在推送到 `master`、提交面向 `master` 的 PR 或手动触发时运行。macOS 和 Windows 分别使用 Node.js 24，从锁文件安装依赖，执行 TypeScript 检查、生产构建和全部自动化测试；一个平台失败不会取消另一个平台的检查。
 
 CI 不连接真实设备，不执行 APK 安装或设备所有者设置。该工作流不生成分发包；包含 ADB 的应用打包仍使用下方打包命令，目标系统与硬件验收见 `VALIDATION.md`。
 
@@ -49,7 +49,7 @@ CI 不连接真实设备，不执行 APK 安装或设备所有者设置。该工
 
 ## 架构
 
-UI / UX 修改遵循项目内 [UI UX Pro Max 技能](.agents/skills/ui-ux-pro-max/SKILL.md)与[桌面设计约束](design-system/android-tool/MASTER.md)，入口写入 `AGENTS.md`。样式集中使用语义变量，采用中性底色、少量功能图标色、紧凑桌面控件和系统字体；设备所有者配置可展开，从安装流程进入时自动展开。
+UI / UX 修改遵循项目内[桌面设计约束](design-system/android-tool/MASTER.md)，入口写入 `AGENTS.md`。UI UX Pro Max 仅作为本机可选辅助工具，技能文件不随仓库提交。样式集中使用语义变量，采用中性底色、少量功能图标色、紧凑桌面控件和系统字体；设备所有者配置可展开，从安装流程进入时自动展开。
 
 ```text
 src/main/          Electron 窗口、白名单 IPC、ADB 服务、APK 解析与偏好存储
@@ -80,7 +80,7 @@ ADB_DIR=/path/to/windows/platform-tools npm run package:win
 
 ## 仓库内容
 
-仓库保留 Electron / React 源码、测试夹具、构建脚本、设计约束和固定版本的 UI UX Pro Max 技能。依赖、构建产物、安装包、ADB / Electron 下载缓存、测试报告、模拟器数据、环境配置和签名私钥由 `.gitignore` 排除；依赖版本以 `package-lock.json` 为准。
+仓库保留 Electron / React 源码、测试夹具、构建脚本和项目设计约束。依赖、构建产物、安装包、ADB / Electron 下载缓存、测试报告、模拟器数据、本机 UI UX Pro Max 技能、环境配置和签名私钥由 `.gitignore` 排除；依赖版本以 `package-lock.json` 为准。
 
 迁移前的 Avalonia 工程已移出当前源码树。清理时将其源码、测试与文档校验备份到本机 `artifacts/archive/avalonia-source-20261101.tar.gz`，该备份不入库，当前开发、构建和测试均不依赖它。
 

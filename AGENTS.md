@@ -2,7 +2,7 @@
 
 正式名称 Android Device Manager，简称 ADM，不设中文名。界面紧凑位置使用简称，完整名称在设置页提供；原应用标识和数据目录作为兼容身份保留。
 
-界面和交互修改先读取 `.agents/skills/ui-ux-pro-max/SKILL.md`，再读取 `design-system/android-tool/MASTER.md`。按实际问题使用技能的本地检索，核对结果与 Electron 桌面场景是否匹配。
+界面和交互修改先读取 `design-system/android-tool/MASTER.md`。UI UX Pro Max 仅作为本机可选辅助工具，不随仓库提交；本机已安装时可读取 `.agents/skills/ui-ux-pro-max/SKILL.md`，按实际问题检索并核对结果与 Electron 桌面场景是否匹配。
 
 - 用户确认的浅色双区、设备图标、可调侧栏、原生窗口按钮和“设备所有者”术语优先。
 - 统一使用 `src/renderer/styles.css` 的语义变量。禁止给单个页面另起配色或叠加临时覆盖样式。

@@ -7,6 +7,9 @@
 /resources/platform-tools/
 *.tsbuildinfo
 
+# 个人安装的设计技能仅供本机使用，项目规范保留在 design-system/ 中
+/.agents/skills/ui-ux-pro-max/
+
 # 测试报告、工具缓存与日志
 /coverage/
 /test-results/
