@@ -211,3 +211,30 @@ it('设置语言先保存再即时切换，保存失败保持原偏好', async (
   expect(select.textContent).toBe('English');
   expect(w.state.notice?.text).toBe('disk full');
 });
+
+it('概览显示常用状态，明细默认收起，刷新仍重新读取详情', async () => {
+  const w = setup();
+  const refresh = vi.spyOn(w, 'refresh').mockResolvedValue();
+  const view = mount(DeviceInfoPage, {
+    global: { provide: { [workbenchKey as symbol]: w } },
+  });
+  cleanups.push(() => view.unmount());
+  await flushPromises();
+  expect(view.findAll('.device-metrics dt').map((h) => h.text())).toEqual([
+    '运行内存',
+    '数据分区',
+    '电池电量',
+    '运行时长',
+  ]);
+  expect(view.findAll('.disclosure-title').map((h) => h.text())).toEqual([
+    '硬件与存储',
+    '运行状态',
+    '系统构建详情',
+    '设备所有者',
+  ]);
+  expect(view.findAll('.info-disclosure').every((group) => group.attributes('open') === undefined)).toBe(
+    true,
+  );
+  await view.get('.info-refresh').trigger('click');
+  expect(refresh).toHaveBeenCalledWith(true);
+});

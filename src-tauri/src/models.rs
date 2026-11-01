@@ -26,6 +26,53 @@ pub struct Details {
     pub architecture: String,
     pub patch: String,
     pub serial: String,
+    pub system: SystemInfo,
+}
+#[derive(Clone, Debug, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SystemInfo {
+    pub brand: String,
+    pub device: String,
+    pub product: String,
+    pub hardware: String,
+    pub soc: String,
+    pub build_id: String,
+    pub build_number: String,
+    pub build_type: String,
+    pub fingerprint: String,
+    pub bootloader: String,
+    pub baseband: String,
+    pub verified_boot: String,
+    pub encryption: String,
+    pub runtime: RuntimeInfo,
+}
+#[derive(Clone, Debug, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RuntimeInfo {
+    pub kernel: String,
+    pub cpu_cores: Option<u32>,
+    pub memory_total: Option<u64>,
+    pub memory_available: Option<u64>,
+    pub storage_total: Option<u64>,
+    pub storage_available: Option<u64>,
+    pub physical_size: String,
+    pub override_size: String,
+    pub physical_density: Option<u32>,
+    pub override_density: Option<u32>,
+    pub battery: BatteryInfo,
+    pub uptime_seconds: Option<u64>,
+    pub addresses: Vec<String>,
+}
+#[derive(Clone, Debug, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BatteryInfo {
+    pub present: Option<bool>,
+    pub percent: Option<f64>,
+    pub status: Option<u32>,
+    pub health: Option<u32>,
+    pub temperature: Option<f64>,
+    pub voltage: Option<f64>,
+    pub power: Vec<String>,
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

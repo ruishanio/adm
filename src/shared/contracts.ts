@@ -16,6 +16,46 @@ export interface Details {
   architecture: string;
   patch: string;
   serial: string;
+  system: SystemInfo;
+}
+export interface SystemInfo {
+  brand: string;
+  device: string;
+  product: string;
+  hardware: string;
+  soc: string;
+  buildId: string;
+  buildNumber: string;
+  buildType: string;
+  fingerprint: string;
+  bootloader: string;
+  baseband: string;
+  verifiedBoot: string;
+  encryption: string;
+  runtime: RuntimeInfo;
+}
+export interface RuntimeInfo {
+  kernel: string;
+  cpuCores: number | null;
+  memoryTotal: number | null;
+  memoryAvailable: number | null;
+  storageTotal: number | null;
+  storageAvailable: number | null;
+  physicalSize: string;
+  overrideSize: string;
+  physicalDensity: number | null;
+  overrideDensity: number | null;
+  battery: {
+    present: boolean | null;
+    percent: number | null;
+    status: number | null;
+    health: number | null;
+    temperature: number | null;
+    voltage: number | null;
+    power: string[];
+  };
+  uptimeSeconds: number | null;
+  addresses: string[];
 }
 export interface Apk {
   id: string;

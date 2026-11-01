@@ -77,28 +77,18 @@ impl Adb {
     pub fn details(&self, device: &Target) -> Result<Details> {
         self.ensure_online(device)?;
         let properties = self.shell(device, &["getprop"])?;
-        let pattern = re(r"(?m)^\[([^\]]+)\]: \[(.*)\]\r?$");
-        let values: std::collections::BTreeMap<String, String> = pattern
-            .captures_iter(&properties)
-            .map(|m| (m[1].into(), m[2].into()))
-            .collect();
-        let get = |key: &str| {
-            values
-                .get(key)
-                .filter(|v| !v.is_empty())
-                .cloned()
-                .unwrap_or_else(|| "—".into())
-        };
-        Ok(Details {
-            android: get("ro.build.version.release"),
-            api: get("ro.build.version.sdk"),
-            manufacturer: get("ro.product.manufacturer"),
-            model: get("ro.product.model"),
-            architecture: get("ro.product.cpu.abilist"),
-            patch: get("ro.build.version.security_patch"),
-            serial: get("ro.serialno"),
-            owner: parse_owner(&self.shell(device, &["dumpsys", "device_policy"])?)?,
-        })
+        let owner = parse_owner(&self.shell(device, &["dumpsys", "device_policy"])?)?;
+        // 扩展采样失败不遮蔽基础信息，但取消和传输会话失效仍必须中止。
+        let runtime = self
+            .script(device, crate::device_info::RUNTIME_SCRIPT, &[])
+            .unwrap_or_default();
+        check_cancel(&self.cancel)?;
+        self.ensure_online(device)?;
+        Ok(crate::device_info::parse_details(
+            &properties,
+            &runtime,
+            owner,
+        ))
     }
     pub fn connect(&self, address: &str) -> Result<String> {
         let address = endpoint(address)?;

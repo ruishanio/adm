@@ -672,24 +672,155 @@ code {
   overflow-wrap: anywhere;
   user-select: text;
 }
-.owner-section {
-  border-top: 1px solid var(--line);
-  padding-top: 16px;
+/* 概览、身份信息与可展开参数分别成层；只在分组之间使用分隔线。 */
+.device-info-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
-.owner-current {
+.device-overview > .section-heading {
+  margin-bottom: 0;
+}
+.device-metrics {
   display: grid;
-  grid-template-columns: 88px minmax(0, 1fr);
-  gap: 12px;
-  align-items: baseline;
-  line-height: 1.6;
-  font-size: 13px;
-  margin: 8px 0 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  margin: 16px 0 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
 }
-.owner-current > span:first-child {
-  min-width: 80px;
+.device-metrics > div {
+  min-width: 0;
 }
-.owner-current > span:last-child {
+.device-metrics dt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.device-metrics dt svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 1.5;
+  color: var(--device);
+}
+.device-metrics [data-metric='storage'] dt svg {
+  color: var(--folder);
+}
+.device-metrics [data-metric='battery'] dt svg {
+  color: var(--owner);
+}
+.device-metrics dd {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 7px 0 0;
+  font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
+  user-select: text;
+}
+.metric-value {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.metric-detail {
+  color: var(--muted);
+  font-size: 12px;
+}
+.device-basics h3 {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.device-properties > div {
+  min-height: 30px;
+  padding-block: 5px;
+  border-bottom: none;
+}
+.device-properties dd {
+  white-space: pre-line;
+}
+.device-properties:lang(en) > div {
+  grid-template-columns: 96px minmax(0, 1fr);
+}
+.device-properties > .property-wide {
+  grid-column: 1 / -1;
+}
+.info-refresh {
+  font-size: 12px;
+}
+.owner-identity {
+  margin: 0 0 16px;
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+.owner-identity > span {
+  color: var(--muted);
+  margin-right: 8px;
+}
+.owner-unset {
+  color: var(--muted);
+}
+.info-disclosure {
+  border-bottom: 1px solid var(--line);
+}
+.info-disclosure summary,
+.owner-config-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 8px 4px;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  list-style: none;
+}
+.info-disclosure summary::-webkit-details-marker {
+  display: none;
+}
+.info-disclosure summary > svg,
+.owner-config-toggle > svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  stroke-width: 1.5;
+}
+.disclosure-title {
+  font-size: 13px;
+  font-weight: 500;
+}
+.disclosure-preview {
+  margin-left: auto;
+  max-width: 40%;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--muted);
+  font-size: 12px;
+}
+.disclosure-chevron {
+  color: var(--muted);
+}
+.info-disclosure[open] .disclosure-chevron,
+.owner-config-toggle[aria-expanded='true'] .disclosure-chevron {
+  transform: rotate(90deg);
+}
+.info-disclosure summary:hover,
+.owner-config-toggle:hover:not(:disabled) {
+  background: var(--surface-subtle);
+}
+.info-disclosure summary:focus-visible,
+.owner-config-toggle:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.info-disclosure > .device-properties {
+  padding: 0 4px 12px 28px;
 }
 .field {
   display: flex;
@@ -701,9 +832,6 @@ code {
 }
 .field + .field {
   margin-top: 16px;
-}
-.owner-section > .field {
-  margin-bottom: 8px;
 }
 .component-input {
   display: flex;
@@ -1203,22 +1331,19 @@ code {
 }
 /* 配置项共用标签列；次要流程通过原生语义按钮逐步展开。 */
 .owner-config-toggle {
-  padding-inline: 0;
+  width: 100%;
+  height: auto;
+  justify-content: flex-start;
+  border: none;
+  background: transparent;
+  box-shadow: none;
   color: var(--foreground);
 }
-.owner-config-toggle:hover:not(:disabled) {
-  text-decoration: none;
-  background: var(--surface-subtle);
-}
-.owner-config-toggle svg {
-  width: 16px;
-  height: 16px;
-}
-.owner-config-toggle[aria-expanded='true'] svg {
-  transform: rotate(90deg);
+.owner-config-toggle .disclosure-chevron {
+  margin-left: auto;
 }
 .owner-form {
-  padding-top: 12px;
+  padding: 8px 4px 16px 28px;
 }
 .owner-form[hidden] {
   display: none;
@@ -1253,7 +1378,7 @@ code {
   .properties {
     column-gap: 16px;
   }
-  .system-properties > div {
+  .device-properties > div {
     grid-template-columns: 80px minmax(0, 1fr);
     gap: 8px;
   }

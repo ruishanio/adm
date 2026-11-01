@@ -1,5 +1,6 @@
 mod adb;
 mod apk;
+mod device_info;
 mod models;
 #[cfg(target_os = "macos")]
 mod native_menu;

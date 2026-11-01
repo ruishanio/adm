@@ -462,3 +462,25 @@ fn language_preferences_preserve_legacy_data_and_survive_reload() {
     assert_eq!(restored.value.language, "en");
     assert_eq!(restored.value.device_names["serial"], "工位一");
 }
+
+#[test]
+fn details_preserve_core_data_when_optional_sampling_fails() {
+    let (adb, runner) = fake();
+    runner.0.lock().unwrap().conflict = true;
+    let info = adb.details(&target()).unwrap();
+    assert!(info.owner.is_none());
+    assert!(info.system.runtime.memory_total.is_none());
+    let calls = &runner.0.lock().unwrap().calls;
+    assert!(calls
+        .iter()
+        .filter(|a| a.contains(&"shell".into()))
+        .all(|a| a[0] == "-t" && a[1] == "42"));
+    assert_eq!(calls.iter().filter(|a| a[0] == "devices").count(), 2);
+}
+
+#[test]
+fn details_do_not_swallow_cancellation() {
+    let (adb, _) = fake();
+    adb.cancel.store(true, Ordering::SeqCst);
+    assert!(adb.details(&target()).unwrap_err().contains("停止等待"));
+}
