@@ -3,6 +3,7 @@ import { effectScope, nextTick } from 'vue';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { createWorkbench } from '../../src/renderer/composables/workbench';
 import { targetKey, type Api, type Snapshot } from '../../src/shared/contracts';
+import { language, setLanguage } from '../../src/shared/i18n';
 const first = { serial: 'one', transportId: '1', model: '第一台', state: 'device' };
 const second = { serial: 'two', transportId: '2', model: '第二台', state: 'device' };
 let snapshot: Snapshot, api: Api;
@@ -17,6 +18,7 @@ beforeEach(() => {
   };
   api = {
     refresh: vi.fn(async () => structuredClone(snapshot)),
+    language: vi.fn(async () => {}),
     details: vi.fn(async (d) => ({
       android: '10',
       api: '29',
@@ -63,6 +65,39 @@ it('文件页切换设备等待信息读取后再读取新目录', async () => {
   await vi.waitFor(() => expect(w.state.files[0]?.name).toBe('two.txt'));
   w.select(first);
   await vi.waitFor(() => expect(w.state.files[0]?.name).toBe('one.txt'));
+});
+it('首次保存确定的语言，后续刷新不重新识别或覆盖手动选择', async () => {
+  const w = await ready();
+  expect(api.language).toHaveBeenCalledExactlyOnceWith('en');
+  setLanguage('zh-CN');
+  await w.refresh();
+  expect(api.language).toHaveBeenCalledTimes(1);
+  expect(language.value).toBe('zh-CN');
+});
+it('已有明确语言时不再次写入偏好', async () => {
+  snapshot.settings.language = 'zh-CN';
+  await ready();
+  expect(api.language).not.toHaveBeenCalled();
+  expect(language.value).toBe('zh-CN');
+});
+it('首次语言持久化完成前不启动设备详情请求，避免原生任务互斥冲突', async () => {
+  let saved!: () => void;
+  vi.mocked(api.language).mockImplementation(
+    () =>
+      new Promise<void>((resolve) => {
+        saved = resolve;
+      }),
+  );
+  const scope = effectScope();
+  scopes.push(scope);
+  const w = scope.run(() => createWorkbench(api))!;
+  const refresh = w.refresh();
+  await vi.waitFor(() => expect(api.language).toHaveBeenCalledTimes(1));
+  expect(api.details).not.toHaveBeenCalled();
+  saved();
+  await refresh;
+  await vi.waitFor(() => expect(w.state.details?.serial).toBe('one'));
+  expect(w.state.notice).toBeNull();
 });
 it('切回曾访问的设备不会把空缓存误当作已加载', async () => {
   const w = await ready();

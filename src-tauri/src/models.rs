@@ -57,6 +57,7 @@ pub struct DeviceFile {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct Settings {
+    pub language: String,
     #[serde(alias = "AdbPath")]
     pub adb_path: String,
     #[serde(alias = "Endpoint")]
@@ -71,6 +72,7 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
+            language: String::new(),
             adb_path: String::new(),
             endpoint: String::new(),
             device_names: BTreeMap::new(),

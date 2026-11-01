@@ -1,3 +1,4 @@
+import { t, setLanguage, resolveLocale } from '../../shared/i18n';
 import { reactive, computed, watch, inject, type InjectionKey } from 'vue';
 import {
   deviceName,
@@ -47,9 +48,9 @@ export function createWorkbench(api: Api) {
   const device = computed(() => state.snapshot?.devices.find((d) => targetKey(d) === state.selected));
   const online = computed(() => device.value?.state === 'device');
   const title = computed(() =>
-    device.value ? deviceName(device.value, state.snapshot?.settings) : '选择一台设备',
+    device.value ? deviceName(device.value, state.snapshot?.settings) : t('选择一台设备'),
   );
-  const sidebar = computed(() => Math.min(state.width, Math.max(220, state.viewport - 645)));
+  const sidebar = computed(() => Math.min(state.width, Math.max(220, state.viewport - 641)));
   let initial = true,
     refreshing = false,
     detailRequest = '',
@@ -76,8 +77,17 @@ export function createWorkbench(api: Api) {
     try {
       state.snapshot = await api.refresh();
       if (initial) {
+        // 首次识别后保存确定的语言；系统语言后续变化和设备轮询都不覆盖用户选择。
+        const savedLanguage = state.snapshot.settings.language;
+        const resolvedLanguage = resolveLocale(savedLanguage);
+        setLanguage(resolvedLanguage);
         initial = false;
         state.width = state.snapshot.settings.sidebarWidth;
+        if (savedLanguage !== resolvedLanguage) {
+          // 原生任务互斥：先完成偏好迁移，再选中设备触发详情读取，避免启动时两个 IPC 抢占任务。
+          await api.language(resolvedLanguage);
+          state.snapshot.settings.language = resolvedLanguage;
+        }
         const first = state.snapshot.devices.find((d) => d.state === 'device');
         if (first) state.selected = targetKey(first);
       }
@@ -114,7 +124,7 @@ export function createWorkbench(api: Api) {
       const chosen = device.value,
         key = state.selected;
       detailRequest = key;
-      void run('读取设备信息', async () => {
+      void run(t('读取设备信息'), async () => {
         const result = await api.details(chosen);
         if (state.selected === key && online.value) state.details = result;
       });
@@ -132,7 +142,7 @@ export function createWorkbench(api: Api) {
     if (!device.value || !online.value) return;
     const chosen = device.value,
       key = state.selected;
-    await run('读取目录', async () => {
+    await run(t('读取目录'), async () => {
       const list = await api.listFiles(chosen, directory);
       if (state.selected === key && online.value) {
         state.files = list;
@@ -162,7 +172,7 @@ export function createWorkbench(api: Api) {
     state.tab = 'install';
   }
   const chooseApk = () =>
-    run('读取安装包', async () => {
+    run(t('读取安装包'), async () => {
       const next = await api.chooseApk();
       if (next) acceptApk(next);
     });
@@ -170,10 +180,10 @@ export function createWorkbench(api: Api) {
     state.dragging = false;
     if (state.busy || state.modal) return;
     if (paths.length !== 1) {
-      state.notice = { text: '请一次拖入一个完整 APK。', error: true };
+      state.notice = { text: t('请一次拖入一个完整 APK。'), error: true };
       return;
     }
-    await run('读取安装包', async () => acceptApk(await api.dropApk(paths[0])));
+    await run(t('读取安装包'), async () => acceptApk(await api.dropApk(paths[0])));
   }
   function select(d: Device) {
     if (!state.busy) {
@@ -187,7 +197,7 @@ export function createWorkbench(api: Api) {
     state.modal = 'rename';
   }
   const hide = (d: Device) =>
-    run('移除设备', async () => {
+    run(t('移除设备'), async () => {
       await api.hide(d.serial);
       await refresh();
     });
@@ -196,7 +206,7 @@ export function createWorkbench(api: Api) {
     const chosen = device.value,
       apk = state.apk;
     await run(
-      '正在安装到 ' + title.value,
+      t('正在安装到 {name}', { name: title.value }),
       async () => {
         await api.install(chosen, apk.id, state.allowTest);
         if (state.ownerAfter) {
@@ -208,13 +218,13 @@ export function createWorkbench(api: Api) {
         }
       },
       state.ownerAfter
-        ? '安装成功并已核对版本。请检查设备所有者条件，并单独确认授权。'
-        : '安装成功，已核对设备上的安装版本。',
+        ? t('安装成功并已核对版本。请检查设备所有者条件，并单独确认授权。')
+        : t('安装成功，已核对设备上的安装版本。'),
     );
   }
   async function checkOwner() {
     if (device.value)
-      await run('检查设备所有者条件', async () => {
+      await run(t('检查设备所有者条件'), async () => {
         state.ownerCheck = await api.checkOwner(device.value!, state.component);
       });
   }
@@ -222,18 +232,18 @@ export function createWorkbench(api: Api) {
     if (!device.value || !state.consent || !state.ownerCheck?.canSet) return;
     const chosen = device.value;
     await run(
-      '设置设备所有者',
+      t('设置设备所有者'),
       async () => {
         await api.setOwner(chosen, state.component, state.consent);
         state.details = await api.details(chosen);
         state.ownerCheck = undefined;
         state.consent = false;
       },
-      '设备所有者已设置并回读确认。',
+      t('设备所有者已设置并回读确认。'),
     );
   }
   async function saveModal() {
-    await run(state.modal === 'rename' ? '保存备注' : '创建文件夹', async () => {
+    await run(state.modal === 'rename' ? t('保存备注') : t('创建文件夹'), async () => {
       if (state.modal === 'rename' && state.renameDevice) {
         await api.rename(state.renameDevice.serial, state.name);
         await refresh();
@@ -296,6 +306,6 @@ export type Workbench = ReturnType<typeof createWorkbench>;
 export const workbenchKey: InjectionKey<Workbench> = Symbol('workbench');
 export function useWorkbench() {
   const value = inject(workbenchKey);
-  if (!value) throw new Error('工作台尚未初始化');
+  if (!value) throw new Error(t('工作台尚未初始化'));
   return value;
 }

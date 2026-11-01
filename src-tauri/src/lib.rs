@@ -1,6 +1,8 @@
 mod adb;
 mod apk;
 mod models;
+#[cfg(target_os = "macos")]
+mod native_menu;
 mod parsing;
 mod process;
 mod settings;
@@ -275,6 +277,29 @@ impl Service {
                 self.update(|s| s.sidebar_width = width)?;
                 Ok(Value::Null)
             }
+            "language" => {
+                let (language,): (String,) = decoded(args)?;
+                if !["zh-CN", "en"].contains(&language.as_str()) {
+                    return Err("不支持的界面语言。".into());
+                }
+                #[cfg(target_os = "macos")]
+                let previous_menu = app
+                    .set_menu(native_menu::build(&app, &language).map_err(|e| e.to_string())?)
+                    .map_err(|e| e.to_string())?;
+                if let Err(error) = self.update(|s| s.language = language) {
+                    // 保存失败时前端保持原语言，原生菜单也恢复，避免两套界面语言不一致。
+                    #[cfg(target_os = "macos")]
+                    {
+                        let restored = match previous_menu {
+                            Some(menu) => app.set_menu(menu),
+                            None => app.remove_menu(),
+                        };
+                        restored.map_err(|e| format!("{error}；恢复菜单失败：{e}"))?;
+                    }
+                    return Err(error);
+                }
+                Ok(Value::Null)
+            }
             "chooseAdb" => {
                 decoded_empty(args)?;
                 let chosen = app
@@ -356,14 +381,18 @@ pub fn run() {
         .setup(|app| {
             let config = dirs::config_dir().unwrap_or_default();
             let local = dirs::data_local_dir().unwrap_or_default();
+            let store = settings::SettingsStore::load(
+                settings::data_path(),
+                &[
+                    config.join("AndroidTool/settings.json"),
+                    local.join("AndroidTool/settings.json"),
+                ],
+            );
+            // 菜单与界面使用同一份偏好；重启时不再回到框架默认的英文菜单。
+            #[cfg(target_os = "macos")]
+            app.set_menu(native_menu::build(app.handle(), &store.value.language)?)?;
             app.manage(Arc::new(Service {
-                store: Mutex::new(settings::SettingsStore::load(
-                    settings::data_path(),
-                    &[
-                        config.join("AndroidTool/settings.json"),
-                        local.join("AndroidTool/settings.json"),
-                    ],
-                )),
+                store: Mutex::new(store),
                 devices: Mutex::new(vec![]),
                 apk: Mutex::new(None),
                 active: Mutex::new(None),

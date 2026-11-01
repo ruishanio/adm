@@ -442,3 +442,23 @@ fn ipc_target_rejects_injected_fields() {
     )
     .is_err());
 }
+
+#[test]
+fn language_preferences_preserve_legacy_data_and_survive_reload() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("settings.json");
+    fs::write(
+        &path,
+        r#"{"language":"unknown","DeviceNames":{"serial":"工位一"}}"#,
+    )
+    .unwrap();
+    let mut store = SettingsStore::load(path.clone(), &[]);
+    assert!(store.value.language.is_empty());
+    assert_eq!(store.value.device_names["serial"], "工位一");
+    let mut next = store.value.clone();
+    next.language = "en".into();
+    store.save(next).unwrap();
+    let restored = SettingsStore::load(path, &[]);
+    assert_eq!(restored.value.language, "en");
+    assert_eq!(restored.value.device_names["serial"], "工位一");
+}

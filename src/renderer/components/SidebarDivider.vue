@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { t } from '../../shared/i18n';
 import { onBeforeUnmount } from 'vue';
 import { useWorkbench } from '@/composables/workbench';
 const w = useWorkbench(),
   s = w.state;
-const clamp = (x: number) => Math.max(220, Math.min(x, s.viewport - 645));
+const clamp = (x: number) => Math.max(220, Math.min(x, s.viewport - 641));
 let cleanup = () => {};
 const save = () =>
   w.api.sidebarWidth(w.sidebar.value).catch((e) => {
@@ -14,12 +15,15 @@ function start(e: MouseEvent) {
   e.preventDefault();
   (e.currentTarget as HTMLElement).focus();
   cleanup();
+  const startX = e.clientX,
+    startWidth = w.sidebar.value;
   const cursor = document.body.style.cursor,
     select = document.body.style.userSelect;
   document.body.style.cursor = 'col-resize';
   document.body.style.userSelect = 'none';
   const move = (event: MouseEvent) => {
-    s.width = clamp(event.clientX);
+    // 命中区比边界更宽，按位移调整可避免按下时侧栏突然跳动。
+    s.width = clamp(startWidth + event.clientX - startX);
   };
   const stop = () => {
     cleanup();
@@ -48,10 +52,12 @@ onBeforeUnmount(() => cleanup());
   <div
     class="sidebar-divider"
     role="separator"
-    aria-label="调整设备列表宽度"
+    :aria-label="t('调整设备列表宽度')"
+    aria-controls="device-sidebar"
+    :title="t('拖动调整设备列表宽度')"
     aria-orientation="vertical"
     :aria-valuemin="220"
-    :aria-valuemax="s.viewport - 645"
+    :aria-valuemax="s.viewport - 641"
     :aria-valuenow="w.sidebar.value"
     tabindex="0"
     @mousedown="start"

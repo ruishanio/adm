@@ -1,3 +1,4 @@
+import { t } from './i18n';
 export interface Target {
   serial: string;
   transportId: string;
@@ -39,6 +40,7 @@ export interface DeviceFile {
   modified: number;
 }
 export interface Settings {
+  language?: import('./i18n').LanguagePreference | '';
   adbPath: string;
   endpoint: string;
   deviceNames: Record<string, string>;
@@ -74,6 +76,7 @@ export interface Api {
   chooseAdb(): Promise<boolean>;
   resetAdb(): Promise<void>;
   sidebarWidth(width: number): Promise<void>;
+  language(value: import('./i18n').LanguagePreference): Promise<void>;
   cancel(): Promise<void>;
 }
 export type Result<T> = { ok: true; value: T } | { ok: false; error: string };
@@ -82,7 +85,8 @@ export const deviceName = (d: Device, settings?: Settings) =>
   d.model.replaceAll('_', ' ') ||
   d.serial;
 export const connection = (d: Device) =>
-  d.serial.startsWith('emulator-') ? '模拟器' : d.serial.includes(':') ? '网络' : 'USB';
+  d.serial.startsWith('emulator-') ? t('模拟器') : d.serial.includes(':') ? t('网络') : 'USB';
 export const deviceStatus = (d: Device) =>
-  ({ device: '已连接', unauthorized: '等待授权', offline: '离线', no: '无访问权限' })[d.state] || d.state;
+  ({ device: t('已连接'), unauthorized: t('等待授权'), offline: t('离线'), no: t('无访问权限') })[d.state] ||
+  d.state;
 export const targetKey = (d: Target) => `${d.serial}@${d.transportId}`;

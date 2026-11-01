@@ -1,3 +1,4 @@
+import { t } from '../../shared/i18n';
 import { invoke } from '@tauri-apps/api/core';
 import type { Api, Target } from '../../shared/contracts';
 // 只传递后端允许的会话字段，不把 Vue 代理或设备展示属性发送到 IPC。
@@ -7,7 +8,7 @@ async function call<T>(method: string, ...args: unknown[]): Promise<T> {
     return await invoke<T>('adm_call', { method, args });
   } catch (error) {
     throw new Error(
-      typeof error === 'string' ? error : error instanceof Error ? error.message : '操作失败，请重试。',
+      typeof error === 'string' ? error : error instanceof Error ? error.message : t('操作失败，请重试。'),
     );
   }
 }
@@ -33,5 +34,6 @@ export const api: Api = {
   chooseAdb: () => call('chooseAdb'),
   resetAdb: () => call('resetAdb'),
   sidebarWidth: (width) => call('sidebarWidth', width),
+  language: (value) => call('language', value),
   cancel: () => call('cancel'),
 };

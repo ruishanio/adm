@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import { t } from '../../shared/i18n';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { X } from '@lucide/vue';
-const props = defineProps<{ title: string; busy?: boolean; description?: string }>();
+const props = defineProps<{ title: string; busy?: boolean; description?: string; contentClass?: string }>();
 // 弹窗由工作台状态打开，没有 DialogTrigger 时显式恢复原焦点。
 const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
 function restoreFocus(event: Event) {
@@ -25,6 +26,7 @@ function close() {
   >
     <DialogContent
       class="dialog"
+      :class="contentClass"
       @close-auto-focus="restoreFocus"
       :show-close-button="false"
       @escape-key-down="
@@ -36,7 +38,12 @@ function close() {
     >
       <header class="dialog-header">
         <DialogTitle>{{ title }}</DialogTitle
-        ><Button variant="ghost" class="icon-button" aria-label="关闭对话框" :disabled="busy" @click="close"
+        ><Button
+          variant="ghost"
+          class="icon-button"
+          :aria-label="t('关闭对话框')"
+          :disabled="busy"
+          @click="close"
           ><X aria-hidden="true"
         /></Button>
       </header>

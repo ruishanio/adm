@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, provide } from 'vue';
+import { t } from '../shared/i18n';
+import { onMounted, onBeforeUnmount, provide, computed, ref } from 'vue';
 import { isTauri } from '@tauri-apps/api/core';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { getCurrentWindow } from '@tauri-apps/api/window';
@@ -22,19 +23,31 @@ const w = createWorkbench(api),
   s = w.state;
 provide(workbenchKey, w);
 let unlisten: (() => void) | undefined,
+  unlistenResize: (() => void) | undefined,
   disposed = false;
+const fullscreen = ref(false);
 const initialPlatform = /Mac/.test(navigator.platform) ? 'darwin' : 'win32';
-const tabs = [
-  { value: 'info', label: '设备信息', icon: Smartphone },
-  { value: 'install', label: '安装应用', icon: Package },
-  { value: 'files', label: '文件管理', icon: FolderOpen },
-];
+const tabs = computed(() => [
+  { value: 'info', label: t('设备信息'), icon: Smartphone },
+  { value: 'install', label: t('安装应用'), icon: Package },
+  { value: 'files', label: t('文件管理'), icon: FolderOpen },
+]);
 async function windowAction(action: 'minimize' | 'toggleMaximize' | 'close') {
   if (isTauri()) await getCurrentWindow()[action]();
 }
 onMounted(async () => {
   w.start();
   if (isTauri()) {
+    const appWindow = getCurrentWindow();
+    // 区分普通铺满和系统全屏：只有 macOS 独立全屏收起顶部，Windows 始终保留。
+    const syncWindowState = async () => {
+      const next = await appWindow.isFullscreen();
+      if (!disposed) fullscreen.value = next;
+    };
+    const stopResize = await appWindow.onResized(syncWindowState);
+    if (disposed) stopResize();
+    else unlistenResize = stopResize;
+    await syncWindowState();
     // 使用系统拖放路径而非浏览器 File；Rust 只接受同次原生事件授予的 APK 路径。
     const stop = await getCurrentWebviewWindow().onDragDropEvent((event) => {
       if (event.payload.type === 'drop') void w.drop(event.payload.paths);
@@ -52,24 +65,30 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   disposed = true;
   unlisten?.();
+  unlistenResize?.();
   w.dispose();
 });
 </script>
 <template>
   <div
-    :class="['app', s.snapshot?.platform || initialPlatform]"
+    :class="['app', s.snapshot?.platform || initialPlatform, { 'window-fullscreen': fullscreen }]"
     :style="{ '--sidebar-width': `${w.sidebar.value}px` }"
     @dragover.prevent
     @drop.prevent
   >
+    <div class="native-drag-area" data-tauri-drag-region aria-hidden="true" />
     <Sidebar /><SidebarDivider />
     <main class="workspace">
       <div v-if="(s.snapshot?.platform || initialPlatform) === 'win32'" class="window-controls">
-        <Button variant="ghost" aria-label="最小化窗口" @click="windowAction('minimize')"
+        <Button variant="ghost" :aria-label="t('最小化窗口')" @click="windowAction('minimize')"
           ><Minus aria-hidden="true" /></Button
-        ><Button variant="ghost" aria-label="最大化或还原窗口" @click="windowAction('toggleMaximize')"
+        ><Button variant="ghost" :aria-label="t('最大化或还原窗口')" @click="windowAction('toggleMaximize')"
           ><Square aria-hidden="true" /></Button
-        ><Button variant="ghost" class="window-close" aria-label="关闭窗口" @click="windowAction('close')"
+        ><Button
+          variant="ghost"
+          class="window-close"
+          :aria-label="t('关闭窗口')"
+          @click="windowAction('close')"
           ><X aria-hidden="true"
         /></Button>
       </div>
@@ -84,11 +103,11 @@ onBeforeUnmount(() => {
               ><span class="separator-dot">·</span>Android {{ s.details.android }}</template
             ><span class="separator-dot">·</span><span class="serial">{{ w.device.value.serial }}</span>
           </p>
-          <p v-else data-tauri-drag-region>连接 Android 设备，开始管理</p>
+          <p v-else data-tauri-drag-region>{{ t('连接 Android 设备，开始管理') }}</p>
         </div>
       </header>
       <Tabs v-model="s.tab" class="work-tabs"
-        ><TabsList class="tabs" aria-label="设备操作"
+        ><TabsList class="tabs" :aria-label="t('设备操作')"
           ><TabsTrigger v-for="tab in tabs" :key="tab.value" :value="tab.value" :disabled="!!s.busy"
             ><component :is="tab.icon" :class="`icon-${tab.value}`" aria-hidden="true" />{{
               tab.label
@@ -110,8 +129,13 @@ onBeforeUnmount(() => {
           class="error-mark"
           >!</span
         ><Check v-else aria-hidden="true" /><span>{{ s.busy || s.notice?.text }}</span
-        ><Button v-if="s.busy" variant="outline" @click="w.api.cancel">停止等待</Button
-        ><Button v-else variant="ghost" class="icon-button" aria-label="关闭提示" @click="s.notice = null"
+        ><Button v-if="s.busy" variant="outline" @click="w.api.cancel">{{ t('停止等待') }}</Button
+        ><Button
+          v-else
+          variant="ghost"
+          class="icon-button"
+          :aria-label="t('关闭提示')"
+          @click="s.notice = null"
           ><X aria-hidden="true"
         /></Button>
       </div>
@@ -119,13 +143,13 @@ onBeforeUnmount(() => {
     <ConnectionDialog v-if="s.modal === 'connect'" /><SettingsDialog v-if="s.modal === 'settings'" />
     <AppDialog
       v-if="s.modal === 'rename' || s.modal === 'folder'"
-      :title="s.modal === 'rename' ? '备注名称' : '新建文件夹'"
+      :title="s.modal === 'rename' ? t('备注名称') : t('新建文件夹')"
       :busy="!!s.busy"
       @close="s.modal = null"
       ><form @submit.prevent="w.saveModal">
         <div class="dialog-body">
           <label class="field"
-            >{{ s.modal === 'rename' ? '设备备注' : '文件夹名称'
+            >{{ s.modal === 'rename' ? t('设备备注') : t('文件夹名称')
             }}<Input
               v-model="s.name"
               autofocus
@@ -134,14 +158,20 @@ onBeforeUnmount(() => {
               :disabled="!!s.busy"
           /></label>
           <p class="field-hint">
-            {{ s.modal === 'rename' ? '备注仅在本机显示，留空恢复设备原名称。' : `创建于 ${s.path}` }}
+            {{
+              s.modal === 'rename'
+                ? t('备注仅在本机显示，留空恢复设备原名称。')
+                : t('创建于 {path}', { path: s.path })
+            }}
           </p>
           <p v-if="s.notice?.error" class="inline-result error" role="alert">{{ s.notice.text }}</p>
         </div>
         <footer class="dialog-footer">
-          <Button type="button" variant="outline" :disabled="!!s.busy" @click="s.modal = null">取消</Button
+          <Button type="button" variant="outline" :disabled="!!s.busy" @click="s.modal = null">{{
+            t('取消')
+          }}</Button
           ><Button type="submit" class="primary" :disabled="!!s.busy">{{
-            s.modal === 'rename' ? '保存' : '创建'
+            s.modal === 'rename' ? t('保存') : t('创建')
           }}</Button>
         </footer>
       </form></AppDialog
