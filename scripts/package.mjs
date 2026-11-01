@@ -23,6 +23,8 @@ run(process.execPath, [
   '--bundles',
   platform === 'mac' ? 'app,dmg' : 'nsis',
   '--ci',
+  // Windows 只发布 NSIS，且没有自动更新器；保留原始二进制，确保安装版与便携版可逐字节核对。
+  ...(platform === 'win' ? ['--no-binary-patching'] : []),
 ]);
 const metadata = JSON.parse(await readFile('package.json', 'utf8'));
 const build = resolve('src-tauri/target', target, 'release');
