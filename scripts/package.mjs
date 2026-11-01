@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { cp, mkdir, readFile, readdir, rm } from 'node:fs/promises';
+import { cp, mkdir, readFile, rm } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 const platform = process.argv[2];
 if (!['mac', 'win'].includes(platform) || process.argv.length !== 3)
@@ -41,7 +41,8 @@ if (platform === 'mac') {
   installer = join(
     build,
     'bundle/dmg',
-    (await readdir(join(build, 'bundle/dmg'))).find((n) => n.endsWith('.dmg')),
+    // 改名后旧包可能仍在构建目录，只选择本次产品名和版本的产物。
+    `${metadata.productName}_${metadata.version}_aarch64.dmg`,
   );
   const zip = resolve('release', `${metadata.shortName}-${metadata.version}-mac-arm64.zip`);
   await rm(zip, { force: true });
@@ -50,11 +51,7 @@ if (platform === 'mac') {
   await cp(join(build, 'adm.exe'), join(destination, 'adm.exe'));
   await cp('src-tauri/resources/platform-tools', join(destination, 'platform-tools'), { recursive: true });
   await cp('README.md', join(destination, 'README.md'));
-  installer = join(
-    build,
-    'bundle/nsis',
-    (await readdir(join(build, 'bundle/nsis'))).find((n) => n.endsWith('.exe')),
-  );
+  installer = join(build, 'bundle/nsis', `${metadata.productName}_${metadata.version}_x64-setup.exe`);
   run(python, [
     '-c',
     'import shutil; shutil.make_archive("release/ADM-' +
