@@ -464,6 +464,103 @@ fn language_preferences_preserve_legacy_data_and_survive_reload() {
 }
 
 #[test]
+fn file_mutations_reject_roots_names_and_unconfirmed_delete() {
+    for (directory, name) in [
+        ("/", "sdcard"),
+        ("/storage", "ABCD"),
+        ("/storage/emulated", "0"),
+        ("/sdcard", "../x"),
+        ("/sdcard", "."),
+        ("/sdcard", "bad\nname"),
+    ] {
+        assert!(mutable_child_path(directory, name).is_err());
+    }
+    let (adb, f) = fake();
+    assert!(adb
+        .delete_file(&target(), "/sdcard", "keep.txt", false)
+        .is_err());
+    assert!(f.0.lock().unwrap().calls.is_empty());
+    f.0.lock().unwrap().transport = "43".into();
+    assert!(adb
+        .rename_file(&target(), "/sdcard", "before.txt", "after.txt")
+        .is_err());
+    assert!(!f
+        .0
+        .lock()
+        .unwrap()
+        .calls
+        .iter()
+        .any(|args| args.contains(&"sh".into())));
+}
+
+#[test]
+fn folder_snapshot_preserves_tree_empty_and_hidden_entries() {
+    let temp = tempfile::tempdir().unwrap();
+    let source = temp.path().join("source");
+    fs::create_dir_all(source.join("中文 空目录")).unwrap();
+    fs::write(source.join(".hidden"), "hidden").unwrap();
+    fs::write(source.join("' $ 文件.txt"), "content").unwrap();
+    let destination = temp.path().join("snapshot");
+    crate::adb::copy_upload_tree(&source, &destination, &cancellation(), 0, &mut 0).unwrap();
+    assert!(destination.join("中文 空目录").is_dir());
+    assert_eq!(
+        fs::read_to_string(destination.join(".hidden")).unwrap(),
+        "hidden"
+    );
+    assert_eq!(
+        fs::read_to_string(destination.join("' $ 文件.txt")).unwrap(),
+        "content"
+    );
+}
+
+#[test]
+fn folder_snapshot_honors_cancellation_and_limits() {
+    let temp = tempfile::tempdir().unwrap();
+    let source = temp.path().join("source");
+    fs::create_dir(&source).unwrap();
+    let cancel = cancellation();
+    cancel.store(true, Ordering::SeqCst);
+    assert!(crate::adb::copy_upload_tree(
+        &source,
+        &temp.path().join("cancelled"),
+        &cancel,
+        0,
+        &mut 0
+    )
+    .is_err());
+    assert!(!temp.path().join("cancelled").exists());
+    assert!(crate::adb::copy_upload_tree(
+        &source,
+        &temp.path().join("too-deep"),
+        &cancellation(),
+        65,
+        &mut 0
+    )
+    .is_err());
+}
+
+#[test]
+#[cfg(unix)]
+fn folder_upload_refuses_symlinks_before_push() {
+    let temp = tempfile::tempdir().unwrap();
+    let source = temp.path().join("folder");
+    fs::create_dir(&source).unwrap();
+    std::os::unix::fs::symlink(temp.path(), source.join("cycle")).unwrap();
+    let (adb, f) = fake();
+    assert!(adb
+        .upload(&target(), &source, "/sdcard")
+        .unwrap_err()
+        .contains("链接"));
+    assert!(!f
+        .0
+        .lock()
+        .unwrap()
+        .calls
+        .iter()
+        .any(|args| args.contains(&"push".into())));
+}
+
+#[test]
 fn details_preserve_core_data_when_optional_sampling_fails() {
     let (adb, runner) = fake();
     runner.0.lock().unwrap().conflict = true;

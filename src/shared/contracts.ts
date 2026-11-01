@@ -106,7 +106,9 @@ export interface Api {
   checkOwner(target: Target, component: string): Promise<OwnerCheck>;
   setOwner(target: Target, component: string, consent: boolean): Promise<void>;
   listFiles(target: Target, path: string): Promise<DeviceFile[]>;
-  upload(target: Target, path: string): Promise<boolean>;
+  upload(target: Target, path: string, kind: 'files' | 'folders'): Promise<boolean>;
+  renameFile(target: Target, directory: string, name: string, next: string): Promise<void>;
+  deleteFile(target: Target, directory: string, name: string, consent: boolean): Promise<void>;
   download(target: Target, path: string): Promise<boolean>;
   mkdir(target: Target, path: string, name: string): Promise<void>;
   copySerial(serial: string): Promise<void>;

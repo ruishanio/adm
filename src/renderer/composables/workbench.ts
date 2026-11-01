@@ -33,7 +33,7 @@ export function createWorkbench(api: Api) {
     dragging: false,
     busy: '',
     notice: null as { text: string; error?: boolean } | null,
-    modal: null as 'connect' | 'settings' | 'rename' | 'folder' | null,
+    modal: null as 'connect' | 'settings' | 'rename' | 'folder' | 'file-rename' | 'file-delete' | null,
     renameDevice: undefined as Device | undefined,
     name: '',
     query: '',

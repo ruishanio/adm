@@ -1,32 +1,137 @@
 <script setup lang="ts">
-import { RefreshCw, Upload, Folder, File, FolderPlus, Download, ChevronUp, Home } from '@lucide/vue';
+import { t } from '../../shared/i18n';
+import { computed, ref, nextTick, watch } from 'vue';
+import {
+  RefreshCw,
+  Upload,
+  Folder,
+  File,
+  FolderPlus,
+  Download,
+  ArrowUp,
+  HardDrive,
+  ChevronRight,
+  Pencil,
+  Check,
+  X,
+  ChevronDown,
+  Trash2,
+  FolderOpen,
+} from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useWorkbench } from '@/composables/workbench';
 import { sizeLabel, parentPath, displayPath } from './format';
-import type { DeviceFile } from '../../shared/contracts';
+import {
+  ContextMenu,
+  ContextMenuTrigger,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+} from '@/components/ui/context-menu';
+import {
+  DropdownMenuRoot,
+  DropdownMenuTrigger,
+  DropdownMenuPortal,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from 'reka-ui';
+import AppDialog from './AppDialog.vue';
+import type { Target, DeviceFile } from '../../shared/contracts';
+import { locale } from '../../shared/i18n';
 const w = useWorkbench(),
   s = w.state;
-async function upload() {
-  if (w.device.value)
-    await w.run('上传文件', async () => {
-      if (await w.api.upload(w.device.value!, s.path)) {
-        s.files = await w.api.listFiles(w.device.value!, s.path);
-        s.notice = { text: '上传完成。' };
-      }
-    });
+const editing = ref(false);
+const fileScroll = ref<HTMLElement | null>(null);
+// 切换目录或设备时回到列表顶部；普通刷新保留当前浏览位置。
+watch(
+  [() => s.path, () => s.selected],
+  () => {
+    if (fileScroll.value) fileScroll.value.scrollTop = 0;
+  },
+  { flush: 'post' },
+);
+const breadcrumbs = computed(() => {
+  const parts = s.path.split('/').filter(Boolean);
+  return parts.map((name, index) => ({
+    name: index === 0 && name === 'sdcard' ? t('共享存储') : displayPath(name),
+    path: '/' + parts.slice(0, index + 1).join('/'),
+  }));
+});
+async function editPath() {
+  s.pathInput = s.path;
+  editing.value = true;
+  await nextTick();
+  document.getElementById('file-path-input')?.focus();
+}
+function cancelEdit() {
+  editing.value = false;
+  s.pathInput = s.path;
+}
+async function navigate() {
+  await w.loadFiles(s.pathInput);
+  if (!s.notice?.error) editing.value = false;
+}
+watch(() => s.selected, cancelEdit);
+async function upload(kind: 'files' | 'folders') {
+  if (!w.device.value) return;
+  const target = { ...w.device.value },
+    directory = s.path;
+  await w.run(t('上传'), async () => {
+    try {
+      if (await w.api.upload(target, directory, kind)) s.notice = { text: t('上传完成。') };
+    } finally {
+      // 批量上传允许部分成功；失败或取消后也重新读取，避免列表隐藏已完成的项目。
+      s.files = await w.api.listFiles(target, directory);
+    }
+  });
 }
 async function download() {
   if (w.device.value && s.file?.type === 'file')
-    await w.run('下载文件', async () => {
-      if (await w.api.download(w.device.value!, s.file!.path)) s.notice = { text: '下载完成。' };
+    await w.run(t('下载文件'), async () => {
+      if (await w.api.download(w.device.value!, s.file!.path)) s.notice = { text: t('下载完成。') };
     });
+}
+const pending = ref<{ target: Target; directory: string; file: DeviceFile }>();
+const nextName = ref(''),
+  actionError = ref('');
+function canModify(file: DeviceFile) {
+  return !s.busy && s.path !== '/' && (file.type === 'file' || file.type === 'directory');
+}
+function fileAction(file: DeviceFile, action: 'file-rename' | 'file-delete') {
+  if (!w.device.value || !canModify(file)) return;
+  // 记录打开菜单时的设备会话和目录，提交时不从可能变化的列表选中项推导目标。
+  pending.value = { target: { ...w.device.value }, directory: s.path, file: { ...file } };
+  s.file = file;
+  nextName.value = file.name;
+  actionError.value = '';
+  s.modal = action;
+}
+async function submitAction() {
+  const operation = pending.value,
+    action = s.modal;
+  if (!operation || (action !== 'file-rename' && action !== 'file-delete') || s.busy) return;
+  const { target, directory, file } = operation;
+  actionError.value = '';
+  await w.run(action === 'file-rename' ? t('重命名') : t('删除'), async () => {
+    try {
+      if (action === 'file-rename') await w.api.renameFile(target, directory, file.name, nextName.value);
+      else await w.api.deleteFile(target, directory, file.name, true);
+      s.modal = null;
+      s.file = undefined;
+      s.files = await w.api.listFiles(target, directory);
+      s.notice = { text: action === 'file-rename' ? t('重命名完成。') : t('删除完成。') };
+    } catch (error) {
+      actionError.value = error instanceof Error ? error.message : String(error);
+      throw error;
+    }
+  });
 }
 function open(f: DeviceFile) {
   if (!s.busy && f.type === 'directory') void w.loadFiles(f.path);
 }
 const date = (value: number) =>
-  new Date(value * 1000).toLocaleString('zh-CN', {
+  new Date(value * 1000).toLocaleString(locale.value, {
     hour12: false,
     year: 'numeric',
     month: '2-digit',
@@ -38,90 +143,235 @@ const date = (value: number) =>
 <template>
   <div v-if="!w.online.value" class="empty-state">
     <Folder aria-hidden="true" />
-    <h2>选择已连接的设备</h2>
-    <p>浏览共享存储、上传和下载文件。</p>
+    <h2>{{ t('选择已连接的设备') }}</h2>
+    <p>{{ t('浏览共享存储、上传和下载文件。') }}</p>
   </div>
-  <template v-else>
-    <div class="file-toolbar">
-      <Button
-        class="icon-button"
-        variant="outline"
-        aria-label="共享存储"
-        title="共享存储"
-        :disabled="!!s.busy"
-        @click="w.loadFiles('/sdcard')"
-        ><Home aria-hidden="true" /></Button
-      ><Button
-        class="icon-button"
-        variant="outline"
-        aria-label="上一级"
-        title="上一级"
-        :disabled="!!s.busy || s.path === '/'"
-        @click="w.loadFiles(parentPath(s.path))"
-        ><ChevronUp aria-hidden="true"
-      /></Button>
-      <form @submit.prevent="w.loadFiles(s.pathInput)">
-        <Input v-model="s.pathInput" aria-label="设备目录" :disabled="!!s.busy" :spellcheck="false" />
-      </form>
-      <Button
-        class="icon-button"
-        variant="outline"
-        aria-label="刷新目录"
-        :disabled="!!s.busy"
-        @click="w.loadFiles(s.path)"
-        ><RefreshCw aria-hidden="true"
-      /></Button>
-    </div>
-    <div class="file-actions">
-      <Button variant="outline" :disabled="!!s.busy" @click="upload"
-        ><Upload class="icon-info" aria-hidden="true" />上传文件</Button
-      ><Button variant="outline" :disabled="!!s.busy || s.file?.type !== 'file'" @click="download"
-        ><Download class="icon-info" aria-hidden="true" />下载</Button
-      ><Button
-        variant="outline"
-        :disabled="!!s.busy"
-        @click="
-          s.name = '';
-          s.modal = 'folder';
-        "
-        ><FolderPlus class="icon-files" aria-hidden="true" />新建文件夹</Button
-      ><span class="muted">{{ s.files.length }} 项</span>
-    </div>
-    <table class="file-table" aria-label="设备文件">
-      <thead>
-        <tr>
-          <th>名称</th>
-          <th>大小</th>
-          <th>修改时间</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="f in s.files"
-          :key="f.path"
-          :tabindex="s.busy ? -1 : 0"
-          :aria-selected="s.file?.path === f.path"
-          :class="{ selected: s.file?.path === f.path }"
-          @click="!s.busy && (s.file = f)"
-          @dblclick="open(f)"
-          @keydown.enter="open(f)"
-          @keydown.space.prevent="!s.busy && (s.file = f)"
+  <div v-else class="file-manager">
+    <header class="file-controls">
+      <div class="file-toolbar">
+        <Button
+          class="icon-button"
+          variant="ghost"
+          :aria-label="t('上一级')"
+          :title="t('上一级')"
+          :disabled="!!s.busy || s.path === '/'"
+          @click="w.loadFiles(parentPath(s.path))"
+          ><ArrowUp aria-hidden="true"
+        /></Button>
+        <form
+          v-if="editing"
+          class="file-path-editor"
+          @submit.prevent="navigate"
+          @keydown.esc.prevent.stop="cancelEdit"
         >
-          <td>
-            <span class="file-name"
-              ><Folder v-if="f.type === 'directory'" aria-hidden="true" class="folder-icon" /><File
-                v-else
-                aria-hidden="true"
-              /><span :title="f.name">{{ displayPath(f.name) }}</span
-              ><small v-if="f.type === 'link'">链接</small></span
+          <Input
+            id="file-path-input"
+            v-model="s.pathInput"
+            :aria-label="t('设备目录')"
+            :disabled="!!s.busy"
+            :spellcheck="false"
+          />
+          <Button
+            class="icon-button"
+            type="submit"
+            variant="ghost"
+            :aria-label="t('前往目录')"
+            :disabled="!!s.busy"
+            ><Check aria-hidden="true"
+          /></Button>
+          <Button
+            class="icon-button"
+            type="button"
+            variant="ghost"
+            :aria-label="t('取消编辑路径')"
+            :disabled="!!s.busy"
+            @click="cancelEdit"
+            ><X aria-hidden="true"
+          /></Button>
+        </form>
+        <nav v-else class="file-breadcrumbs" :aria-label="t('当前目录')" :title="s.path">
+          <Button
+            class="icon-button"
+            variant="ghost"
+            :aria-label="t('根目录')"
+            :disabled="!!s.busy"
+            @click="w.loadFiles('/')"
+            ><HardDrive aria-hidden="true"
+          /></Button>
+          <template v-for="part in breadcrumbs" :key="part.path"
+            ><ChevronRight class="breadcrumb-separator" aria-hidden="true" /><Button
+              variant="ghost"
+              :disabled="!!s.busy"
+              :aria-current="part.path === s.path ? 'location' : undefined"
+              @click="w.loadFiles(part.path)"
+              >{{ part.name }}</Button
+            ></template
+          >
+        </nav>
+        <Button
+          v-if="!editing"
+          class="icon-button"
+          variant="ghost"
+          :aria-label="t('编辑路径')"
+          :title="t('编辑路径')"
+          :disabled="!!s.busy"
+          @click="editPath"
+          ><Pencil aria-hidden="true"
+        /></Button>
+        <Button
+          class="icon-button"
+          variant="ghost"
+          :aria-label="t('刷新目录')"
+          :title="t('刷新目录')"
+          :disabled="!!s.busy"
+          @click="w.loadFiles(s.path)"
+          ><RefreshCw aria-hidden="true"
+        /></Button>
+      </div>
+      <div class="file-actions">
+        <Button
+          variant="ghost"
+          :disabled="!!s.busy"
+          @click="
+            s.name = '';
+            s.modal = 'folder';
+          "
+        >
+          <FolderPlus aria-hidden="true" />{{ t('新建文件夹') }}
+        </Button>
+        <span class="toolbar-separator" aria-hidden="true" />
+        <DropdownMenuRoot>
+          <DropdownMenuTrigger as-child>
+            <Button variant="ghost" :disabled="!!s.busy"
+              ><Upload aria-hidden="true" />{{ t('上传')
+              }}<ChevronDown class="upload-chevron" aria-hidden="true"
+            /></Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuPortal>
+            <DropdownMenuContent class="device-context-menu file-menu" align="start" :side-offset="4">
+              <DropdownMenuItem :disabled="!!s.busy" @select="upload('files')"
+                ><File aria-hidden="true" />{{ t('上传文件…') }}</DropdownMenuItem
+              >
+              <DropdownMenuItem :disabled="!!s.busy" @select="upload('folders')"
+                ><Folder aria-hidden="true" />{{ t('上传文件夹…') }}</DropdownMenuItem
+              >
+            </DropdownMenuContent>
+          </DropdownMenuPortal>
+        </DropdownMenuRoot>
+        <Button variant="ghost" :disabled="!!s.busy || s.file?.type !== 'file'" @click="download">
+          <Download aria-hidden="true" />{{ t('下载') }}
+        </Button>
+        <span class="muted">{{ t('{count} 项', { count: s.files.length }) }}</span>
+      </div>
+    </header>
+    <div ref="fileScroll" class="file-scroll" :aria-busy="!!s.busy">
+      <table class="file-table" :aria-label="t('设备文件')">
+        <thead>
+          <tr>
+            <th>{{ t('名称') }}</th>
+            <th>{{ t('大小') }}</th>
+            <th>{{ t('修改时间') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <ContextMenu
+            v-for="f in s.files"
+            :key="f.path"
+            @update:open="
+              (value) => {
+                if (value && !s.busy) s.file = f;
+              }
+            "
+          >
+            <ContextMenuTrigger as-child :disabled="!!s.busy">
+              <tr
+                :tabindex="s.busy ? -1 : 0"
+                :aria-selected="s.file?.path === f.path"
+                :aria-disabled="!!s.busy"
+                :class="{ selected: s.file?.path === f.path }"
+                @click="!s.busy && (s.file = f)"
+                @dblclick="open(f)"
+                @keydown.enter="open(f)"
+                @keydown.space.prevent="!s.busy && (s.file = f)"
+              >
+                <td>
+                  <span class="file-name"
+                    ><Folder v-if="f.type === 'directory'" aria-hidden="true" class="folder-icon" /><File
+                      v-else
+                      aria-hidden="true"
+                    /><span :title="f.name">{{ displayPath(f.name) }}</span
+                    ><small v-if="f.type === 'link'">{{ t('链接') }}</small></span
+                  >
+                </td>
+                <td>{{ f.type === 'file' ? sizeLabel(f.size) : '—' }}</td>
+                <td>{{ date(f.modified) }}</td>
+              </tr>
+            </ContextMenuTrigger>
+            <ContextMenuContent
+              class="device-context-menu file-menu"
+              @close-auto-focus="
+                (e) => {
+                  if (s.modal) e.preventDefault();
+                }
+              "
             >
-          </td>
-          <td>{{ f.type === 'file' ? sizeLabel(f.size) : '—' }}</td>
-          <td>{{ date(f.modified) }}</td>
-        </tr>
-      </tbody>
-    </table>
-    <div v-if="!s.files.length && !s.busy" class="empty-directory">此目录为空</div>
-    <p class="field-hint">双击文件夹进入。上传不会覆盖同名文件；链接和特殊文件仅供查看。</p>
-  </template>
+              <ContextMenuItem v-if="f.type === 'directory'" :disabled="!!s.busy" @select="open(f)"
+                ><FolderOpen aria-hidden="true" />{{ t('打开文件夹') }}</ContextMenuItem
+              >
+              <ContextMenuItem
+                v-if="f.type === 'file'"
+                :disabled="!!s.busy"
+                @select="
+                  s.file = f;
+                  download();
+                "
+                ><Download aria-hidden="true" />{{ t('下载') }}</ContextMenuItem
+              >
+              <ContextMenuItem :disabled="!canModify(f)" @select="fileAction(f, 'file-rename')"
+                ><Pencil aria-hidden="true" />{{ t('重命名…') }}</ContextMenuItem
+              >
+              <ContextMenuSeparator />
+              <ContextMenuItem
+                class="destructive"
+                :disabled="!canModify(f)"
+                @select="fileAction(f, 'file-delete')"
+                ><Trash2 aria-hidden="true" />{{ t('删除…') }}</ContextMenuItem
+              >
+            </ContextMenuContent>
+          </ContextMenu>
+        </tbody>
+      </table>
+      <div v-if="!s.files.length && !s.busy" class="empty-directory">{{ t('此目录为空') }}</div>
+    </div>
+  </div>
+  <AppDialog
+    v-if="pending && (s.modal === 'file-rename' || s.modal === 'file-delete')"
+    :title="s.modal === 'file-rename' ? t('重命名') : t('删除')"
+    :busy="!!s.busy"
+    @close="s.modal = null"
+  >
+    <form @submit.prevent="submitAction">
+      <div class="dialog-body">
+        <template v-if="s.modal === 'file-rename'">
+          <label class="field"
+            >{{ t('名称') }}<Input v-model="nextName" required :disabled="!!s.busy" :spellcheck="false"
+          /></label>
+        </template>
+        <p v-else>{{ t('删除后无法恢复，文件夹内的所有内容也会一并删除。') }}</p>
+        <div class="path-display">{{ pending.file.path }}</div>
+        <p v-if="actionError" class="file-action-error" role="alert">{{ actionError }}</p>
+      </div>
+      <footer class="dialog-footer">
+        <Button type="button" variant="outline" :disabled="!!s.busy" @click="s.modal = null">{{
+          t('取消')
+        }}</Button>
+        <Button
+          type="submit"
+          :class="s.modal === 'file-delete' ? 'destructive' : 'primary'"
+          :disabled="!!s.busy || (s.modal === 'file-rename' && !nextName)"
+          >{{ s.modal === 'file-delete' ? t('删除') : t('保存') }}</Button
+        >
+      </footer>
+    </form>
+  </AppDialog>
 </template>

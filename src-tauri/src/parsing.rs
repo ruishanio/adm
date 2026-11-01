@@ -110,6 +110,34 @@ pub fn child_path(directory: &str, name: &str) -> Result<String> {
         name
     ))
 }
+pub fn mutable_child_path(directory: &str, name: &str) -> Result<String> {
+    if name.len() > 255 || name.chars().any(|c| c.is_control()) {
+        return Err("名称不能包含控制字符，且不能超过 255 字节。".into());
+    }
+    let path = child_path(directory, name)?;
+    // 根目录及挂载入口仅用于导航，不能通过列表操作整体重命名或删除。
+    if [
+        "/",
+        "/storage",
+        "/storage/emulated",
+        "/data/media",
+        "/mnt",
+        "/mnt/media_rw",
+    ]
+    .contains(&remote_path(directory)?.as_str())
+        || [
+            "/storage/emulated",
+            "/storage/emulated/0",
+            "/data/media",
+            "/data/media/0",
+            "/mnt/sdcard",
+        ]
+        .contains(&path.as_str())
+    {
+        return Err("存储根目录不能重命名或删除。".into());
+    }
+    Ok(path)
+}
 pub fn parse_files(directory: &str, output: &str) -> Result<Vec<DeviceFile>> {
     let fields: Vec<_> = output.split('\0').collect();
     if fields.len() < 3

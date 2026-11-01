@@ -8,6 +8,7 @@ import ConnectionDialog from '../../src/renderer/components/ConnectionDialog.vue
 import SidebarDivider from '../../src/renderer/components/SidebarDivider.vue';
 import Sidebar from '../../src/renderer/components/Sidebar.vue';
 import SettingsDialog from '../../src/renderer/components/SettingsDialog.vue';
+import FilesPage from '../../src/renderer/components/FilesPage.vue';
 import { createWorkbench, workbenchKey } from '../../src/renderer/composables/workbench';
 import type { Api } from '../../src/shared/contracts';
 const cleanups: (() => void)[] = [];
@@ -210,6 +211,125 @@ it('设置语言先保存再即时切换，保存失败保持原偏好', async (
   expect(locale.value).toBe('en');
   expect(select.textContent).toBe('English');
   expect(w.state.notice?.text).toBe('disk full');
+});
+
+it('路径导航可点击返回父级，直接编辑失败保留输入以便修正', async () => {
+  const w = setup();
+  await flushPromises();
+  w.state.path = '/sdcard/Download';
+  const view = mount(FilesPage, {
+    global: { provide: { [workbenchKey as symbol]: w } },
+    attachTo: document.body,
+  });
+  cleanups.push(() => view.unmount());
+  await flushPromises();
+  const shared = view.findAll('.file-breadcrumbs button').find((b) => b.text() === '共享存储')!;
+  await shared.trigger('click');
+  await flushPromises();
+  expect(w.state.path).toBe('/sdcard');
+  await view.get('[aria-label="编辑路径"]').trigger('click');
+  await view.get('input').setValue('/missing');
+  vi.mocked(w.api.listFiles).mockRejectedValueOnce(new Error('not found'));
+  await view.get('form').trigger('submit');
+  await flushPromises();
+  expect(w.state.path).toBe('/sdcard');
+  expect(view.get('input').element.value).toBe('/missing');
+  await view.get('input').trigger('keydown', { key: 'Escape' });
+  expect(view.find('input').exists()).toBe(false);
+  expect(view.text()).toContain('共享存储');
+});
+
+async function fileSetup() {
+  const w = setup();
+  await flushPromises();
+  w.api.renameFile = vi.fn(async () => {});
+  w.api.deleteFile = vi.fn(async () => {});
+  w.api.upload = vi.fn(async () => true);
+  w.state.files = [{ name: 'folder', path: '/sdcard/folder', type: 'directory', size: 0, modified: 1 }];
+  const view = mount(FilesPage, {
+    global: { provide: { [workbenchKey as symbol]: w } },
+    attachTo: document.body,
+  });
+  cleanups.push(() => view.unmount());
+  await flushPromises();
+  return { w, view };
+}
+async function selectFileMenu(view: ReturnType<typeof mount>, text: string) {
+  await view.get('tbody tr').trigger('contextmenu', { button: 2, clientX: 100, clientY: 100 });
+  await flushPromises();
+  const item = [...document.querySelectorAll<HTMLElement>('[role="menuitem"]')].find((e) =>
+    e.textContent?.includes(text),
+  )!;
+  item.click();
+  await flushPromises();
+}
+it('文件右键重命名保留原会话，冲突在弹窗中显示并允许修正', async () => {
+  const { w, view } = await fileSetup();
+  await selectFileMenu(view, '重命名');
+  expect(w.state.modal).toBe('file-rename');
+  vi.mocked(w.api.renameFile).mockRejectedValueOnce(new Error('同名文件已存在'));
+  const input = document.querySelector<HTMLInputElement>('[role="dialog"] input')!;
+  input.value = 'renamed';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  await flushPromises();
+  const form = document.querySelector('[role="dialog"] form')!;
+  form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+  await flushPromises();
+  expect(w.api.renameFile).toHaveBeenCalledWith(
+    expect.objectContaining({ serial: 'test', transportId: '1' }),
+    '/sdcard',
+    'folder',
+    'renamed',
+  );
+  expect(w.state.modal).toBe('file-rename');
+  expect(document.querySelector('[role="alert"]')?.textContent).toContain('同名');
+  form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+  await flushPromises();
+  expect(w.state.modal).toBeNull();
+});
+it('文件删除必须确认，取消不调用后端，确认后刷新目录', async () => {
+  const { w, view } = await fileSetup();
+  await selectFileMenu(view, '删除');
+  expect(w.api.deleteFile).not.toHaveBeenCalled();
+  const cancel = [...document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')].find(
+    (e) => e.textContent === '取消',
+  )!;
+  cancel.click();
+  await flushPromises();
+  expect(w.state.modal).toBeNull();
+  expect(w.api.deleteFile).not.toHaveBeenCalled();
+  await selectFileMenu(view, '删除');
+  document
+    .querySelector('[role="dialog"] form')!
+    .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+  await flushPromises();
+  expect(w.api.deleteFile).toHaveBeenCalledExactlyOnceWith(
+    expect.objectContaining({ serial: 'test', transportId: '1' }),
+    '/sdcard',
+    'folder',
+    true,
+  );
+  expect(w.api.listFiles).toHaveBeenCalled();
+  expect(w.state.modal).toBeNull();
+});
+it('上传菜单区分文件和文件夹，部分失败仍刷新列表并保留错误', async () => {
+  const { w, view } = await fileSetup();
+  vi.mocked(w.api.upload).mockRejectedValueOnce(new Error('已上传 1 项；同名冲突'));
+  const trigger = view.findAll('button').find((b) => b.text() === '上传')!;
+  await trigger.trigger('keydown', { key: 'Enter' });
+  await flushPromises();
+  const folder = [...document.querySelectorAll<HTMLElement>('[role="menuitem"]')].find((e) =>
+    e.textContent?.includes('上传文件夹'),
+  )!;
+  folder.click();
+  await flushPromises();
+  expect(w.api.upload).toHaveBeenCalledWith(
+    expect.objectContaining({ serial: 'test', transportId: '1' }),
+    '/sdcard',
+    'folders',
+  );
+  expect(w.api.listFiles).toHaveBeenCalled();
+  expect(w.state.notice?.text).toContain('已上传 1 项');
 });
 
 it('概览显示常用状态，明细默认收起，刷新仍重新读取详情', async () => {

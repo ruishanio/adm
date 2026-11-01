@@ -128,3 +128,105 @@ fn dedicated_emulator() {
         std::panic::resume_unwind(error);
     }
 }
+
+/// 仅验证本次新文件能力，在专用模拟器的随机目录内执行，不安装 APK 或更改所有者。
+#[test]
+#[ignore = "需要 ADM_SMOKE_SERIAL，仅允许 AndroidToolSmoke_ 专用模拟器"]
+fn dedicated_file_operations() {
+    let serial = std::env::var("ADM_SMOKE_SERIAL").expect("缺少专用模拟器序列号");
+    assert!(serial.starts_with("emulator-"));
+    let adb = Adb::new(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("resources/platform-tools")
+            .join(if cfg!(windows) { "adb.exe" } else { "adb" }),
+        cancellation(),
+    );
+    assert!(adb
+        .simple(&["-s", &serial, "emu", "avd", "name"])
+        .unwrap()
+        .starts_with("AndroidToolSmoke_"));
+    let device = adb
+        .devices()
+        .unwrap()
+        .into_iter()
+        .find(|d| d.serial == serial && d.state == "device")
+        .unwrap();
+    let target = Target {
+        serial: device.serial,
+        transport_id: device.transport_id,
+    };
+    let directory = format!(".adm-files-test-{}", uuid::Uuid::new_v4());
+    let remote = format!("/sdcard/{directory}");
+    let local = tempfile::tempdir().unwrap();
+    let folder = local.path().join("中文 ' $ 文件夹");
+    fs::create_dir_all(folder.join("nested/empty")).unwrap();
+    fs::write(folder.join(".hidden"), "hidden").unwrap();
+    fs::write(folder.join("nested/内容.txt"), "ADM folder content").unwrap();
+    adb.mkdir(&target, "/sdcard", &directory).unwrap();
+    let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        adb.upload(&target, &folder, &remote).unwrap();
+        let empty = local.path().join("empty-root");
+        fs::create_dir(&empty).unwrap();
+        adb.upload(&target, &empty, &remote).unwrap();
+        assert!(adb
+            .list_files(&target, &format!("{remote}/empty-root"))
+            .unwrap()
+            .is_empty());
+        adb.delete_file(&target, &remote, "empty-root", true)
+            .unwrap();
+        let folder_name = folder.file_name().unwrap().to_str().unwrap();
+        let child = format!("{remote}/{folder_name}");
+        assert!(adb
+            .list_files(&target, &format!("{child}/nested"))
+            .unwrap()
+            .iter()
+            .any(|f| f.name == "empty" && f.r#type == "directory"));
+        let downloaded = local.path().join("download.txt");
+        adb.download(&target, &format!("{child}/nested/内容.txt"), &downloaded)
+            .unwrap();
+        assert_eq!(
+            fs::read_to_string(&downloaded).unwrap(),
+            "ADM folder content"
+        );
+        assert!(adb
+            .upload(&target, &folder, &remote)
+            .unwrap_err()
+            .contains("同名"));
+        adb.rename_file(&target, &remote, folder_name, "改名 文件夹")
+            .unwrap();
+        let renamed = format!("{remote}/改名 文件夹");
+        adb.rename_file(
+            &target,
+            &format!("{renamed}/nested"),
+            "内容.txt",
+            "内容 ' $.txt",
+        )
+        .unwrap();
+        let entries = adb
+            .list_files(&target, &format!("{renamed}/nested"))
+            .unwrap();
+        assert!(entries.iter().any(|f| f.name == "内容 ' $.txt"));
+        assert!(adb
+            .rename_file(
+                &target,
+                &format!("{renamed}/nested"),
+                "内容 ' $.txt",
+                "empty"
+            )
+            .unwrap_err()
+            .contains("同名"));
+        assert!(adb
+            .delete_file(&target, &remote, "改名 文件夹", false)
+            .is_err());
+        adb.delete_file(&target, &format!("{renamed}/nested"), "内容 ' $.txt", true)
+            .unwrap();
+        adb.delete_file(&target, &remote, "改名 文件夹", true)
+            .unwrap();
+        assert!(adb.list_files(&target, &remote).unwrap().is_empty());
+        println!("通过：目录上传、空目录、隐藏项、中文及特殊名称、下载比对、同名保护、文件/目录重命名、确认删除和清理");
+    }));
+    adb.shell(&target, &["rm", "-rf", &remote]).unwrap();
+    if let Err(error) = outcome {
+        std::panic::resume_unwind(error);
+    }
+}

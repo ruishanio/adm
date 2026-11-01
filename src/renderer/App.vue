@@ -114,7 +114,7 @@ onBeforeUnmount(() => {
             }}</TabsTrigger
           ></TabsList
         >
-        <div class="task-content">
+        <div :class="['task-content', { 'file-content': s.tab === 'files' }]">
           <TabsContent value="info"><DeviceInfoPage /></TabsContent
           ><TabsContent value="install"><InstallPage /></TabsContent
           ><TabsContent value="files"><FilesPage /></TabsContent></div

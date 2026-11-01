@@ -1028,40 +1028,135 @@ code {
   font-size: 12px;
   margin-top: 3px;
 }
+.task-content.file-content {
+  overflow: hidden;
+  padding: 0;
+  scrollbar-gutter: auto;
+}
+.file-content > [data-slot='tabs-content'][data-state='active'] {
+  height: 100%;
+  min-height: 0;
+}
+.file-manager {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.file-controls {
+  flex-shrink: 0;
+  padding: 10px 20px 8px;
+  border-bottom: 1px solid var(--line);
+}
 .file-toolbar {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 4px;
+  min-height: 30px;
 }
-.file-toolbar form {
-  flex: 1;
+.file-breadcrumbs,
+.file-path-editor {
+  display: flex;
+  align-items: center;
   min-width: 0;
+  flex: 1;
+  gap: 2px;
+  height: 30px;
+  padding: 0 4px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  background: var(--sidebar);
 }
-.file-toolbar input {
+.file-breadcrumbs {
+  overflow: hidden;
+}
+.file-breadcrumbs button {
+  min-width: 0;
+  padding-inline: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  color: var(--muted);
+  border-color: transparent;
+  background: transparent;
+  font-size: 12px;
+}
+.file-breadcrumbs button.icon-button {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.file-breadcrumbs [aria-current='location'] {
+  color: var(--foreground);
+  font-weight: 500;
+}
+.breadcrumb-separator {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  color: var(--muted);
+}
+.file-path-editor:focus-within {
+  border-color: var(--focus);
+}
+.file-path-editor input,
+.file-path-editor input:focus {
+  border: none;
+  outline: none;
+  box-shadow: none;
+  background: transparent;
+  min-width: 0;
+  flex: 1;
   font-family: 'SFMono-Regular', Consolas, monospace;
   font-size: 12px;
 }
 .file-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 0;
+  gap: 4px;
+  padding-top: 6px;
 }
 .file-actions button {
   font-size: 12px;
-  padding: 0 10px;
+  padding-inline: 8px;
+  background: transparent;
+  border-color: transparent;
+}
+.file-actions button svg {
+  color: var(--muted);
+}
+.file-actions .upload-chevron {
+  width: 12px;
+  height: 12px;
 }
 .file-actions > .muted {
   margin-left: auto;
   font-size: 12px;
 }
+.toolbar-separator {
+  height: 16px;
+  width: 1px;
+  margin-inline: 4px;
+  background: var(--line);
+}
+/* 只让文件列表滚动，目录导航与操作按钮留在上方，表头固定在列表顶部。 */
+.file-scroll {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  padding: 0;
+  margin-bottom: 12px;
+}
 .file-table {
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   width: 100%;
   table-layout: fixed;
   text-align: left;
 }
 .file-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   color: var(--muted);
   font-size: 12px;
   font-weight: 500;
@@ -1075,6 +1170,14 @@ code {
 .file-table th:nth-child(3) {
   width: 140px;
 }
+.file-table th:first-child,
+.file-table td:first-child {
+  padding-left: 20px;
+}
+.file-table th:last-child,
+.file-table td:last-child {
+  padding-right: 16px;
+}
 .file-table td {
   font-size: 13px;
   height: 32px;
@@ -1086,10 +1189,13 @@ code {
   text-overflow: ellipsis;
   font-variant-numeric: tabular-nums;
 }
+.file-table tbody tr:not([aria-disabled='true']) {
+  cursor: pointer;
+}
 .file-table tr.selected td {
   background: var(--selection);
 }
-.file-table tbody tr:not(.selected):hover td {
+.file-table tbody tr:not([aria-disabled='true']):not(.selected):hover td {
   background: var(--surface-subtle);
 }
 .file-name {
@@ -1650,4 +1756,44 @@ a[href],
 select:disabled,
 [aria-disabled='true'] {
   cursor: default;
+}
+
+/* 文件菜单沿用设备菜单的密度，删除仅在此处使用危险色。 */
+.file-menu {
+  z-index: 60;
+}
+.file-menu [role='menuitem'] {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 30px;
+  padding: 5px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  outline: none;
+}
+.file-menu [role='menuitem'] svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 1.5;
+}
+.file-menu [role='menuitem'].destructive {
+  color: var(--error);
+}
+.file-menu [role='menuitem'].destructive svg {
+  color: inherit;
+}
+button.destructive {
+  color: var(--on-accent);
+  background: var(--error);
+  border-color: var(--error);
+}
+button.destructive:hover:not(:disabled) {
+  background: var(--error);
+  border-color: var(--error);
+}
+.file-action-error {
+  margin-top: 12px;
+  color: var(--error);
+  overflow-wrap: anywhere;
 }
