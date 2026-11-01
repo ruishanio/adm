@@ -11,6 +11,11 @@ import {
   type DeviceFile,
 } from '../../shared/contracts';
 type Tab = 'info' | 'install' | 'files';
+/**
+ * 创建跨页面共享的工作台，处理会话切换、任务互斥和异步数据回读。
+ * @param api 受控的原生业务接口，测试时可注入模拟实现。
+ * @returns 响应式状态、派生设备信息及启动/清理、连接与设备操作方法。
+ */
 export function createWorkbench(api: Api) {
   const state = reactive({
     snapshot: undefined as Snapshot | undefined,

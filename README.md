@@ -10,10 +10,15 @@
 
 ## 开发
 
-需要 Node.js 24、Rust 1.99.1（`rust-toolchain.toml` 固定）及平台编译工具：macOS 安装 Xcode Command Line Tools；Windows 安装 Visual Studio Build Tools 的 C++ 桌面开发组件和 WebView2。参见 [Tauri 开发环境](https://v2.tauri.app/start/prerequisites/)。
+需要 Python 3、Node.js 24、Rust 1.99.1（`rust-toolchain.toml` 固定）及平台编译工具：macOS 安装 Xcode Command Line Tools；Windows 安装 Visual Studio Build Tools 的 C++ 桌面开发组件和 WebView2。参见 [Tauri 开发环境](https://v2.tauri.app/start/prerequisites/)。
 
 ```sh
 npm ci
+
+# 首次构建先准备 ADB 资源（仅运行当前系统对应的一行）
+python3 scripts/package_ci.py prepare mac arm64  # macOS
+python scripts/package_ci.py prepare win x64    # Windows
+
 npm run dev
 ```
 

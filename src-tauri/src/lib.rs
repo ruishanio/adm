@@ -67,6 +67,7 @@ impl Service {
         *self.apk.lock().unwrap() = Some(record);
         Ok(info)
     }
+    /// 分发主窗口业务请求：app 提供原生对话框，method/args 为方法名及参数数组；返回 JSON 结果或中文错误。
     fn dispatch(&self, app: tauri::AppHandle, method: String, args: Value) -> Result<Value> {
         if method == "cancel" {
             let (): () = decoded_empty(args)?;

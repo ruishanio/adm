@@ -298,6 +298,7 @@ pub struct ApkRecord {
     pub path: PathBuf,
     pub hash: String,
 }
+/// 给定 APK 路径与取消标记，校验 ZIP/清单及前后指纹，返回安装信息、规范路径和 SHA-256；文件变化时拒绝读取。
 pub fn read_apk(path: &Path, cancel: &Cancel) -> Result<ApkRecord> {
     if path
         .extension()
