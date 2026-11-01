@@ -118,7 +118,7 @@ console.log(JSON.stringify(metadata));
 """
     result = subprocess.run(
         ["node", "--input-type=module", "-e", script, str(asar_path)],
-        cwd=ROOT, check=True, capture_output=True, text=True,
+        cwd=ROOT, check=True, capture_output=True, text=True, encoding="utf-8",
     )
     packaged = json.loads(result.stdout)
     if (packaged["name"], packaged["version"]) != (METADATA["name"], METADATA["version"]):
@@ -147,6 +147,9 @@ console.log(JSON.stringify(metadata));
 
 
 if __name__ == "__main__":
+    # Windows Runner 的重定向输出默认可能是 cp1252，统一使用 UTF-8 保留中文日志。
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=["prepare", "verify"])
     parser.add_argument("platform", choices=["mac", "win"])
