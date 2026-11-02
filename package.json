@@ -18,6 +18,7 @@
     "test": "vitest run && node --test tests/licenses/*.test.mjs",
     "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml",
     "tauri": "tauri",
+    "icons:render": "node scripts/render-icons.mjs",
     "icons:generate": "node scripts/generate-icons.mjs",
     "package:mac": "node scripts/package.mjs mac",
     "package:win": "node scripts/package.mjs win"

@@ -5,13 +5,13 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const source = join(root, 'resources/branding/adm-icon.svg');
+const source = join(root, 'resources/branding/adm-icon.png');
 const destination = join(root, 'src-tauri/icons');
 const temporary = await mkdtemp(join(tmpdir(), 'adm-icons-'));
 const desktopIcons = ['32x32.png', '128x128.png', '128x128@2x.png', 'icon.png', 'icon.icns', 'icon.ico'];
 
 try {
-  // 使用锁定版本的 Tauri CLI，从唯一矢量源统一导出两平台的图标。
+  // 使用锁定版本的 Tauri CLI，从 3D 场景渲染的透明 PNG 统一导出两平台图标。
   const result = spawnSync(
     process.execPath,
     [join(root, 'node_modules/@tauri-apps/cli/tauri.js'), 'icon', source, '--output', temporary],
@@ -27,8 +27,9 @@ try {
   for (const name of desktopIcons) {
     await copyFile(join(temporary, name), join(destination, name));
   }
-  await copyFile(source, join(destination, 'icon.svg'));
-  console.log('已更新 macOS ICNS、Windows ICO、各尺寸 PNG 和 SVG 副本。');
+  // 清除旧流程遗留的 SVG 副本，避免把过时图标当成仍在使用的设计源。
+  await rm(join(destination, 'icon.svg'), { force: true });
+  console.log('已从 3D 渲染 PNG 更新 macOS ICNS、Windows ICO 和各尺寸 PNG。');
 } finally {
   await rm(temporary, { recursive: true, force: true });
 }

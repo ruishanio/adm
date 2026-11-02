@@ -28,6 +28,11 @@ __pycache__/
 *.log
 *.log.*
 
+# Blender 编辑器备份和崩溃文件；正式 .blend 设计源保留
+*.blend[0-9]
+*.blend[0-9][0-9]
+*.blend@
+
 # 本地环境与签名材料；允许提交不含秘密的配置示例
 .env
 .env.*

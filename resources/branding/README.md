@@ -1,29 +1,53 @@
-# ADM 图标矢量源文件
+# ADM 图标 3D 源文件
 
-`adm-icon.svg` 根据已确认的三台设备图标重绘。背板、底座、前中后三台设备和 Android 标记分别分组，轮廓、屏幕、配色、渐变均可编辑；没有嵌入位图、字体或外部资源。
+图标由三台依次排列的设备、带真实凹腔的深色底座、薄荷绿色 Android 标记和暖白背板组成。全部造型均为 3D 几何体；材质、灯光、遮挡和接触阴影由 Blender 渲染，不依赖 SVG、贴图或外部字体。
 
-三个槽口分别按原图校准，各自的前壁轮廓同时用于遮挡设备底部。修改时应同步调整同一槽口的开口与前壁，避免悬浮黑缝；材质由 SVG 渐变和轻微的程序化滤镜组成。
+| 文件 | 用途 |
+| --- | --- |
+| `adm-icon.blend` | 可直接编辑的完整场景，包含模型、材质、摄像机、灯光和合成节点 |
+| `adm-icon.glb` | 可在通用 3D 查看器中旋转的模型，不含背板与摄影棚 |
+| `adm-icon.png` | 2048 × 2048、RGBA 透明背景的应用图标母版 |
+| `scene.json` | 程序化重建时的造型、配色、相机和渲染参数 |
 
-- 画布：`1254 × 1254`，默认显示尺寸：`1024 × 1024`。
-- 方形背板以外为透明区域。
-- 可使用 Figma、Illustrator、Inkscape 或浏览器打开。
-- 去除 `background-tile` 分组可得到不带浅色背板的标志。
-- 已接入应用：macOS 使用 ICNS，Windows 使用 ICO，窗口图标使用配套 PNG。
+`scripts/render-icon.py` 提供不依赖 SVG 的参数化建模实现。槽口与机身使用同一组位置参数，两端余量对称；设备底部插入凹槽，由真实几何遮挡消除悬浮感。屏幕保持留白，摄像机采用低视角的两点透视。
 
-## 更新应用图标
+## 编辑与渲染
 
-修改 `resources/branding/adm-icon.svg` 后，在项目根目录运行：
+使用 Blender 4.5 LTS 打开 `adm-icon.blend`。按集合编辑设备、底座、背板和灯光；默认已经设置好图标相机和 Cycles 渲染器。保存修改后执行：
 
 ```sh
+npm run icons:render
 npm run icons:generate
 ```
 
-命令使用项目锁定的 Tauri CLI，同步生成 `src-tauri/icons/` 中的 ICNS、ICO、32 / 128 / 256 / 512 像素 PNG，并更新 `icon.svg` 副本。仅保留 macOS 和 Windows 所需资源。请勿单独修改生成文件。
+第一步渲染已保存的 `.blend`，更新 PNG 母版和 GLB 模型；第二步使用项目锁定的 Tauri CLI，将 PNG 导出为 `src-tauri/icons/` 中的 ICNS、ICO、32 / 128 / 256 / 512 像素 PNG。重新启动开发应用或重新打包后生效。
 
-`src-tauri/tauri.conf.json` 已引用这些资源，开发模式重新启动或重新打包后生效。生成结果随项目保存，CI 构建无需额外安装图像工具。
+Blender 不在 PATH 或标准安装位置时，通过 `ADM_BLENDER_PATH` 指定可执行文件。例如 macOS：
+
+```sh
+ADM_BLENDER_PATH=/Applications/Blender.app/Contents/MacOS/Blender npm run icons:render
+```
+
+快速预览不会覆盖模型源文件和正式母版：
+
+```sh
+npm run icons:render -- --preview --size 768 --samples 32 --output artifacts/branding/preview.png
+```
+
+如需修改参数并重新生成全部几何，编辑 `scene.json` 后执行：
+
+```sh
+npm run icons:render -- --rebuild
+```
+
+**`--rebuild` 会覆盖 `.blend` 中手工调整的场景。** 日常在 Blender 中编辑后只需运行默认渲染命令，不要使用该参数。渲染器优先使用可用 GPU；可用 `--cpu` 强制使用 CPU。平台和 Blender 版本不同可能带来细微的光照差异。
+
+## 打包
+
+3D 源文件和 PNG 母版保留在本目录，平台图标随项目保存。CI 和普通应用打包只使用已生成的图标，不需要 Blender，也不会将 `.blend`、`.glb` 或建模脚本带入安装包。图标生成流程不再使用 SVG。
 
 ## Android 标记署名
 
 The Android robot is reproduced or modified from work created and shared by Google and used according to terms described in the [Creative Commons 3.0 Attribution License](https://creativecommons.org/licenses/by/3.0/).
 
-参考：[Android brand guidelines](https://developer.android.com/distribute/marketing-tools/brand-guidelines)。
+该署名同时保存在 Blender 场景内的 `Android attribution.txt` 文本中。

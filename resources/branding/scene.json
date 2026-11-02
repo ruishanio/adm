@@ -1,0 +1,39 @@
+{
+  "model": {
+    "base_width": 2.9,
+    "base_depth": 5.0,
+    "base_height": 0.65,
+    "base_radius": 0.34,
+    "device_width": 2.22,
+    "device_height": 2.86,
+    "device_depth": 0.32,
+    "device_bottom": 0.27,
+    "device_spacing": 1.7,
+    "slot_width": 2.65,
+    "slot_depth": 0.72,
+    "slot_floor": 0.18
+  },
+  "colors": {
+    "base": "#505967",
+    "front": "#0054FF",
+    "middle": "#53779E",
+    "rear": "#454D5C",
+    "screen": "#B2DCFD",
+    "speaker": "#25313C",
+    "android": "#75DFA0",
+    "tile": "#FAF9F5"
+  },
+  "camera": {
+    "azimuth": 43.0,
+    "distance": 25.0,
+    "height": 6.2,
+    "lens": 104.0,
+    "shift_y": -0.53,
+    "shift_x": -0.02
+  },
+  "render": {
+    "size": 2048,
+    "samples": 192,
+    "seed": 19
+  }
+}
