@@ -1,0 +1,40 @@
+.file-menu {
+  z-index: 60;
+}
+.file-menu [role='menuitem'] {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 30px;
+  padding: 5px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  outline: none;
+}
+.file-menu [role='menuitem'] svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 1.5;
+}
+.file-menu [role='menuitem'].destructive {
+  color: var(--error);
+}
+.file-menu [role='menuitem'].destructive svg {
+  color: inherit;
+}
+button.destructive {
+  color: var(--on-accent);
+  background: var(--error);
+  border-color: var(--error);
+}
+button.destructive:hover:not(:disabled) {
+  background: var(--error);
+  border-color: var(--error);
+}
+.file-action-error {
+  margin-top: 12px;
+  color: var(--error);
+  overflow-wrap: anywhere;
+}
+
+/* 性能页按统一指标列与曲线列对齐，核心明细按需展开，降低重复刻度的视觉干扰。 */

@@ -1,0 +1,208 @@
+.applications-page {
+  gap: 0;
+  min-width: 0;
+}
+/* 应用列表独立滚动，安装入口、搜索和表头在紧凑窗口中仍保持可用。 */
+.installed-app-content {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  /* 列表贴齐工作区，水平边距仅留给上方控件，滚动条靠窗口右侧。 */
+  padding: 0;
+  scrollbar-gutter: auto;
+}
+.installed-app-content > [data-slot='tabs-content'][data-state='active'],
+.installed-app-content .applications-page,
+.installed-apps {
+  min-height: 0;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+/* 可调列宽表格将表头与正文分开，纵向滚动条从表头下方开始。 */
+.resizable-table {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.resizable-table-header {
+  flex-shrink: 0;
+  background: var(--surface-subtle);
+  border-block: 1px solid var(--line);
+}
+.table-header-viewport {
+  overflow: hidden;
+}
+.resizable-table-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overflow-anchor: none;
+}
+.resizable-table-head th {
+  position: relative;
+}
+.table-column-label {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.table-column-resizer {
+  --focus-outline-width: 0px;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -6px;
+  z-index: 1;
+  width: 12px;
+  cursor: col-resize;
+  user-select: none;
+  touch-action: none;
+}
+.resizable-table-head th:last-child .table-column-resizer {
+  right: 0;
+}
+.table-column-resizer::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 50%;
+  width: 1px;
+  background: var(--line);
+  pointer-events: none;
+}
+.table-column-resizer:hover::after,
+.table-column-resizer.resizing::after {
+  background: var(--control-border);
+}
+:root[data-focus-mode='keyboard'] .table-column-resizer:focus-visible::after {
+  background: var(--focus);
+}
+/* 尾部间距随列表内容滚动，仅在到达末尾时露出，不占用固定的窗口底部空间。 */
+.apps-scroll::after,
+.file-scroll::after {
+  content: '';
+  display: block;
+  height: 12px;
+}
+.apps-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: left;
+  table-layout: fixed;
+}
+.apps-table th {
+  padding: 7px 8px;
+  background: var(--surface-subtle);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.apps-table td {
+  border-bottom: 1px solid var(--line);
+  padding: 4px 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.apps-table th:first-child,
+.apps-table td:first-child {
+  padding-left: 20px;
+}
+.application-row {
+  --focus-outline-offset: -2px;
+  cursor: pointer;
+}
+.application-row[aria-disabled='true'] {
+  cursor: default;
+}
+.apps-table .application-row:not([aria-disabled='true']):not(.selected):hover td {
+  background: var(--surface-subtle);
+}
+.apps-table .application-row.selected td {
+  background: var(--selection);
+}
+.apps-table .application-row td {
+  height: 44px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
+.app-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: var(--foreground);
+}
+.installed-app-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+.installed-app-icon img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+.installed-app-icon svg {
+  width: 22px;
+  height: 22px;
+}
+.app-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  font-weight: 500;
+}
+.app-disabled-label {
+  font-size: 11px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.app-running {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.app-running.running {
+  color: var(--success);
+}
+.app-running i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.app-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  /* 抵消文字按钮自身的内边距，让“详情”文字与表头从同一位置开始。 */
+  margin-inline-start: -4px;
+}
+.app-details-button {
+  padding-inline: 4px;
+  font-size: 12px;
+}
+.app-menu-separator {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--line);
+}
+.apps-empty {
+  padding: 32px 12px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+}

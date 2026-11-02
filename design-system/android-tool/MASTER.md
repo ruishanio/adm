@@ -24,7 +24,7 @@ Tauri 2 / Vue 3 / TypeScript / shadcn-vue / Tailwind CSS 4，面向 macOS 和 Wi
 
 系统字体：macOS 系统字体 / Windows Segoe UI / 中文系统回退；不下载字体。正文和表单 13px，辅助文字 12px，工作区设备名 16px。间距按 4/8/12/16/24px 组合；普通控件 macOS 28px、Windows 32px，图标按钮至少 28px。此处是鼠标/键盘桌面工具，不套用手机 44/48pt 触控规则。
 
-统一变量放在 `src/renderer/styles.css`：foreground、muted、surface、sidebar、line、control-border、accent、selection、brand、device、install、folder、owner、success、error、focus、radius、spacing、motion。正常文字对比度 >=4.5:1；用于识别控件的边界和焦点 >=3:1。淡分隔线仅作分组，不承担控件边界。
+统一变量定义在 `src/renderer/styles/tokens.css`，经 `src/renderer/styles.css` 按固定顺序导入：foreground、muted、surface、sidebar、line、control-border、accent、selection、brand、device、install、folder、owner、success、error、focus、radius、spacing、motion。正常文字对比度 >=4.5:1；用于识别控件的边界和焦点 >=3:1。淡分隔线仅作分组，不承担控件边界。
 
 Lucide 线性图标：控件 16px、设备 24px、页头 28px，统一 1.5px 笔画。设备图标与名称及副标题组成的两行内容整体居中，副标题从相同文字列起始。图标不是按钮时隐藏辅助语义；只有图标的按钮必须有可访问名称。
 

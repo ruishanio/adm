@@ -1,0 +1,226 @@
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border: 2px solid transparent;
+  border-radius: 5px;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+/* 配置项共用标签列；次要流程通过原生语义按钮逐步展开。 */
+.owner-config-toggle {
+  width: 100%;
+  height: auto;
+  justify-content: flex-start;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  color: var(--foreground);
+}
+.owner-config-toggle .disclosure-chevron {
+  margin-left: auto;
+}
+.owner-form {
+  padding: 8px 4px 16px 28px;
+}
+.owner-form[hidden] {
+  display: none;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  margin-bottom: 12px;
+}
+.form-row > label {
+  padding-top: 4px;
+  color: var(--muted);
+}
+.owner-form .field-hint,
+.owner-form > .inline-result,
+.owner-form .owner-actions {
+  margin-left: 100px;
+}
+.section-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-heading h2 svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 1.5;
+}
+@container (max-width: 640px) {
+  .properties {
+    column-gap: 16px;
+  }
+  .device-properties > div {
+    grid-template-columns: 80px minmax(0, 1fr);
+    gap: 8px;
+  }
+  .owner-actions .checkbox {
+    align-items: flex-start;
+  }
+  .owner-actions .checkbox input {
+    margin-top: 2px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *:before,
+  *:after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* shadcn-vue 组件沿用同一套桌面密度与状态变量，不引入第二套视觉主题。 */
+.work-tabs {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 0;
+  min-height: 0;
+}
+.work-tabs > .tabs {
+  height: auto;
+  width: auto;
+  justify-content: flex-start;
+  background: transparent;
+  border-radius: 0;
+  padding: 0 20px 8px;
+}
+.task-content > [data-slot='tabs-content'] {
+  margin: 0;
+  outline: none;
+}
+.dialog {
+  display: block;
+  gap: 0;
+  overflow: auto;
+  animation: none;
+}
+[data-slot='dialog-overlay'] {
+  background: rgb(0 0 0 / 18%);
+  animation: none;
+}
+[data-slot='checkbox'] {
+  display: inline-flex;
+  min-height: 16px;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  flex: 0 0 16px;
+}
+/* 复选框底层同样是 button，选中态必须覆盖通用按钮的悬停和按下背景。 */
+button[data-slot='checkbox'][data-state='checked'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+button[data-slot='checkbox'][data-state='checked']:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+button[data-slot='checkbox']:disabled {
+  background: var(--surface-subtle);
+  border-color: var(--line);
+  color: var(--muted);
+}
+button[data-slot='checkbox'] svg {
+  width: 13px;
+  height: 13px;
+  color: inherit;
+}
+.device-context-menu {
+  min-width: 196px;
+  padding: 5px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-size: 13px;
+  box-shadow:
+    0 6px 20px rgb(0 0 0 / 12%),
+    0 1px 3px rgb(0 0 0 / 8%);
+  animation: none;
+}
+.device-context-menu [data-slot='context-menu-item'],
+.app-action-menu [role='menuitem'] {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 30px;
+  padding: 5px 8px;
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+  font-size: 13px;
+}
+.device-context-menu [data-slot='context-menu-item'] svg,
+.app-action-menu [role='menuitem'] svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 1.5;
+  color: var(--muted);
+}
+.device-context-menu [data-highlighted] {
+  background: var(--selection);
+  color: var(--foreground);
+}
+.device-context-menu [data-disabled] {
+  color: var(--disabled);
+  cursor: default;
+}
+.app-action-menu [role='menuitem'].destructive:not([data-disabled]),
+.app-action-menu [role='menuitem'].destructive:not([data-disabled]) svg {
+  color: var(--error);
+}
+.app-action-menu [data-disabled] svg {
+  color: var(--disabled);
+}
+.device-context-menu [data-slot='context-menu-separator'] {
+  margin: 4px 3px;
+  height: 1px;
+  background: var(--line);
+}
+.native-drag-area {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: var(--titlebar-height);
+  width: 100%;
+  z-index: 5;
+  user-select: none;
+}
+.window-controls {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 32px;
+  display: flex;
+  z-index: 10;
+}
+.window-controls button {
+  border: none;
+  border-radius: 0;
+  width: 46px;
+  height: 32px;
+  min-height: 32px;
+  background: transparent;
+  padding: 0;
+}
+.window-controls svg {
+  width: 13px;
+  height: 13px;
+}
+.window-controls .window-close:hover {
+  color: white;
+  background: #c42b1c;
+}

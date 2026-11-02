@@ -1,0 +1,204 @@
+.settings-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.settings-dialog {
+  width: 660px;
+  height: 430px;
+}
+.settings-layout {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  min-height: 0;
+  gap: 0;
+}
+.settings-navigation {
+  width: 150px;
+  height: auto;
+  flex: 0 0 150px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 4px;
+  padding: 12px 8px;
+  border-radius: 0;
+  background: var(--sidebar);
+  border-right: 1px solid var(--line);
+}
+.settings-navigation button {
+  flex: 0 0 auto;
+  justify-content: flex-start;
+  min-height: 32px;
+  height: auto;
+  padding: 7px 10px;
+  white-space: normal;
+  text-align: left;
+  line-height: 18px;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+}
+.settings-navigation button[aria-selected='true'] {
+  background: var(--selection);
+  color: var(--foreground);
+}
+.settings-content {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  padding: 20px 24px;
+}
+.settings-content .field {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+.settings-content .app-select-trigger {
+  width: 172px;
+  flex-shrink: 0;
+}
+.settings-content .field-hint {
+  margin-block: 10px;
+}
+.settings-content .path-display {
+  max-height: 130px;
+  overflow: auto;
+}
+.settings-content [data-slot='tabs-content'] {
+  margin: 0;
+  outline: none;
+}
+.app-select-trigger {
+  width: 100%;
+  justify-content: space-between;
+  padding-inline: 10px;
+  font-size: 13px;
+  text-align: left;
+  background: var(--surface-subtle);
+  border-color: var(--control-edge);
+  box-shadow: 0 1px 1px rgb(0 0 0 / 3%);
+}
+.app-select-trigger > svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--muted);
+}
+/* 行内选择器用于指标的次级筛选，保留菜单与键盘焦点，弱化表单外框。 */
+.app-select-trigger.app-select-inline {
+  width: auto;
+  gap: 4px;
+  padding-inline: 4px;
+  font-size: 12px;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+.app-select-trigger.app-select-inline:hover:not(:disabled),
+.app-select-trigger.app-select-inline[data-state='open'] {
+  background: transparent;
+  border-color: transparent;
+  color: var(--accent);
+}
+.app-select-trigger.app-select-inline > svg {
+  width: 12px;
+  height: 12px;
+  color: inherit;
+}
+.app-select-menu {
+  z-index: 60;
+  min-width: var(--reka-select-trigger-width);
+  max-height: var(--reka-select-content-available-height);
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--foreground);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 12%);
+}
+.app-select-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: var(--control-height);
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-size: 13px;
+  cursor: pointer;
+  outline: none;
+}
+.app-select-option[data-highlighted] {
+  background: var(--selection);
+}
+.app-select-option svg {
+  width: 14px;
+  height: 14px;
+}
+/* 可检索下拉菜单固定搜索区，只滚动候选项，长包名换行而不撑宽窗口。 */
+.app-search-menu {
+  width: 360px;
+  max-width: calc(100vw - 24px);
+  max-height: min(360px, var(--reka-combobox-content-available-height));
+  overflow: hidden;
+}
+.app-select-search {
+  position: relative;
+  flex-shrink: 0;
+  padding: 4px 4px 8px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+}
+.app-select-search > svg {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: calc(4px + var(--control-height) / 2 - 8px);
+  left: 12px;
+  color: var(--muted);
+}
+.app-select-search input {
+  padding-left: 30px;
+}
+.app-search-options {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.app-search-option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.app-search-option-description,
+.app-select-empty {
+  color: var(--muted);
+  font-size: 12px;
+}
+.app-select-empty {
+  margin: 0;
+  padding: 16px 8px;
+  text-align: center;
+}
+select,
+a[href],
+.checkbox:not(:has([disabled], [data-disabled])) {
+  cursor: pointer;
+}
+select:disabled,
+[aria-disabled='true'] {
+  cursor: default;
+}
+
+/* 文件菜单沿用设备菜单的密度，删除仅在此处使用危险色。 */

@@ -1,0 +1,425 @@
+.app {
+  --titlebar-height: 32px;
+  position: relative;
+  height: 100dvh;
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1px minmax(640px, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  background: var(--surface);
+  overflow: hidden;
+}
+.win32,
+:root[data-platform='win32'] {
+  --control-height: 32px;
+}
+.sidebar {
+  grid-row: 1;
+  grid-column: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--sidebar);
+  padding: calc(var(--titlebar-height) + 4px) 8px 0;
+}
+/* 仅系统全屏收起顶部高度；普通铺满仍保留交通灯区域，标题始终左对齐。 */
+.darwin.window-fullscreen {
+  --titlebar-height: 0px;
+}
+.sidebar-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px;
+  margin-bottom: 6px;
+  min-height: 32px;
+  user-select: none;
+}
+.sidebar-heading h1 {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.sidebar-heading .icon-button {
+  margin-left: auto;
+  color: var(--muted);
+}
+.device-count {
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.device-group-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px 0 8px;
+  margin-bottom: 4px;
+  min-height: var(--control-height);
+}
+.device-group-heading .group-title {
+  margin: 0;
+  padding: 0;
+}
+.device-list {
+  overflow-y: auto;
+  flex: 1;
+  padding: 0 0 16px;
+}
+.group-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  padding: 0 8px;
+  margin: 4px 0 4px;
+}
+.group-title:not(:first-child) {
+  margin-top: 16px;
+}
+.device-row {
+  width: 100%;
+  height: auto;
+  min-height: 52px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 6px;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 10px;
+  padding: 6px 8px;
+  line-height: 18px;
+  margin: 2px 0;
+  text-align: left;
+  justify-content: start;
+  align-content: center;
+}
+.device-row:hover:not(:disabled) {
+  background: var(--hover);
+}
+.device-row.selected,
+.device-row.selected:hover:not(:disabled) {
+  background: var(--selection);
+}
+.device-row:disabled {
+  opacity: 1;
+}
+.device-row,
+.file-table tr {
+  --focus-outline-offset: -2px;
+}
+/* 图标与名称、连接说明组成的两行内容整体居中。 */
+.device-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.device-row .device-icon {
+  width: 24px;
+  height: 24px;
+  stroke-width: 1.5;
+  color: var(--muted);
+  align-self: center;
+}
+.device-row.offline .device-name {
+  color: var(--muted);
+}
+.device-row .device-icon.connected {
+  color: var(--device);
+  fill: var(--device-soft);
+}
+.device-name {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--foreground);
+}
+.device-caption {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.device-identifier {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.device-caption > svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 1.5;
+  flex-shrink: 0;
+}
+/* 非在线设备保留可见文字状态，不依赖图标或颜色区分授权问题。 */
+.device-state-text {
+  flex-shrink: 0;
+}
+.status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex-shrink: 0;
+  align-self: center;
+}
+.status-dot.online {
+  background: var(--success);
+}
+.status-dot.pending {
+  background: var(--warning);
+}
+.device-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin: 0 6px 16px;
+}
+.device-search svg {
+  position: absolute;
+  left: 8px;
+  width: 13px;
+  color: var(--muted);
+}
+.device-search input {
+  padding-left: 28px;
+  font-size: 12px;
+}
+.sidebar-empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 40px 0;
+  line-height: 1.9;
+}
+.sidebar-empty svg {
+  color: var(--muted);
+}
+.sidebar-empty p {
+  margin-top: 10px;
+  color: var(--muted);
+}
+.sidebar-empty span {
+  font-size: 12px;
+}
+.sidebar-footer {
+  padding: 12px 4px 8px;
+}
+.connect-button {
+  width: 100%;
+  height: 32px;
+  justify-content: center;
+  padding-inline: 12px;
+  background: var(--surface);
+  font-size: 13px;
+  box-shadow: 0 1px 1px rgb(0 0 0 / 3%);
+  color: var(--foreground);
+  border-color: var(--control-edge);
+}
+.connect-button svg {
+  color: var(--accent);
+}
+.connect-button:hover:not(:disabled) {
+  background: var(--surface-subtle);
+  border-color: var(--control-border);
+}
+.sidebar-settings {
+  border-top: 1px solid var(--line);
+  margin-top: 12px;
+  padding: 8px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sidebar-settings .quiet {
+  color: var(--muted);
+  padding: 0 5px;
+  font-size: 12px;
+}
+.sidebar-settings > span {
+  color: var(--muted);
+  font-size: 12px;
+  padding-right: 4px;
+}
+.sidebar-divider {
+  --focus-outline-width: 0px;
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  /* 视觉仅占 1px，命中范围向两侧扩展，避免出现白色沟槽。 */
+  margin: 0 -6px;
+  cursor: col-resize;
+  touch-action: none;
+  z-index: 2;
+  outline: none;
+}
+.sidebar-divider::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: var(--line);
+  pointer-events: none;
+}
+.sidebar-divider:hover::after,
+.sidebar-divider:active::after {
+  background: var(--control-border);
+}
+/* 分栏只使用中间细线提示键盘焦点，不给扩展命中区叠加通用外框。 */
+:root[data-focus-mode='keyboard'] .sidebar-divider:focus-visible::after {
+  background: var(--focus);
+}
+.workspace {
+  grid-column: 3;
+  grid-row: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding: 0;
+}
+.device-header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: var(--titlebar-height);
+  padding: 8px 20px;
+  min-height: 64px;
+  /* 沿用现有设备摘要作为窗口拖动区，标签、刷新和列表保持正常点击。 */
+  user-select: none;
+}
+.device-symbol {
+  width: 28px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: var(--device);
+  align-self: center;
+}
+.device-symbol svg {
+  width: 28px;
+  height: 28px;
+  stroke-width: 1.5;
+  fill: var(--device-soft);
+}
+.device-title {
+  min-width: 0;
+  flex: 1;
+}
+.device-title h1 {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.device-title p {
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 2px;
+  min-width: 0;
+}
+.device-summary {
+  gap: 4px 16px;
+}
+.device-summary-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+.device-summary-item > svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 1.5;
+  flex-shrink: 0;
+}
+.device-connection .status-dot {
+  width: 5px;
+  height: 5px;
+}
+.device-connection {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.serial {
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--line);
+  padding: 0 20px 8px;
+  flex-shrink: 0;
+}
+.tabs button {
+  flex: 0 0 auto;
+  height: 30px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  box-shadow: none;
+  background: transparent;
+  padding: 0 12px;
+  position: relative;
+  color: var(--muted);
+  font-size: 13px;
+}
+.tabs button:hover:not(:disabled) {
+  background: var(--surface-subtle);
+  border-color: transparent;
+  color: var(--foreground);
+}
+.tabs button[aria-selected='true'],
+.tabs button[aria-selected='true']:hover:not(:disabled) {
+  color: var(--foreground);
+  background: var(--hover);
+  font-weight: 500;
+}
+.task-content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 20px;
+  container-type: inline-size;
+  /* 设备信息未溢出时不额外预留右侧滚动条空间，保持左右内边距一致。 */
+  scrollbar-gutter: auto;
+}
+.task-content > [data-slot='tabs-content'] > section + section {
+  margin-top: 24px;
+}
+/* 日志工具栏固定，正文独立滚动；缓存有界且仅渲染视口内行。 */
+.task-content.logs-content {
+  padding: 0;
+  overflow: hidden;
+  scrollbar-gutter: auto;
+}
+.logs-content > [data-slot='tabs-content'][data-state='active'],
+.logs-page {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* 工具栏与性能应用选择器共用浅灰字段样式，表单弹窗保持原有边框。 */

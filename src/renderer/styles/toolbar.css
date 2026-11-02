@@ -1,0 +1,77 @@
+.workspace-toolbar {
+  --toolbar-field-height: max(30px, var(--control-height));
+  flex-shrink: 0;
+  padding: 10px 20px 8px;
+  border-bottom: 1px solid var(--line);
+}
+.toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--toolbar-field-height);
+}
+.workspace-toolbar .app-select-trigger,
+.performance-app-picker .app-select-trigger,
+.toolbar-search input {
+  height: var(--toolbar-field-height, max(30px, var(--control-height)));
+  font-size: 12px;
+  border-color: transparent;
+  background: var(--sidebar);
+  box-shadow: none;
+}
+.workspace-toolbar .app-select-trigger:hover:not(:disabled),
+.workspace-toolbar .app-select-trigger[data-state='open'],
+.performance-app-picker .app-select-trigger:hover:not(:disabled),
+.performance-app-picker .app-select-trigger[data-state='open'],
+.toolbar-search input:hover:not(:disabled):not(:focus) {
+  border-color: transparent;
+  background: var(--hover);
+}
+.toolbar-search {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+.toolbar-search > svg {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: var(--muted);
+  pointer-events: none;
+}
+.toolbar-search input {
+  padding-left: 30px;
+  width: 100%;
+}
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-top: 6px;
+  min-height: calc(var(--control-height) + 6px);
+}
+.workspace-toolbar button.quiet {
+  font-size: 12px;
+  padding-inline: 8px;
+  gap: 6px;
+}
+.workspace-toolbar button.quiet:not(:disabled) > svg {
+  color: var(--muted);
+}
+.workspace-toolbar .checkbox {
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin: 0;
+  font-size: 12px;
+}
+.toolbar-meta {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+/* 筛选只占一行；应用和级别控制宽度，剩余空间留给关键词，窄工作区也不拆散字段。 */

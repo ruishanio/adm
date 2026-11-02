@@ -1,0 +1,192 @@
+.task-notice {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  padding: 8px 20px;
+  min-height: 44px;
+  color: var(--success);
+  font-size: 12px;
+  line-height: 1.6;
+  background: var(--surface-subtle);
+}
+.task-notice > svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+.task-notice > span {
+  flex: 1;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 100px;
+  overflow: auto;
+}
+.task-notice > button {
+  margin-left: auto;
+  font-size: 12px;
+  height: 26px;
+}
+.task-notice.error {
+  color: var(--error);
+}
+.error-mark {
+  flex: 0 !important;
+  border: 1px solid var(--muted);
+  border-radius: 50%;
+  min-width: 16px;
+  height: 16px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 14px;
+}
+.spin {
+  animation: spin 1.2s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.dialog {
+  width: 460px;
+  max-width: calc(100vw - 48px);
+  max-height: calc(100dvh - 48px);
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-dialog);
+  padding: 0;
+  color: var(--foreground);
+  background: var(--surface);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 18%);
+}
+.dialog::backdrop {
+  background: rgb(0 0 0 / 18%);
+}
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.dialog-header h2 {
+  font-size: 14px;
+}
+.dialog-header .icon-button {
+  color: var(--muted);
+}
+.dialog-body {
+  padding: 20px;
+}
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface-subtle);
+  border-top: 1px solid var(--line);
+  padding: 12px 16px;
+}
+.dialog-footer > .muted {
+  margin-right: auto;
+  font-size: 12px;
+}
+.dialog-footer button {
+  min-width: 66px;
+  font-size: 12px;
+}
+.connection-dialog {
+  width: 480px;
+  height: 380px;
+}
+.dialog.connection-dialog,
+.dialog.settings-dialog {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.connection-dialog > .dialog-body {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  padding: 12px 20px 16px;
+}
+.connection-dialog > .dialog-footer,
+.dialog-header {
+  flex-shrink: 0;
+}
+.connection-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.connection-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  height: 32px;
+  width: 100%;
+  padding: 2px;
+  gap: 2px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--sidebar);
+  margin-bottom: 20px;
+}
+.connection-tabs button {
+  border: 1px solid transparent;
+  border-radius: 4px;
+  min-height: 26px;
+  height: 26px;
+  padding: 0 10px;
+  color: var(--muted);
+  background: transparent;
+  box-shadow: none;
+  font-size: 12px;
+}
+.connection-tabs button[aria-selected='true'] {
+  color: var(--foreground);
+  background: var(--surface);
+  border-color: var(--control-edge);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
+  font-weight: 500;
+}
+.connection-tabs button:hover:not(:disabled) {
+  border-color: transparent;
+  background: var(--hover);
+}
+.connection-tabs button[aria-selected='true']:hover:not(:disabled) {
+  background: var(--surface);
+  border-color: var(--control-edge);
+}
+.connection-tabs svg {
+  width: 15px;
+  height: 15px;
+}
+.connection-panel {
+  margin: 0;
+  outline: none;
+}
+.usb-guide {
+  font-size: 12px;
+  line-height: 1.9;
+  color: var(--muted);
+}
+.usb-guide ol {
+  padding-left: 20px;
+  margin: 18px 0;
+  list-style: decimal;
+}
+.usb-guide li + li {
+  margin-top: 10px;
+}
+.path-display {
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 12px;
+  background: var(--surface-subtle);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  padding: 8px 12px;
+  overflow-wrap: anywhere;
+  margin: 12px 0;
+}
