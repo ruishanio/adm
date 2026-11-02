@@ -14,7 +14,7 @@ import {
   type AppDetails,
   type Target,
 } from '../../shared/contracts';
-type Tab = 'info' | 'apps' | 'files' | 'logs';
+type Tab = 'performance' | 'info' | 'apps' | 'files' | 'logs';
 /**
  * 创建跨页面共享的工作台，处理会话切换、任务互斥和异步数据回读。
  * @param api 受控的原生业务接口，测试时可注入模拟实现。

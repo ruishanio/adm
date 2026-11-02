@@ -32,3 +32,17 @@ it('日志接口剥离展示字段并只传筛选和游标，不向前端开放�
     args: ['session', { uid: '2000', level: 'W', keyword: '中文', crashesOnly: false }, 500],
   });
 });
+it('性能接口绑定传输会话，仅发送包名，不开放任意 shell 参数', async () => {
+  await api.startPerformance(reactive({ serial: 'perf-device', transportId: '44', model: 'Phone' }));
+  expect(invoke).toHaveBeenLastCalledWith('adm_call', {
+    method: 'startPerformance',
+    args: [{ serial: 'perf-device', transportId: '44' }],
+  });
+  await api.samplePerformance('session', 'com.test.app');
+  expect(invoke).toHaveBeenLastCalledWith('adm_call', {
+    method: 'samplePerformance',
+    args: ['session', 'com.test.app'],
+  });
+  await api.stopPerformance('session');
+  expect(invoke).toHaveBeenLastCalledWith('adm_call', { method: 'stopPerformance', args: ['session'] });
+});

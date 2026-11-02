@@ -8,6 +8,7 @@ mod models;
 #[cfg(target_os = "macos")]
 mod native_menu;
 mod parsing;
+mod performance;
 mod process;
 mod settings;
 #[cfg(test)]
@@ -34,6 +35,7 @@ struct Service {
     drops: Mutex<HashSet<PathBuf>>,
     resources: PathBuf,
     logs: logcat::Logcat,
+    performance: performance::Performance,
 }
 struct Operation<'a>(&'a Service, Cancel);
 impl Drop for Operation<'_> {
@@ -122,8 +124,21 @@ impl Service {
                 json!({"devices":devices,"settings":store,"adbPath":adb_path,"platform":if cfg!(windows){"win32"}else{"darwin"},"version":app.package_info().version.to_string(),"error":error}),
             );
         }
-        // 实时日志拥有独立的只读进程和缓存，不占用安装、文件操作的任务锁。
+        // 日志与性能监控各自管理只读会话，不占用安装、文件操作的任务锁。
         match method.as_str() {
+            "startPerformance" => {
+                let (target,): (Target,) = decoded(args)?;
+                return encoded(self.performance.start(self.adb(cancellation())?, target)?);
+            }
+            "samplePerformance" => {
+                let (id, package): (String, String) = decoded(args)?;
+                return encoded(self.performance.sample(&id, &package)?);
+            }
+            "stopPerformance" => {
+                let (id,): (String,) = decoded(args)?;
+                self.performance.stop(&id);
+                return Ok(Value::Null);
+            }
             "startLogcat" => {
                 let (target,): (Target,) = decoded(args)?;
                 return encoded(self.logs.start(self.adb(cancellation())?, target)?);
@@ -481,6 +496,7 @@ pub fn run() {
                 drops: Mutex::new(HashSet::new()),
                 resources: app.path().resource_dir()?,
                 logs: logcat::Logcat::default(),
+                performance: performance::Performance::default(),
             }));
             Ok(())
         })
@@ -499,6 +515,7 @@ pub fn run() {
                 WindowEvent::Destroyed => {
                     state.cancel();
                     state.logs.stop_all();
+                    state.performance.stop_all();
                 }
                 _ => {}
             }

@@ -14,6 +14,9 @@ async function call<T>(method: string, ...args: unknown[]): Promise<T> {
 }
 // 前端仅暴露业务调用；本地路径、ADB 进程与文件读写均由 Rust 校验并执行。
 export const api: Api = {
+  startPerformance: (t) => call('startPerformance', target(t)),
+  samplePerformance: (id, packageName) => call('samplePerformance', id, packageName),
+  stopPerformance: (id) => call('stopPerformance', id),
   startLogcat: (t) => call('startLogcat', target(t)),
   readLogcat: (id, after) => call('readLogcat', id, after),
   stopLogcat: (id) => call('stopLogcat', id),

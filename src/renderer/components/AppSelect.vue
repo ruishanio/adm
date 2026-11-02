@@ -16,6 +16,7 @@ defineProps<{
   modelValue: string;
   options: { value: string; label: string }[];
   disabled?: boolean;
+  variant?: 'default' | 'inline';
 }>();
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>();
 </script>
@@ -29,7 +30,7 @@ const emit = defineEmits<{ 'update:modelValue': [value: string] }>();
       }
     "
   >
-    <SelectTrigger :id="id" class="app-select-trigger">
+    <SelectTrigger :id="id" :class="['app-select-trigger', { 'app-select-inline': variant === 'inline' }]">
       <SelectValue>{{ options.find((option) => option.value === modelValue)?.label }}</SelectValue>
       <ChevronDown aria-hidden="true" />
     </SelectTrigger>

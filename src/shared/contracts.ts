@@ -145,6 +145,9 @@ export interface Snapshot {
   error?: string;
 }
 export interface Api {
+  startPerformance(target: Target): Promise<string>;
+  samplePerformance(id: string, packageName: string): Promise<PerformanceSample>;
+  stopPerformance(id: string): Promise<void>;
   startLogcat(target: Target): Promise<string>;
   readLogcat(id: string, after: number): Promise<LogBatch>;
   stopLogcat(id: string): Promise<void>;
@@ -190,3 +193,39 @@ export const deviceStatus = (d: Device) =>
   ({ device: t('已连接'), unauthorized: t('等待授权'), offline: t('离线'), no: t('无访问权限') })[d.state] ||
   d.state;
 export const targetKey = (d: Target) => `${d.serial}@${d.transportId}`;
+
+export interface CpuCounter {
+  name: string;
+  total: number | null;
+  idle: number | null;
+  frequencyMhz: number | null;
+  online: boolean | null;
+}
+export interface NetworkCounter {
+  name: string;
+  received: number;
+  sent: number;
+}
+export interface FrameCounter {
+  key: string;
+  frames: number;
+  janky: number;
+}
+export interface PerformanceSample {
+  uptimeSeconds: number | null;
+  cpus: CpuCounter[];
+  memoryTotal: number | null;
+  memoryAvailable: number | null;
+  swapTotal: number | null;
+  swapFree: number | null;
+  networks: NetworkCounter[];
+  batteryPercent: number | null;
+  batteryTemperature: number | null;
+  thermalStatus: number | null;
+  app: {
+    packageName: string;
+    pssBytes: number | null;
+    uptimeSeconds: number | null;
+    frames: FrameCounter[];
+  } | null;
+}

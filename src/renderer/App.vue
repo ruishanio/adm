@@ -10,6 +10,7 @@ import {
   PackagePlus,
   FolderOpen,
   ScrollText,
+  Activity,
   LoaderCircle,
   Check,
   X,
@@ -30,6 +31,7 @@ import ApplicationsPage from './components/ApplicationsPage.vue';
 import InstallDialog from './components/InstallDialog.vue';
 import FilesPage from './components/FilesPage.vue';
 import DeviceLogsPage from './components/DeviceLogsPage.vue';
+import PerformancePage from './components/PerformancePage.vue';
 import ConnectionDialog from './components/ConnectionDialog.vue';
 import SettingsDialog from './components/SettingsDialog.vue';
 import AppDialog from './components/AppDialog.vue';
@@ -44,6 +46,7 @@ const fullscreen = ref(false);
 const initialPlatform = /Mac/.test(navigator.platform) ? 'darwin' : 'win32';
 const tabs = computed(() => [
   { value: 'info', label: t('设备信息'), icon: Smartphone },
+  { value: 'performance', label: t('性能监控'), icon: Activity },
   { value: 'apps', label: t('应用管理'), icon: AppWindow },
   { value: 'files', label: t('文件管理'), icon: FolderOpen },
   { value: 'logs', label: t('设备日志'), icon: ScrollText },
@@ -138,10 +141,12 @@ onBeforeUnmount(() => {
               'file-content': s.tab === 'files',
               'installed-app-content': s.tab === 'apps',
               'logs-content': s.tab === 'logs',
+              'performance-content': s.tab === 'performance',
             },
           ]"
         >
           <TabsContent value="info"><DeviceInfoPage /></TabsContent
+          ><TabsContent value="performance"><PerformancePage v-if="s.tab === 'performance'" /></TabsContent
           ><TabsContent value="apps"><ApplicationsPage /></TabsContent
           ><TabsContent value="files"><FilesPage /></TabsContent
           ><TabsContent value="logs"><DeviceLogsPage v-if="s.tab === 'logs'" /></TabsContent></div
