@@ -104,7 +104,15 @@ macOS 最低 13.3，使用系统 WKWebView；Windows 使用 WebView2，安装器
 
 流程执行检查与测试、生产构建、打包、完整性检查及安装验证：macOS 挂载 DMG 检查应用和签名；Windows 在临时 Runner 上执行静默安装、文件回读和卸载。
 
-成功后上传 `ADM-<tag>-<平台架构>` Artifact，包含安装包、应用 ZIP 和校验信息，保留 30 天。下载入口为 [Package 运行记录](https://github.com/ruishanio/adm/actions/workflows/package.yml)，不自动创建 GitHub Release。应用内部版本仍以 `package.json` 为准，测试后缀只区分构建 tag。
+分发许可检查通过后上传 `ADM-<tag>-<平台架构>` Artifact，包含安装包、应用 ZIP 和校验信息，保留 30 天。下载入口为 [Package 运行记录](https://github.com/ruishanio/adm/actions/workflows/package.yml)。应用内部版本仍以 `package.json` 为准，测试后缀只区分构建 tag。
+
+两个平台任务都成功后，独立的 `release` 任务使用 `scripts/release_ci.py` 下载并核对同一次运行的产物。构建任务保持只读权限，只有发布任务有 `contents: write`。脚本再次执行分发许可检查，验证 tag / commit、版本、平台、许可清单摘要和文件 SHA-256，然后创建 Release 草稿、上传附件、回读确认完整性，最后公开。`v0.1.0` 为正式 Release，`v0.1.0-build.1` 等后缀标签为 Pre-release，不标记 Latest。
+
+Release 附件包含 macOS DMG、Windows 安装 EXE、两平台 ZIP、统一的 `SHA256SUMS.txt` 和按平台命名的两份构建信息。校验文件覆盖四个分发包及两份构建信息，避免两个平台的同名文件相互覆盖。
+
+上传失败会保留草稿，可在原工作流中只重跑失败的发布任务。已公开版本只核对附件，不自动替换；重新构建后若文件摘要不同，应发布新 tag。修改工作流不会补发旧 tag；旧构建也不会包含当前许可材料。
+
+发布脚本的离线回归测试为 `python3 -m unittest discover -s tests/release -v`（Windows 使用 `python`），CI 和 Package 都会执行。测试模拟 GitHub 响应，不上传文件；当前 `legal/release-review.json` 仍有待办时，发布检查按预期阻止上传。
 
 CI 不连接真实 Android 设备，也不执行 APK 安装或设置设备所有者。
 

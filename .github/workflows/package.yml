@@ -48,7 +48,9 @@ jobs:
         run: npm ci --no-audit --no-fund
 
       - name: 自动化测试
-        run: npm test
+        run: |
+          npm test
+          python -m unittest discover -s tests/release -v
 
       - name: 配置锁定的 Rust 工具链
         run: rustup toolchain install 1.99.1 --profile minimal --component rustfmt --component clippy
@@ -91,3 +93,35 @@ jobs:
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
+
+  release:
+    name: 发布 GitHub Release
+    needs: package
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # 仅发布任务拥有写权限；两个平台全部成功才会进入此任务。
+    permissions:
+      contents: write
+    steps:
+      - name: 检出同一 tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: 配置 Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '24'
+
+      - name: 下载本次运行的双平台产物
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: ADM-${{ github.ref_name }}-*
+          path: artifacts/release-downloads
+          # 两个平台有同名的校验清单及构建信息，先分目录下载，再校验合并。
+          merge-multiple: false
+
+      - name: 校验附件并发布 Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/release_ci.py --publish
