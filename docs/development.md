@@ -108,7 +108,7 @@ macOS 最低 13.3，使用系统 WKWebView；Windows 使用 WebView2，安装器
 
 两个平台任务都成功后，独立的 `release` 任务使用 `scripts/release_ci.py` 下载并核对同一次运行的产物。构建任务保持只读权限，只有发布任务有 `contents: write`。脚本再次执行分发许可检查，验证 tag / commit、版本、平台、许可清单摘要和文件 SHA-256，然后创建 Release 草稿、上传附件、回读确认完整性，最后公开。`v0.1.0` 为正式 Release，`v0.1.0-build.1` 等后缀标签为 Pre-release，不标记 Latest。
 
-Release 附件包含 macOS DMG、Windows 安装 EXE、两平台 ZIP、统一的 `SHA256SUMS.txt` 和按平台命名的两份构建信息。校验文件覆盖四个分发包及两份构建信息，避免两个平台的同名文件相互覆盖。
+Release 附件仅包含 macOS DMG、Windows 安装 EXE 和两平台 ZIP。上传前仍核对版本、提交、文件大小与 SHA-256；构建信息和校验清单保留在 Actions Artifact 中。发布任务另将按平台命名的两份构建信息及统一校验清单保存为 `release-records-<tag>`，保留 30 天；校验清单覆盖四个分发包及两份构建信息。
 
 上传失败会保留草稿，可在原工作流中只重跑失败的发布任务。已公开版本只核对附件，不自动替换；重新构建后若文件摘要不同，应发布新 tag。修改工作流不会补发旧 tag；旧构建也不会包含当前许可材料。
 

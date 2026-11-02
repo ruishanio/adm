@@ -144,3 +144,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: python scripts/release_ci.py --publish
+
+      # 汇总记录只存为 Actions Artifact，供排查构建来源，不占用 Release 下载列表。
+      - name: 保存构建记录与校验清单
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: release-records-${{ github.ref_name }}
+          path: |
+            release/publish/build-info-*.json
+            release/publish/SHA256SUMS.txt
+          if-no-files-found: ignore
+          retention-days: 30

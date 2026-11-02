@@ -65,7 +65,7 @@ ADM 将常用的 ADB 操作放进一个桌面工作台。通过 USB 或网络连
 | **macOS**   | Apple Silicon（ARM64），macOS 13.3 或更新版本 | 打开 `ADM-版本-mac-arm64.dmg`，将 ADM 拖入 Applications。                           |
 | **Windows** | x64，Windows 10 / 11                          | 运行 `ADM-版本-win-x64-setup.exe`，按向导安装。缺少 WebView2 时，安装器会联网下载。 |
 
-Release 同时提供两平台应用 ZIP、统一的 `SHA256SUMS.txt`，以及记录版本与提交的 `build-info-mac-arm64.json`、`build-info-win-x64.json`。Actions Artifact 内仍保留各平台的 `SHA256SUMS.txt` 和 `build-info.json`。Windows 便携 ZIP 需要系统已安装 WebView2。
+Release 提供两平台安装包和应用 ZIP，可在附件旁查看 SHA-256。构建信息与校验清单保留在 Actions Artifact 中。Windows 便携 ZIP 需要系统已安装 WebView2。
 
 > macOS 使用 ad-hoc 签名，尚未公证，Windows 尚未代码签名。仅提供以上两个平台的构建。
 

@@ -57,9 +57,12 @@ class ReleaseTests(unittest.TestCase):
              "state": "uploaded", "digest": f"sha256:{release.digest(path)}"} for path in assets
         ]}
 
-    def test_combines_both_platforms_without_overwriting_build_info(self):
+    def test_only_packages_are_published_and_audit_files_stay_in_ci(self):
         assets = self.prepare()
-        self.assertEqual(len(assets), 7)
+        self.assertEqual({path.name for path in assets}, {
+            "ADM-0.1.0-mac-arm64.dmg", "ADM-0.1.0-mac-arm64.zip",
+            "ADM-0.1.0-win-x64-setup.exe", "ADM-0.1.0-win-x64.zip",
+        })
         for target in ["mac-arm64", "win-x64"]:
             self.assertTrue((self.output / f"build-info-{target}.json").is_file())
         lines = (self.output / "SHA256SUMS.txt").read_text().splitlines()

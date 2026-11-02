@@ -29,6 +29,7 @@ def prepare_assets(root, downloads, output, tag, commit):
     manifest_hash = digest(root / "legal/manifest.json")
     review = json.loads((root / "legal/release-review.json").read_text(encoding="utf-8"))
     copies = []
+    public_names = set()
     for platform, arch, installer in [("mac", "arm64", ".dmg"), ("win", "x64", "-setup.exe")]:
         target = f"{platform}-{arch}"
         directory = downloads / f"ADM-{tag}-{target}"
@@ -45,6 +46,7 @@ def prepare_assets(root, downloads, output, tag, commit):
                 raise ValueError(f"{target} 的 {key} 与本次发布不一致。")
         prefix = f"{metadata['shortName']}-{version}-{target}"
         names = {prefix + ".zip", prefix + installer}
+        public_names.update(names)
         entries = info.get("files", [])
         if len(entries) != 2 or {entry["file"] for entry in entries} != names:
             raise ValueError(f"{target} 缺少安装包或便携包，或包含意外文件。")
@@ -67,7 +69,8 @@ def prepare_assets(root, downloads, output, tag, commit):
     assets = sorted(output.iterdir())
     sums_path = output / "SHA256SUMS.txt"
     sums_path.write_text("".join(f"{digest(path)}  {path.name}\n" for path in assets), encoding="utf-8")
-    return [*assets, sums_path]
+    # 构建信息和汇总校验清单保留在 CI；Release 只公开已验证的安装包与 ZIP。
+    return [path for path in assets if path.name in public_names]
 
 
 def gh(*args):
@@ -118,7 +121,7 @@ def publish(repository, tag, commit, assets):
             f"ADM {tag}\n\n"
             "- macOS Apple Silicon：下载 `.dmg` 安装，或使用应用 ZIP。\n"
             "- Windows x64：下载 `-setup.exe` 安装，或使用便携 ZIP。\n"
-            "- `SHA256SUMS.txt` 可核对附件；两份 `build-info-*.json` 记录构建来源。\n\n"
+            "- 附件旁可查看 SHA-256；构建记录和校验清单保留在 Actions 产物中。\n\n"
             "macOS 使用 ad-hoc 签名，尚未公证；Windows 尚未代码签名。\n\n"
             f"构建提交：`{commit}`\n", encoding="utf-8",
         )
