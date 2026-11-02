@@ -2,7 +2,7 @@
 import { computed, defineComponent, nextTick, reactive } from 'vue';
 import { mount, flushPromises } from '@vue/test-utils';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { useAppResources } from '../../src/renderer/composables/app-resources';
+import { useAppResources } from '../../src/renderer/features/apps/resources';
 import type { Workbench } from '../../src/renderer/composables/workbench';
 import type { InstalledApp } from '../../src/shared/contracts';
 const cleanup: (() => void)[] = [];
@@ -36,7 +36,7 @@ function setup() {
   });
   const api = {
     appRunning: vi.fn(async () => ['com.example.app0']),
-    appIcons: vi.fn(async (t, packages: string[]) =>
+    appIcons: vi.fn(async (_target, packages: string[]) =>
       Object.fromEntries(packages.map((p) => [p, 'data:image/png;base64,image'])),
     ),
   };

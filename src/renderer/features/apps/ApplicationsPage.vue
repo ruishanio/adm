@@ -2,7 +2,7 @@
 import { PackagePlus } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 import { useWorkbench } from '@/composables/workbench';
-import { t } from '../../shared/i18n';
+import { t } from '../../../shared/i18n';
 import InstalledAppsPage from './InstalledAppsPage.vue';
 
 const w = useWorkbench();

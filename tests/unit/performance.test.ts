@@ -2,9 +2,13 @@
 import { computed } from 'vue';
 import { mount, flushPromises } from '@vue/test-utils';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { cpuUsage, performancePoint, createPerformance } from '../../src/renderer/composables/performance';
-import PerformancePage from '../../src/renderer/components/PerformancePage.vue';
-import PerformanceChart from '../../src/renderer/components/PerformanceChart.vue';
+import {
+  cpuUsage,
+  performancePoint,
+  createPerformance,
+} from '../../src/renderer/features/performance/session';
+import PerformancePage from '../../src/renderer/features/performance/PerformancePage.vue';
+import PerformanceChart from '../../src/renderer/features/performance/PerformanceChart.vue';
 import { workbenchKey } from '../../src/renderer/composables/workbench';
 import type { Api, PerformanceSample, CpuCounter } from '../../src/shared/contracts';
 import { setLanguage } from '../../src/shared/i18n';

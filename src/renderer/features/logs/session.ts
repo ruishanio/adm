@@ -1,6 +1,7 @@
+import { readAppOptions } from '../../lib/app-options';
 import { computed, reactive, shallowRef } from 'vue';
-import type { Api, LogApp, LogEntry, LogFilter, Target } from '../../shared/contracts';
-import { t } from '../../shared/i18n';
+import type { Api, LogApp, LogEntry, LogFilter, Target } from '../../../shared/contracts';
+import { t } from '../../../shared/i18n';
 
 export function matchesLog(entry: LogEntry, filter: LogFilter): boolean {
   const rank = (level: string) => Math.max(0, 'VDIWEF'.indexOf(level));
@@ -59,7 +60,7 @@ export function createLogcat(api: Api) {
     if (id) void api.stopLogcat(id).catch(() => {});
   };
 
-  async function loadApps() {
+  async function loadApps(refresh = true) {
     if (!target || state.appsLoading) return;
     const version = epoch,
       request = ++appRequest,
@@ -67,7 +68,7 @@ export function createLogcat(api: Api) {
     state.appsLoading = true;
     state.appsError = '';
     try {
-      const list = await api.logcatApps(current);
+      const list = await readAppOptions(api, current, refresh);
       if (version !== epoch || request !== appRequest) return;
       apps.value = list;
       if (state.packageName && !list.some((a) => a.packageName === state.packageName)) {
@@ -127,7 +128,7 @@ export function createLogcat(api: Api) {
       exportNotice: '',
     });
     if (!target) return;
-    void loadApps();
+    void loadApps(false);
     try {
       const id = await api.startLogcat({ ...target });
       // 旧设备的启动可能晚于切换/卸载完成；必须回收它，而不是挂到新页面上。

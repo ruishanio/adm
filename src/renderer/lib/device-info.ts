@@ -1,3 +1,4 @@
+import { deviceBytes as bytes } from './format';
 import type { Details } from '../../shared/contracts';
 import { t, type MessageKey } from '../../shared/i18n';
 
@@ -7,8 +8,6 @@ const row = (label: MessageKey, value?: string | null, wide = false): Property =
   value: value || '—',
   wide,
 });
-const bytes = (value: number) =>
-  value >= 1024 ** 3 ? `${(value / 1024 ** 3).toFixed(1)} GiB` : `${(value / 1024 ** 2).toFixed(0)} MiB`;
 
 // 0 是有效读数；缺失总量或可用量时只呈现已知部分，不推算使用率。
 function capacity(total?: number | null, available?: number | null): string {

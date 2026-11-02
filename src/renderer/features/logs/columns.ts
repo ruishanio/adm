@@ -1,5 +1,5 @@
 import { computed } from 'vue';
-import { useColumnWidths } from './column-widths';
+import { useColumnWidths } from '../../composables/column-widths';
 
 export function useLogColumns() {
   const columns = useColumnWidths(

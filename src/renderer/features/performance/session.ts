@@ -1,5 +1,5 @@
 import { reactive, shallowRef } from 'vue';
-import type { Api, CpuCounter, PerformanceSample, Target } from '../../shared/contracts';
+import type { Api, CpuCounter, PerformanceSample, Target } from '../../../shared/contracts';
 
 export interface PerformancePoint {
   time: number;

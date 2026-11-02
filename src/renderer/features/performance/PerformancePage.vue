@@ -13,13 +13,15 @@ import {
   ChevronRight,
 } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
-import AppSelect from './AppSelect.vue';
-import AppSearchSelect from './AppSearchSelect.vue';
+import AppSelect from '../../components/AppSelect.vue';
+import AppSearchSelect from '../../components/AppSearchSelect.vue';
 import PerformanceChart from './PerformanceChart.vue';
 import { useWorkbench } from '@/composables/workbench';
-import { createPerformance, type PerformancePoint } from '@/composables/performance';
-import { t, type MessageKey } from '../../shared/i18n';
-import type { LogApp } from '../../shared/contracts';
+import { createPerformance, type PerformancePoint } from '@/features/performance/session';
+import { readAppOptions, toAppOptions } from '../../lib/app-options';
+import { performanceBytes as bytes, rateLabel as rate, percentLabel as percent } from '../../lib/format';
+import { t, type MessageKey } from '../../../shared/i18n';
+import type { LogApp } from '../../../shared/contracts';
 const w = useWorkbench();
 const perf = createPerformance(w.api),
   s = perf.state;
@@ -29,7 +31,7 @@ const apps = ref<LogApp[]>([]),
 const network = ref('');
 const coresExpanded = ref(false);
 let appEpoch = 0;
-async function loadApps() {
+async function loadApps(refresh = true) {
   const version = ++appEpoch;
   apps.value = [];
   appsError.value = '';
@@ -37,7 +39,7 @@ async function loadApps() {
   if (!w.online.value || !w.device.value) return;
   appsLoading.value = true;
   try {
-    const list = await w.api.logcatApps(w.device.value);
+    const list = await readAppOptions(w.api, w.device.value, refresh);
     if (version === appEpoch) apps.value = list;
   } catch (error) {
     if (version === appEpoch) appsError.value = error instanceof Error ? error.message : String(error);
@@ -51,7 +53,7 @@ watch(
     perf.start(w.online.value ? w.device.value : undefined);
     network.value = '';
     coresExpanded.value = false;
-    void loadApps();
+    void loadApps(false);
   },
   { immediate: true },
 );
@@ -67,13 +69,7 @@ const appOptions = computed(() => [
   ...(s.packageName && !apps.value.some((a) => a.packageName === s.packageName)
     ? [{ value: s.packageName, label: s.packageName }]
     : []),
-  ...[...apps.value]
-    .sort((a, b) => (a.label || a.packageName).localeCompare(b.label || b.packageName))
-    .map((a) => ({
-      value: a.packageName,
-      label: a.label || a.packageName,
-      description: a.label ? a.packageName : undefined,
-    })),
+  ...toAppOptions(apps.value),
 ]);
 const intervalOptions = computed(() =>
   [1, 2, 5].map((n) => ({ value: String(n * 1000), label: t('每 {seconds} 秒', { seconds: n }) })),
@@ -92,15 +88,6 @@ watch(networkOptions, (options) => {
     network.value = options.find((n) => /^(wlan|eth|rmnet)/.test(n.value))?.value || options[0]?.value || '';
 });
 const networkValue = computed(() => latest.value?.networks[network.value]);
-const percent = (n?: number | null) => (n == null ? '—' : `${n.toFixed(1)}%`);
-const bytes = (n?: number | null) =>
-  n == null
-    ? '—'
-    : n >= 1024 ** 3
-      ? `${(n / 1024 ** 3).toFixed(2)} GiB`
-      : `${(n / 1024 ** 2).toFixed(1)} MiB`;
-const rate = (n?: number | null) =>
-  n == null ? '—' : n >= 1024 ** 2 ? `${(n / 1024 ** 2).toFixed(1)} MiB/s` : `${(n / 1024).toFixed(1)} KiB/s`;
 const usage = computed(() =>
   sample.value?.memoryTotal != null && sample.value.memoryAvailable != null
     ? sample.value.memoryTotal - sample.value.memoryAvailable
@@ -335,7 +322,7 @@ const pssMax = computed(() => Math.max(64 * 1024 ** 2, ...perf.points.value.map(
               :disabled="appsLoading"
               :title="t('刷新应用')"
               :aria-label="t('刷新应用')"
-              @click="loadApps"
+              @click="loadApps()"
               ><RefreshCw :class="{ spin: appsLoading }" aria-hidden="true"
             /></Button>
           </div>

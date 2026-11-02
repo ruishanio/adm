@@ -2,7 +2,7 @@
   "schema": 1,
   "version": "0.1.2",
   "inputs": {
-    "package.json": "8ca3c9c03ac43df6e668f3502f919918a484302bf5b42753c9a9cb5e31fce628",
+    "package.json": "655a8e54072fe0b900652aebf591b59715a6a034188072391fdd7ea1341946ca",
     "package-lock.json": "ae7881d8d533dc82b19a615b4f4340f2fed1ed357839251327033e84f9de3e93",
     "src-tauri/Cargo.toml": "52d45a6843b3eb54e736632f6c47be128a79f39dd3540ace2046682007570269",
     "src-tauri/Cargo.lock": "571c071e96d8d6eaf9850256b8caee98bfb2174f9e7409f380f54d877a7fec1c",

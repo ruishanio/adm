@@ -1,6 +1,6 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
-import type { Workbench } from './workbench';
-import type { InstalledApp } from '../../shared/contracts';
+import type { Workbench } from '../../composables/workbench';
+import type { InstalledApp } from '../../../shared/contracts';
 
 /** 图标按可见行批量读取；进程独立串行轮询，换设备、隐藏页面和迟到响应均隔离。 */
 export function useAppResources(w: Workbench) {

@@ -3,8 +3,8 @@ import { defineComponent, effectScope, nextTick } from 'vue';
 import { mount, flushPromises } from '@vue/test-utils';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { createWorkbench, workbenchKey } from '../../src/renderer/composables/workbench';
-import ApplicationsPage from '../../src/renderer/components/ApplicationsPage.vue';
-import InstallDialog from '../../src/renderer/components/InstallDialog.vue';
+import ApplicationsPage from '../../src/renderer/features/apps/ApplicationsPage.vue';
+import InstallDialog from '../../src/renderer/features/install/InstallDialog.vue';
 import type { Api, AppDetails, InstalledApp, Snapshot } from '../../src/shared/contracts';
 import { setLanguage } from '../../src/shared/i18n';
 
@@ -144,7 +144,7 @@ it('名称优先显示，支持中文名称及包名搜索，系统应用可选�
   expect(view.get('.app-identity').attributes('title')).toContain(app.packageName);
   expect(view.get('tbody tr').text()).toContain('运行中');
   expect(view.get('tbody tr').text()).toContain('2.0');
-  expect(view.get('tbody tr').text()).toContain('2.0 KB');
+  expect(view.get('tbody tr').text()).toContain('2.0 KiB');
   await view.get('input[type="search"]').setValue('笔记');
   expect(view.findAll('tbody tr')).toHaveLength(1);
   await view.get('input[type="search"]').setValue('NOTES');

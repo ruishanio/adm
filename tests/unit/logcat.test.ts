@@ -2,9 +2,9 @@
 import { computed, effectScope, nextTick } from 'vue';
 import { mount, flushPromises } from '@vue/test-utils';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { createLogcat, matchesLog } from '../../src/renderer/composables/logcat';
+import { createLogcat, matchesLog } from '../../src/renderer/features/logs/session';
 import { workbenchKey } from '../../src/renderer/composables/workbench';
-import DeviceLogsPage from '../../src/renderer/components/DeviceLogsPage.vue';
+import DeviceLogsPage from '../../src/renderer/features/logs/DeviceLogsPage.vue';
 import type { Api, LogBatch, LogEntry } from '../../src/shared/contracts';
 import { setLanguage } from '../../src/shared/i18n';
 const target = { serial: 'emulator-5570', transportId: '42' };

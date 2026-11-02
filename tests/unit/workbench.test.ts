@@ -150,3 +150,32 @@ it('变更组件撤销旧检查和授权', async () => {
   expect(w.state.ownerCheck).toBeUndefined();
   expect(w.state.consent).toBe(false);
 });
+
+it('销毁工作台后移除领域监听，重复销毁不会再触发设备或目录读取', async () => {
+  const w = await ready();
+  w.dispose();
+  w.dispose();
+  vi.mocked(api.details).mockClear();
+  w.state.selected = targetKey(second);
+  w.state.tab = 'files';
+  await nextTick();
+  expect(api.details).not.toHaveBeenCalled();
+  expect(api.listFiles).not.toHaveBeenCalled();
+});
+it('所有者检查期间断线，迟到结果不能恢复已撤销的授权', async () => {
+  const w = await ready();
+  let finish!: (value: { canSet: boolean; alreadySet: boolean; summary: string }) => void;
+  api.checkOwner = vi.fn(
+    () =>
+      new Promise<Awaited<ReturnType<Api['checkOwner']>>>((resolve) => {
+        finish = resolve;
+      }),
+  );
+  const checking = w.checkOwner();
+  snapshot.devices = [{ ...first, state: 'offline' }];
+  await w.refresh();
+  finish({ canSet: true, alreadySet: false, summary: 'old' });
+  await checking;
+  expect(w.state.ownerCheck).toBeUndefined();
+  expect(w.state.consent).toBe(false);
+});

@@ -4,14 +4,15 @@ import { Pause, Play, Download, RefreshCw, Search } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import AppDialog from './AppDialog.vue';
-import AppSelect from './AppSelect.vue';
-import AppSearchSelect from './AppSearchSelect.vue';
+import AppDialog from '../../components/AppDialog.vue';
+import AppSelect from '../../components/AppSelect.vue';
+import AppSearchSelect from '../../components/AppSearchSelect.vue';
 import { useWorkbench } from '@/composables/workbench';
-import { createLogcat } from '@/composables/logcat';
-import { useLogColumns } from '@/composables/log-columns';
-import { t } from '../../shared/i18n';
-import type { LogEntry } from '../../shared/contracts';
+import { createLogcat } from '@/features/logs/session';
+import { useLogColumns } from '@/features/logs/columns';
+import { toAppOptions } from '../../lib/app-options';
+import { t } from '../../../shared/i18n';
+import type { LogEntry } from '../../../shared/contracts';
 
 const w = useWorkbench();
 const logs = createLogcat(w.api),
@@ -39,13 +40,7 @@ const applicationValue = computed({
 });
 const applications = computed(() => [
   { value: '__all__', label: s.appsLoading ? t('正在读取应用列表…') : t('全部应用') },
-  ...[...logs.apps.value]
-    .sort((a, b) => (a.label || a.packageName).localeCompare(b.label || b.packageName))
-    .map((app) => ({
-      value: app.packageName,
-      label: app.label || app.packageName,
-      description: app.label ? app.packageName : undefined,
-    })),
+  ...toAppOptions(logs.apps.value),
 ]);
 const levels = computed(() => [
   { value: 'V', label: t('全部级别') },
@@ -128,7 +123,7 @@ function pauseOnNavigate(event: KeyboardEvent) {
             :aria-label="t('刷新应用')"
             :title="t('刷新应用')"
             :disabled="!w.online.value || s.appsLoading"
-            @click="logs.loadApps"
+            @click="logs.loadApps()"
             ><RefreshCw :class="{ spin: s.appsLoading }" aria-hidden="true"
           /></Button>
         </div>

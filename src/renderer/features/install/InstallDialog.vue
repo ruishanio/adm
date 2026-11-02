@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { t } from '../../shared/i18n';
+import { t } from '../../../shared/i18n';
 import { computed } from 'vue';
 import { Package, Upload, FilePlus2, Download, LoaderCircle, X } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useWorkbench } from '@/composables/workbench';
-import { sizeLabel } from './format';
-import AppDialog from './AppDialog.vue';
+import { sizeLabel } from '../../lib/format';
+import AppDialog from '../../components/AppDialog.vue';
 const w = useWorkbench(),
   s = w.state;
 const properties = computed(() =>

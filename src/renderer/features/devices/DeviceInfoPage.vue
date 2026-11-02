@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { t } from '../../shared/i18n';
+import { t } from '../../../shared/i18n';
 import { computed } from 'vue';
 import {
   Smartphone,
@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useWorkbench } from '@/composables/workbench';
-import { deviceStatus } from '../../shared/contracts';
+import { deviceStatus } from '../../../shared/contracts';
 import { deviceInfoGroups, buildProperties, overviewMetrics } from '@/lib/device-info';
 const w = useWorkbench(),
   s = w.state;

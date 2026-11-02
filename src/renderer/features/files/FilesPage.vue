@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { t } from '../../shared/i18n';
+import { t } from '../../../shared/i18n';
 import { computed, ref, nextTick, watch } from 'vue';
 import {
   RefreshCw,
@@ -21,7 +21,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useWorkbench } from '@/composables/workbench';
-import { sizeLabel, parentPath, displayPath } from './format';
+import { sizeLabel, parentPath, displayPath } from '../../lib/format';
 import {
   ContextMenu,
   ContextMenuTrigger,
@@ -36,11 +36,12 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from 'reka-ui';
-import AppDialog from './AppDialog.vue';
-import ResizableTable from './ResizableTable.vue';
+import AppDialog from '../../components/AppDialog.vue';
+import ResizableTable from '../../components/ResizableTable.vue';
 import type { ColumnDefinition } from '@/composables/column-widths';
-import type { Target, DeviceFile } from '../../shared/contracts';
-import { locale } from '../../shared/i18n';
+import type { DeviceFile } from '../../../shared/contracts';
+import { locale } from '../../../shared/i18n';
+import { useFileActions } from './actions';
 const w = useWorkbench(),
   s = w.state;
 const editing = ref(false);
@@ -80,60 +81,8 @@ async function navigate() {
   if (!s.notice?.error) editing.value = false;
 }
 watch(() => s.selected, cancelEdit);
-async function upload(kind: 'files' | 'folders') {
-  if (!w.device.value) return;
-  const target = { ...w.device.value },
-    directory = s.path;
-  await w.run(t('上传'), async () => {
-    try {
-      if (await w.api.upload(target, directory, kind)) s.notice = { text: t('上传完成。') };
-    } finally {
-      // 批量上传允许部分成功；失败或取消后也重新读取，避免列表隐藏已完成的项目。
-      s.files = await w.api.listFiles(target, directory);
-    }
-  });
-}
-async function download() {
-  if (w.device.value && s.file?.type === 'file')
-    await w.run(t('下载文件'), async () => {
-      if (await w.api.download(w.device.value!, s.file!.path)) s.notice = { text: t('下载完成。') };
-    });
-}
-const pending = ref<{ target: Target; directory: string; file: DeviceFile }>();
-const nextName = ref(''),
-  actionError = ref('');
-function canModify(file: DeviceFile) {
-  return !s.busy && s.path !== '/' && (file.type === 'file' || file.type === 'directory');
-}
-function fileAction(file: DeviceFile, action: 'file-rename' | 'file-delete') {
-  if (!w.device.value || !canModify(file)) return;
-  // 记录打开菜单时的设备会话和目录，提交时不从可能变化的列表选中项推导目标。
-  pending.value = { target: { ...w.device.value }, directory: s.path, file: { ...file } };
-  s.file = file;
-  nextName.value = file.name;
-  actionError.value = '';
-  s.modal = action;
-}
-async function submitAction() {
-  const operation = pending.value,
-    action = s.modal;
-  if (!operation || (action !== 'file-rename' && action !== 'file-delete') || s.busy) return;
-  const { target, directory, file } = operation;
-  actionError.value = '';
-  await w.run(action === 'file-rename' ? t('重命名') : t('删除'), async () => {
-    try {
-      if (action === 'file-rename') await w.api.renameFile(target, directory, file.name, nextName.value);
-      else await w.api.deleteFile(target, directory, file.name, true);
-      s.modal = null;
-      s.file = undefined;
-      s.files = await w.api.listFiles(target, directory);
-      s.notice = { text: action === 'file-rename' ? t('重命名完成。') : t('删除完成。') };
-    } catch (error) {
-      actionError.value = error instanceof Error ? error.message : String(error);
-      throw error;
-    }
-  });
-}
+const { upload, download, pending, nextName, actionError, canModify, fileAction, submitAction } =
+  useFileActions(w);
 function open(f: DeviceFile) {
   if (!s.busy && f.type === 'directory') void w.loadFiles(f.path);
 }
