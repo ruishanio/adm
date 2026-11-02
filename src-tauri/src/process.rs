@@ -75,16 +75,17 @@ impl Runner for NativeRunner {
             use std::os::windows::process::CommandExt;
             command.creation_flags(0x08000000);
         }
-        let mut child = command.spawn().map_err(|e| format!("无法启动 ADB：{e}"))?;
-        if let Some(mut stdin) = child.stdin.take() {
+        let child =
+            crate::child_process::spawn(&mut command).map_err(|e| format!("无法启动 ADB：{e}"))?;
+        if let Some(mut stdin) = child.stdin() {
             if let Some(input) = input {
                 let _ = writeln!(stdin, "{input}");
             }
         }
         let total = Arc::new(AtomicUsize::new(0));
         let overflow = Arc::new(AtomicBool::new(false));
-        let out = child.stdout.take().ok_or("无法读取 ADB 输出")?;
-        let err = child.stderr.take().ok_or("无法读取 ADB 错误")?;
+        let out = child.stdout().ok_or("无法读取 ADB 输出")?;
+        let err = child.stderr().ok_or("无法读取 ADB 错误")?;
         let (t, o) = (total.clone(), overflow.clone());
         let stdout = thread::spawn(move || collect(out, t, o));
         let (t, o) = (total.clone(), overflow.clone());

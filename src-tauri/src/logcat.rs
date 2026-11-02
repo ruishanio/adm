@@ -209,6 +209,7 @@ impl Buffer {
 struct Session {
     buffer: Arc<Mutex<Buffer>>,
     cancel: Cancel,
+    worker: Option<thread::JoinHandle<()>>,
 }
 #[derive(Default)]
 pub struct Logcat {
@@ -268,11 +269,10 @@ impl Logcat {
             use std::os::windows::process::CommandExt;
             command.creation_flags(0x08000000);
         }
-        let mut child = command
-            .spawn()
+        let child = crate::child_process::spawn(&mut command)
             .map_err(|e| format!("无法启动 Logcat：{e}"))?;
-        let out = child.stdout.take().unwrap();
-        let err = child.stderr.take().unwrap();
+        let out = child.stdout().unwrap();
+        let err = child.stderr().unwrap();
         let buffer = Arc::new(Mutex::new(Buffer::new()));
         let cancel = cancellation();
         let id = uuid::Uuid::new_v4().to_string();
@@ -281,9 +281,10 @@ impl Logcat {
             Session {
                 buffer: buffer.clone(),
                 cancel: cancel.clone(),
+                worker: None,
             },
         );
-        thread::spawn(move || {
+        let worker = thread::spawn(move || {
             let stdout_buffer = buffer.clone();
             let lookup_cancel = cancel.clone();
             let stdout = thread::spawn(move || {
@@ -346,6 +347,7 @@ impl Logcat {
                 });
             }
         });
+        sessions.get_mut(&id).unwrap().worker = Some(worker);
         Ok(id)
     }
     pub fn read(&self, id: &str, after: u64) -> Result<LogBatch> {
@@ -355,13 +357,36 @@ impl Logcat {
         Ok(batch)
     }
     pub fn stop(&self, id: &str) {
-        if let Some(session) = self.sessions.lock().unwrap().remove(id) {
-            session.cancel.store(true, Ordering::SeqCst);
-        }
+        let session = self.sessions.lock().unwrap().remove(id);
+        Self::finish(session.into_iter().collect());
     }
     pub fn stop_all(&self) {
-        for (_, session) in self.sessions.lock().unwrap().drain() {
+        let sessions = self
+            .sessions
+            .lock()
+            .unwrap()
+            .drain()
+            .map(|(_, s)| s)
+            .collect();
+        Self::finish(sessions);
+    }
+    /// 先取消全部会话，再有限等待读线程；不能只发出停止信号就让宿主退出。
+    fn finish(sessions: Vec<Session>) {
+        for session in &sessions {
             session.cancel.store(true, Ordering::SeqCst);
+        }
+        let deadline = Instant::now() + Duration::from_secs(3);
+        for session in sessions {
+            if let Some(worker) = session.worker {
+                while !worker.is_finished() && Instant::now() < deadline {
+                    thread::sleep(Duration::from_millis(10));
+                }
+                if worker.is_finished() {
+                    let _ = worker.join();
+                } else {
+                    eprintln!("ADM 日志读线程停止等待超时");
+                }
+            }
         }
     }
     /// 在打开保存对话框之前截取快照；后续新日志或筛选变化不改变本次导出内容。
@@ -620,6 +645,7 @@ mod tests {
             Session {
                 buffer: Arc::new(Mutex::new(b)),
                 cancel: cancellation(),
+                worker: None,
             },
         );
         let mut f = filter();
@@ -650,9 +676,7 @@ mod tests {
         }
         assert_eq!(logs.read(&id, 0).unwrap().entries[0].raw, "first");
         logs.stop(&id);
-        while buffer.lock().unwrap().running && Instant::now() < deadline {
-            thread::sleep(Duration::from_millis(10));
-        }
+        // stop 返回即完成客户端和读线程回收，不需要调用方再轮询等待。
         assert!(!buffer.lock().unwrap().running);
         assert!(logs.read(&id, 0).is_err());
     }
