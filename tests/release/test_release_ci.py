@@ -22,9 +22,6 @@ class ReleaseTests(unittest.TestCase):
         self.root = Path(temporary.name)
         self.downloads = self.root / "downloads"
         self.output = self.root / "publish"
-        (self.root / "legal").mkdir()
-        (self.root / "legal/manifest.json").write_text("{}", encoding="utf-8")
-        (self.root / "legal/release-review.json").write_text('{"status":"ready"}', encoding="utf-8")
         (self.root / "package.json").write_text(json.dumps({
             "version": "0.1.0", "shortName": "ADM", "productName": "ADM",
         }), encoding="utf-8")
@@ -41,8 +38,7 @@ class ReleaseTests(unittest.TestCase):
                 files.append({"file": path.name, "size": path.stat().st_size, "sha256": release.digest(path)})
             (directory / "build-info.json").write_text(json.dumps({
                 "product": "ADM", "framework": "Tauri 2", "version": "0.1.0", "tag": TAG,
-                "commit": COMMIT, "platform": platform, "arch": arch, "distributionReview": "ready",
-                "legalManifestSha256": release.digest(self.root / "legal/manifest.json"), "files": files,
+                "commit": COMMIT, "platform": platform, "arch": arch, "files": files,
             }), encoding="utf-8")
             (directory / "SHA256SUMS.txt").write_text(
                 "".join(f"{item['sha256']}  {item['file']}\n" for item in files), encoding="utf-8",
@@ -77,24 +73,11 @@ class ReleaseTests(unittest.TestCase):
             self.prepare()
         self.assertFalse(self.output.exists())
 
-    def test_recorded_official_adb_policy_remains_open_in_build_info(self):
-        policy = {"status": "open-review", "distributionPolicy": "retain-official-adb"}
-        (self.root / "legal/release-review.json").write_text(json.dumps(policy))
-        for directory in self.directories:
-            path = directory / "build-info.json"
-            info = json.loads(path.read_text())
-            info.update(distributionReview=policy["status"], distributionPolicy=policy["distributionPolicy"])
-            path.write_text(json.dumps(info))
-        self.prepare()
-        actual = json.loads((self.output / "build-info-win-x64.json").read_text())
-        self.assertEqual(actual["distributionReview"], "open-review")
-
-    def test_mismatched_source_or_review_is_rejected(self):
+    def test_mismatched_build_metadata_is_rejected(self):
         path = self.directories[1] / "build-info.json"
         original = json.loads(path.read_text())
         for key, value in [("commit", "b" * 40), ("tag", "v0.1.0-old"), ("version", "9.0.0"),
-                           ("platform", "mac"), ("legalManifestSha256", "wrong"),
-                           ("distributionReview", "pending")]:
+                           ("platform", "mac"), ("arch", "arm64")]:
             with self.subTest(key=key):
                 path.write_text(json.dumps({**original, key: value}))
                 with self.assertRaisesRegex(ValueError, key):
@@ -205,11 +188,11 @@ class ReleaseTests(unittest.TestCase):
                     release.get_release(REPOSITORY, TAG)
                 gh.assert_called_once()
 
-    def test_main_stops_at_existing_distribution_gate(self):
+    def test_main_rejects_non_tag_before_reading_assets_or_publishing(self):
         with patch("sys.argv", ["release_ci.py", "--publish"]):
-            with patch.object(release.subprocess, "run", side_effect=subprocess.CalledProcessError(1, "node")):
+            with patch.dict(release.os.environ, {"GITHUB_REF_TYPE": "branch", "GITHUB_REF_NAME": "master"}):
                 with patch.object(release, "prepare_assets") as prepare, patch.object(release, "publish") as publish:
-                    with self.assertRaises(subprocess.CalledProcessError):
+                    with self.assertRaisesRegex(ValueError, "已有 tag"):
                         release.main()
                     prepare.assert_not_called()
                     publish.assert_not_called()

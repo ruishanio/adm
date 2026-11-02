@@ -157,7 +157,6 @@ export interface Api {
   stopLogcat(id: string): Promise<void>;
   logcatApps(target: Target): Promise<LogApp[]>;
   exportLogcat(id: string, filter: LogFilter, through: number): Promise<boolean>;
-  openThirdPartyNotices(): Promise<void>;
   refresh(): Promise<Snapshot>;
   details(target: Target): Promise<Details>;
   connect(endpoint: string): Promise<void>;

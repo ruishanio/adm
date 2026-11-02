@@ -51,7 +51,6 @@ if (platform === 'mac') {
   await cp(join(build, 'adm.exe'), join(destination, 'adm.exe'));
   await cp('src-tauri/resources/platform-tools', join(destination, 'platform-tools'), { recursive: true });
   await cp('README.md', join(destination, 'README.md'));
-  await cp('legal', join(destination, 'legal'), { recursive: true });
   installer = join(build, 'bundle/nsis', `${metadata.productName}_${metadata.version}_x64-setup.exe`);
   run(python, [
     '-c',

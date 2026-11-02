@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { t } from '../../shared/i18n';
 import { ref } from 'vue';
-import { SlidersHorizontal, Terminal, Smartphone, FileText, Info } from '@lucide/vue';
+import { SlidersHorizontal, Terminal, Smartphone, Info } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import AppDialog from './AppDialog.vue';
 import AppSelect from './AppSelect.vue';
 import { useWorkbench } from '@/composables/workbench';
 import AboutPanel from './AboutPanel.vue';
-import LicensePanel from './LicensePanel.vue';
 import { language, setLanguage } from '../../shared/i18n';
 const w = useWorkbench(),
   s = w.state;
@@ -47,7 +46,6 @@ async function changeLanguage(next: string) {
         <TabsTrigger value="general"><SlidersHorizontal aria-hidden="true" />{{ t('通用') }}</TabsTrigger>
         <TabsTrigger value="adb"><Terminal aria-hidden="true" />{{ t('ADB 工具') }}</TabsTrigger>
         <TabsTrigger value="devices"><Smartphone aria-hidden="true" />{{ t('设备列表') }}</TabsTrigger>
-        <TabsTrigger value="licenses"><FileText aria-hidden="true" />{{ t('第三方许可') }}</TabsTrigger>
         <TabsTrigger value="about"><Info aria-hidden="true" />{{ t('关于') }}</TabsTrigger>
       </TabsList>
       <div class="settings-content">
@@ -86,9 +84,6 @@ async function changeLanguage(next: string) {
             @click="restore"
             >{{ t('恢复已移除设备') }}</Button
           >
-        </TabsContent>
-        <TabsContent value="licenses">
-          <LicensePanel :platform="s.snapshot?.platform" :open-notices="w.api.openThirdPartyNotices" />
         </TabsContent>
         <TabsContent value="about">
           <AboutPanel :version="s.snapshot?.version" />

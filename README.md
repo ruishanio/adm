@@ -56,7 +56,7 @@ ADM 将常用的 ADB 操作放进一个桌面工作台。通过 USB 或网络连
 
 版本与更新说明以 **[GitHub Releases](https://github.com/ruishanio/adm/releases)** 为准，避免这里的版本文字与实际发布不同步。
 
-发布流程完成后，可在 **[GitHub Releases](https://github.com/ruishanio/adm/releases)** 的 **Assets** 下载对应平台安装包。推送包含新发布流程的版本 tag 后，两个平台全部构建、安装验证及分发许可检查通过，才会自动发布；测试后缀 tag 标记为 **Pre-release**。
+发布流程完成后，可在 **[GitHub Releases](https://github.com/ruishanio/adm/releases)** 的 **Assets** 下载对应平台安装包。推送包含新发布流程的版本 tag 后，两个平台全部构建、安装验证通过，才会自动发布；测试后缀 tag 标记为 **Pre-release**。
 
 此前的测试构建仍可从 **[GitHub Actions → Package](https://github.com/ruishanio/adm/actions/workflows/package.yml)** 页面底部 **Artifacts** 下载。Actions 下载需要登录 GitHub，产物保留 **30 天**；历史 tag 不会因修改工作流自动补发 Release。
 
@@ -127,13 +127,9 @@ npm run package:win
 
 提交改动前请阅读 [AGENTS.md](AGENTS.md)，运行与改动相关的检查，并在 PR 中说明行为变化与验证结果。
 
-## 许可与第三方声明
+## 许可
 
 ADM 自有代码采用 [MIT 许可](LICENSE)。第三方软件、复制组件及图形保持各自的许可，MIT 不覆盖第三方商标或独立运行时条款。
-
-在应用中打开 **设置 → 第三方许可**，仅显示必要图形署名和适用的平台通知；点击“查看完整声明”可用系统文本应用离线阅读原文。安装包也附带可读的 `legal/` 目录，包含完整原文、Android 图形署名、WebView2 条款与隐私通知，以及五个 MPL 组件的精确版本源码归档。获取位置见 [源码说明](legal/SOURCE-CODE.md)，更新流程见 [许可材料维护](legal/README.md)。
-
-当前 ADB 37.0.1 对应源码与 libusb 重新链接材料仍有待办，见 [发布核对状态](legal/release-review.json)。Windows 安装器、许可页面与运行库来源预检已通过。目前继续官方 ADB 分发方案，并保留未核实事项；发布仍检查许可材料完整性和安装包。材料校验通过不等于所有分发义务已解决。
 
 Android is a trademark of Google LLC.
 
@@ -141,4 +137,4 @@ The Android robot is reproduced or modified from work created and shared by Goog
 
 ## 致谢
 
-ADM 基于 [Tauri](https://tauri.app/)、[Vue](https://vuejs.org/)、[shadcn-vue](https://www.shadcn-vue.com/)、[Tailwind CSS](https://tailwindcss.com/) 和 [Lucide](https://lucide.dev/) 构建，设备连接使用 Google 官方 [Android SDK Platform-Tools](https://developer.android.com/tools/releases/platform-tools)。第三方声明随应用保留。
+ADM 基于 [Tauri](https://tauri.app/)、[Vue](https://vuejs.org/)、[shadcn-vue](https://www.shadcn-vue.com/)、[Tailwind CSS](https://tailwindcss.com/) 和 [Lucide](https://lucide.dev/) 构建，设备连接使用 Google 官方 [Android SDK Platform-Tools](https://developer.android.com/tools/releases/platform-tools)。

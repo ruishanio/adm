@@ -11,7 +11,6 @@ export default defineConfig({
     outDir: '../../dist',
     emptyOutDir: true,
     target: ['es2022', 'safari16.4'],
-    license: { fileName: 'THIRD-PARTY-LICENSES.md' },
   },
   server: { host: '127.0.0.1', port: 5178, strictPort: true },
   clearScreen: false,

@@ -5,7 +5,7 @@ mod files;
 mod logs;
 mod performance;
 mod settings;
-use crate::{licenses, models::Result, process::cancellation, service::Service};
+use crate::{models::Result, process::cancellation, service::Service};
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::{json, Value};
 use std::sync::Arc;
@@ -17,11 +17,6 @@ impl Service {
         method: String,
         args: Value,
     ) -> Result<Value> {
-        if method == "openThirdPartyNotices" {
-            decoded_empty(args)?;
-            licenses::open_notices(&self.resources)?;
-            return Ok(Value::Null);
-        }
         if method == "cancel" {
             decoded_empty(args)?;
             self.cancel();

@@ -4,7 +4,6 @@ mod apps;
 mod child_process;
 mod commands;
 mod device_info;
-mod licenses;
 mod logcat;
 mod models;
 #[cfg(target_os = "macos")]

@@ -382,14 +382,7 @@ export const english = {
   通用: 'General',
   'ADB 工具': 'ADB tools',
   关于: 'About',
-  第三方许可: 'Third-party licenses',
   '自有代码采用 MIT 许可': 'Original code is licensed under MIT',
-  '完整许可与版权声明已随应用附带，可离线查看。':
-    'Full license and copyright notices are included for offline access.',
-  查看完整声明: 'View full notices',
-  '无法打开声明文件，请重试。': 'Could not open the notices file. Please retry.',
-  'WebView2 适用微软的独立许可条款。其 Microsoft Defender SmartScreen 会收集用户信息并发送给微软，详见完整声明中的微软隐私声明及 Edge 隐私白皮书。':
-    'WebView2 is governed by separate Microsoft license terms. Its Microsoft Defender SmartScreen collects and sends user information to Microsoft. See the Microsoft Privacy Statement and Edge Privacy Whitepaper in the full notices.',
   界面语言: 'Language',
   '切换后立即生效，无需重新启动。': 'Changes take effect immediately. No restart required.',
   '优先使用随应用附带的 ADB，也可指定本机 platform-tools。':

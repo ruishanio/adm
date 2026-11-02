@@ -81,8 +81,6 @@ def verify(platform, arch):
         unpacked = ROOT / "release" / "win-unpacked"
         adb_name = "adb.exe"
     required = [executable]
-    legal = json.loads((ROOT / "legal/manifest.json").read_text(encoding="utf-8"))
-    legal_files = {**legal["files"], "manifest.json": hashlib.sha256((ROOT / "legal/manifest.json").read_bytes()).hexdigest()}
     required += [
         str(Path(resources) / "platform-tools" / part).replace("\\", "/")
         for part in [adb_name, "NOTICE.txt", "source.properties"]
@@ -98,11 +96,6 @@ def verify(platform, arch):
         for entry in required:
             if archive.getinfo(entry).file_size == 0:
                 raise ValueError(f"产物文件为空：{entry}")
-        # 核对实际 ZIP 字节，防止声明存在于仓库却未随应用、便携版或源码归档交付。
-        for entry, expected in legal_files.items():
-            packaged_name = str(Path(resources) / "legal" / entry).replace("\\", "/")
-            if hashlib.sha256(archive.read(packaged_name)).hexdigest() != expected:
-                raise ValueError(f"产物许可或源码归档不一致：{entry}")
         properties = archive.read(str(Path(resources) / "platform-tools/source.properties").replace("\\", "/")).decode("utf-8")
         if f"Pkg.Revision={SDK_VERSION}" not in properties:
             raise ValueError("包内 ADB 版本与固定版本不一致")
@@ -159,23 +152,10 @@ def verify(platform, arch):
         "platform": platform,
         "arch": arch,
         "adbVersion": SDK_VERSION,
-        "legalManifestSha256": legal_files["manifest.json"],
-        "distributionReview": json.loads((ROOT / "legal/release-review.json").read_text(encoding="utf-8"))["status"],
-        "distributionPolicy": json.loads((ROOT / "legal/release-review.json").read_text(encoding="utf-8")).get("distributionPolicy"),
         "files": files,
     }
     (ROOT / "release/build-info.json").write_text(json.dumps(info, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(info), flush=True)
-
-
-def verify_installed_legal(directory):
-    """核对安装后的全部声明及源码，避免只验证便携 ZIP。"""
-    manifest = json.loads((ROOT / "legal/manifest.json").read_text(encoding="utf-8"))
-    for name, expected in manifest["files"].items():
-        if hashlib.sha256((directory / "legal" / name).read_bytes()).hexdigest() != expected:
-            raise ValueError(f"安装后许可材料不一致：{name}")
-    if (directory / "legal/manifest.json").read_bytes() != (ROOT / "legal/manifest.json").read_bytes():
-        raise ValueError("安装后许可清单不一致")
 
 
 def smoke_install(platform, arch):
@@ -199,7 +179,6 @@ def smoke_install(platform, arch):
         try:
             app = mount / f"{name}.app"
             original = ROOT / "release/mac-arm64" / f"{name}.app"
-            verify_installed_legal(app / "Contents/Resources")
             for entry in ["Contents/MacOS/adm",
                           "Contents/Resources/platform-tools/adb"]:
                 if (app / entry).read_bytes() != (original / entry).read_bytes():
@@ -219,7 +198,6 @@ def smoke_install(platform, arch):
                 # NSIS 要求 /D 放在最后且不加引号；shell=False 直接交给 Windows 创建进程。
                 subprocess.run(f'"{installer}" /S /currentuser /D={install_dir}', check=True, timeout=180)
                 original = ROOT / "release/win-unpacked"
-                verify_installed_legal(install_dir)
                 for entry in ["adm.exe", "platform-tools/adb.exe"]:
                     if (install_dir / entry).read_bytes() != (original / entry).read_bytes():
                         raise ValueError(f"安装后的应用内容不一致：{entry}")

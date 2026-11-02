@@ -26,8 +26,6 @@ def prepare_assets(root, downloads, output, tag, commit):
         raise ValueError("发布 tag 必须匹配 package.json 版本。")
     if not re.fullmatch(r"[0-9a-f]{40}", commit):
         raise ValueError("缺少有效的构建提交 SHA。")
-    manifest_hash = digest(root / "legal/manifest.json")
-    review = json.loads((root / "legal/release-review.json").read_text(encoding="utf-8"))
     copies = []
     public_names = set()
     for platform, arch, installer in [("mac", "arm64", ".dmg"), ("win", "x64", "-setup.exe")]:
@@ -38,8 +36,6 @@ def prepare_assets(root, downloads, output, tag, commit):
         expected = {
             "product": metadata["productName"], "framework": "Tauri 2", "version": version,
             "tag": tag, "commit": commit, "platform": platform, "arch": arch,
-            "legalManifestSha256": manifest_hash, "distributionReview": review["status"],
-            "distributionPolicy": review.get("distributionPolicy"),
         }
         for key, value in expected.items():
             if info.get(key) != value:
@@ -152,8 +148,6 @@ def main():
     parser.add_argument("--output", type=Path, default=ROOT / "release/publish")
     parser.add_argument("--publish", action="store_true")
     args = parser.parse_args()
-    # 本地预检也保留既有分发门槛；不能仅凭产物里的 ready 字样绕过仓库核对。
-    subprocess.run(["node", str(ROOT / "scripts/check-licenses.mjs"), "--release"], check=True)
     tag, commit = os.environ.get("GITHUB_REF_NAME", ""), os.environ.get("GITHUB_SHA", "")
     if os.environ.get("GITHUB_REF_TYPE") != "tag":
         raise ValueError("仅允许为已有 tag 汇总发布产物。")

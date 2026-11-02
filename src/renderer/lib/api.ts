@@ -22,7 +22,6 @@ export const api: Api = {
   stopLogcat: (id) => call('stopLogcat', id),
   logcatApps: (t) => call('logcatApps', target(t)),
   exportLogcat: (id, filter, through) => call('exportLogcat', id, { ...filter }, through),
-  openThirdPartyNotices: () => call('openThirdPartyNotices'),
   refresh: () => call('refresh'),
   details: (t) => call('details', target(t)),
   connect: (address) => call('connect', address),

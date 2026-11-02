@@ -15,6 +15,6 @@
     ]
   },
   "bundle": {
-    "licenseFile": "../legal/WINDOWS-INSTALLER.txt"
+    "licenseFile": "../LICENSE"
   }
 }

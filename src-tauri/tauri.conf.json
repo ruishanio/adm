@@ -36,10 +36,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": [
-      "dmg",
-      "nsis"
-    ],
+    "targets": ["dmg", "nsis"],
     "category": "DeveloperTool",
     "license": "MIT",
     "shortDescription": "Android device management via ADB",
@@ -51,8 +48,7 @@
       "icons/icon.ico"
     ],
     "resources": {
-      "resources/platform-tools/": "platform-tools/",
-      "../legal/": "legal/"
+      "resources/platform-tools/": "platform-tools/"
     },
     "macOS": {
       "minimumSystemVersion": "13.3",
@@ -65,10 +61,7 @@
       },
       "nsis": {
         "installMode": "currentUser",
-        "languages": [
-          "SimpChinese",
-          "English"
-        ],
+        "languages": ["SimpChinese", "English"],
         "displayLanguageSelector": false,
         "compression": "zlib"
       }
