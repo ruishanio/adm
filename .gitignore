@@ -11,7 +11,10 @@
 /src-tauri/resources/platform-tools/
 *.tsbuildinfo
 
-# 个人安装的设计技能仅供本机使用，项目规范保留在 design-system/ 中
+# 本地设计、开发和验证文档不随仓库提交
+/docs/
+
+# 个人安装的设计技能仅供本机使用
 /.agents/skills/ui-ux-pro-max/
 
 # 测试报告、工具缓存与日志

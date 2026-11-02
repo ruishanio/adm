@@ -134,7 +134,8 @@ def publish(repository, tag, commit, assets):
         raise ValueError("发布期间 Release 状态发生变化，停止修改。")
     verify_remote_assets(release, assets)
     flags = ["--latest=false"] if prerelease else []
-    template = ROOT / "docs/releases" / f"{tag}.md"
+    # 发布说明属于 CI 输入，不依赖被忽略的本地 docs 目录。
+    template = ROOT / ".github/release-notes" / f"{tag}.md"
     if template.is_file():
         # 已有草稿也更新为本次审阅的说明，不保留此前临时的发布阻塞文字。
         notes = assets[0].parent.parent / "release-notes.md"

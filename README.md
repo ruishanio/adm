@@ -11,11 +11,11 @@
 
 **macOS Apple Silicon · Windows x64 · 简体中文 / English**
 
-[下载安装](#下载安装) · [功能](#功能) · [快速开始](#快速开始) · [使用指南](docs/usage.md) · [参与开发](#参与开发)
+[下载安装](#下载安装) · [功能](#功能) · [快速开始](#快速开始) · [参与开发](#参与开发)
 
 </div>
 
-![ADM 设备工作台：左侧切换设备，右侧查看设备概览、基本信息与设备所有者](docs/images/workbench.jpg)
+![ADM 设备工作台：左侧切换设备，右侧查看设备概览、基本信息与设备所有者](resources/readme/workbench.jpg)
 
 <p align="center"><sub>界面截图使用样例设备与文件数据，具体布局以当前版本为准。</sub></p>
 
@@ -42,13 +42,13 @@ ADM 将常用的 ADB 操作放进一个桌面工作台。通过 USB 或网络连
 
 选择目标设备，拖入 APK，核对应用信息后安装。
 
-![ADM 安装应用：展示 APK 包名、版本和安装选项](docs/images/install.jpg)
+![ADM 安装应用：展示 APK 包名、版本和安装选项](resources/readme/install.jpg)
 
 ### 文件管理
 
 通过路径栏浏览设备目录，上传文件或文件夹，右键执行文件操作。
 
-![ADM 文件管理：路径导航、上传菜单与设备文件列表](docs/images/files.jpg)
+![ADM 文件管理：路径导航、上传菜单与设备文件列表](resources/readme/files.jpg)
 
 </details>
 
@@ -81,8 +81,6 @@ Release 提供两平台安装包和应用 ZIP，可在附件旁查看 SHA-256。
 - 安装支持**单个完整 APK**，暂不支持 AAB、APKS 或拆分 APK。
 - 设备所有者能否设置取决于设备状态与 Android 限制；ADM 不会移除账号、工作资料或已有所有者，也不会重置设备。
 
-连接排查、文件操作规则与快捷键见 **[使用指南](docs/usage.md)**。
-
 ## 参与开发
 
 ADM 使用 **Tauri 2 + Vue 3 + TypeScript**，界面基于 shadcn-vue、Tailwind CSS 4 与 Lucide。Rust 后端负责 ADB、APK 解析和本地配置；应用使用系统 WebView，不携带 Chromium 或 Node.js 运行时。
@@ -109,13 +107,21 @@ python scripts/package_ci.py prepare win x64
 npm run dev
 ```
 
-| 文档                                                 | 内容                                       |
-| ---------------------------------------------------- | ------------------------------------------ |
-| [使用指南](docs/usage.md)                            | 连接、安装、设备所有者、文件管理与常见问题 |
-| [开发与构建](docs/development.md)                    | 环境、目录结构、测试、打包、CI 与配置存储  |
-| [多语言方案](docs/i18n.md)                           | 语言选择、翻译范围与扩展方式               |
-| [桌面设计约束](design-system/android-tool/MASTER.md) | 布局、交互与组件规范                       |
-| [验证记录](VALIDATION.md)                            | 已执行的验证及其适用范围                   |
+常规检查与本地打包：
+
+```sh
+npm test
+npm run build
+cargo fmt --manifest-path src-tauri/Cargo.toml --check
+cargo clippy --manifest-path src-tauri/Cargo.toml --locked --all-targets -- -D warnings
+cargo test --manifest-path src-tauri/Cargo.toml --locked
+
+# 在对应平台执行
+npm run package:mac
+npm run package:win
+```
+
+构建产物输出到 `release/`。设计、开发与验证文档在本地 `docs/` 中维护，不随仓库分发。
 
 欢迎通过 [Issues](https://github.com/ruishanio/adm/issues) 反馈问题或提出建议。报告问题时，请附上 ADM 版本、电脑系统与架构、Android 版本、连接方式和复现步骤；日志与截图中请隐去设备标识、地址和个人文件信息。
 
