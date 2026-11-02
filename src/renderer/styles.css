@@ -651,7 +651,8 @@ code {
   overflow: auto;
   padding: 20px;
   container-type: inline-size;
-  scrollbar-gutter: stable;
+  /* 设备信息未溢出时不额外预留右侧滚动条空间，保持左右内边距一致。 */
+  scrollbar-gutter: auto;
 }
 .task-content > [data-slot='tabs-content'] > section + section {
   margin-top: 24px;
