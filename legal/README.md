@@ -13,7 +13,7 @@
 3. 在项目根目录运行 `python3 scripts/generate-licenses.py`（Windows 用 `python`）。生成器读取两个目标的 Cargo metadata、锁文件和本机包原文；日常构建不会重新联网生成。
 4. 审阅 `legal/` 差异，运行 `npm run licenses:check`、`npm test`、`npm run build`。构建还核对 Vite 实际打包的所有前端组件均有许可。
 5. 分别构建 macOS ARM64 / Windows x64，校验 ZIP、安装后资源及源码归档。源码与应用一起保留，不能仅依赖会过期的 CI 下载链接。
-6. 处理 `release-review.json` 的待办并记录可复核的证据后，才将状态改为 `ready`。`npm run licenses:release-check` 是上传前的必经检查；不得为通过 CI 而移除未解决问题。
+6. 在 `release-review.json` 如实保留待办、证据与分发决策。只有全部核实才标为 `ready`；当前决定继续官方 ADB 方案，使用 `open-review` + `retain-official-adb`，不把未核实事项写成已完成。`npm run licenses:release-check` 仍校验全部材料完整性和决策记录；默认 `pending` 状态继续阻止上传。
 
 第三方原文不翻译或删减；中文说明不替代原条款。完整多重许可文本均保留，明确的 OR
 表达式优先选择 MIT，记录于 `selection`；AND 表达式对应的声明须同时保留。清单包含构建依赖是保守归档，不是

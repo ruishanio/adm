@@ -27,6 +27,7 @@ def prepare_assets(root, downloads, output, tag, commit):
     if not re.fullmatch(r"[0-9a-f]{40}", commit):
         raise ValueError("缺少有效的构建提交 SHA。")
     manifest_hash = digest(root / "legal/manifest.json")
+    review = json.loads((root / "legal/release-review.json").read_text(encoding="utf-8"))
     copies = []
     for platform, arch, installer in [("mac", "arm64", ".dmg"), ("win", "x64", "-setup.exe")]:
         target = f"{platform}-{arch}"
@@ -36,7 +37,8 @@ def prepare_assets(root, downloads, output, tag, commit):
         expected = {
             "product": metadata["productName"], "framework": "Tauri 2", "version": version,
             "tag": tag, "commit": commit, "platform": platform, "arch": arch,
-            "legalManifestSha256": manifest_hash, "distributionReview": "ready",
+            "legalManifestSha256": manifest_hash, "distributionReview": review["status"],
+            "distributionPolicy": review.get("distributionPolicy"),
         }
         for key, value in expected.items():
             if info.get(key) != value:
@@ -124,6 +126,12 @@ def publish(repository, tag, commit, assets):
         raise ValueError("发布期间 Release 状态发生变化，停止修改。")
     verify_remote_assets(release, assets)
     flags = ["--latest=false"] if prerelease else []
+    template = ROOT / "docs/releases" / f"{tag}.md"
+    if template.is_file():
+        # 已有草稿也更新为本次审阅的说明，不保留此前临时的发布阻塞文字。
+        notes = assets[0].parent.parent / "release-notes.md"
+        notes.write_text(template.read_text(encoding="utf-8").replace("{{commit}}", commit), encoding="utf-8")
+        flags += ["--notes-file", str(notes)]
     gh("release", "edit", tag, "--repo", repository, "--draft=false",
        f"--prerelease={str(prerelease).lower()}", *flags)
     return release["html_url"]

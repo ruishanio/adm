@@ -127,7 +127,7 @@ ADM 自有代码采用 [MIT 许可](LICENSE)。第三方软件、复制组件及
 
 在应用中打开 **设置 → 第三方许可**，仅显示必要图形署名和适用的平台通知；点击“查看完整声明”可用系统文本应用离线阅读原文。安装包也附带可读的 `legal/` 目录，包含完整原文、Android 图形署名、WebView2 条款与隐私通知，以及五个 MPL 组件的精确版本源码归档。获取位置见 [源码说明](legal/SOURCE-CODE.md)，更新流程见 [许可材料维护](legal/README.md)。
 
-当前 ADB 37.0.1 对应源码、libusb 重新链接材料，以及 Windows 最终分发核对仍有待办，见 [发布核对状态](legal/release-review.json)。本地构建可以继续；在这些问题关闭前，自动公开产物上传会中止。材料校验通过不等于所有分发义务已解决。
+当前 ADB 37.0.1 对应源码、libusb 重新链接材料，以及 Windows 最终分发核对仍有待办，见 [发布核对状态](legal/release-review.json)。目前继续官方 ADB 分发方案，并保留未核实事项；发布仍检查许可材料完整性和安装包。材料校验通过不等于所有分发义务已解决。
 
 Android is a trademark of Google LLC.
 

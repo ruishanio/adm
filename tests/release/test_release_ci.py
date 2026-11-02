@@ -24,6 +24,7 @@ class ReleaseTests(unittest.TestCase):
         self.output = self.root / "publish"
         (self.root / "legal").mkdir()
         (self.root / "legal/manifest.json").write_text("{}", encoding="utf-8")
+        (self.root / "legal/release-review.json").write_text('{"status":"ready"}', encoding="utf-8")
         (self.root / "package.json").write_text(json.dumps({
             "version": "0.1.0", "shortName": "ADM", "productName": "ADM",
         }), encoding="utf-8")
@@ -72,6 +73,18 @@ class ReleaseTests(unittest.TestCase):
         with self.assertRaises(FileNotFoundError):
             self.prepare()
         self.assertFalse(self.output.exists())
+
+    def test_recorded_official_adb_policy_remains_open_in_build_info(self):
+        policy = {"status": "open-review", "distributionPolicy": "retain-official-adb"}
+        (self.root / "legal/release-review.json").write_text(json.dumps(policy))
+        for directory in self.directories:
+            path = directory / "build-info.json"
+            info = json.loads(path.read_text())
+            info.update(distributionReview=policy["status"], distributionPolicy=policy["distributionPolicy"])
+            path.write_text(json.dumps(info))
+        self.prepare()
+        actual = json.loads((self.output / "build-info-win-x64.json").read_text())
+        self.assertEqual(actual["distributionReview"], "open-review")
 
     def test_mismatched_source_or_review_is_rejected(self):
         path = self.directories[1] / "build-info.json"

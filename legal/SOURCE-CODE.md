@@ -42,7 +42,8 @@ ADB 来自 Google 官方 Platform-Tools 37.0.1，build 15733141。对应压缩�
 该链接不是此二进制的完整对应源码证明。静态包含的 libusb 涉及 LGPL 2.1，仍需取得
 与二进制对应的源代码、构建说明和重新链接材料，或采用经过核实的其他合规分发方式。
 目前不提供无法兑现的源码书面要约，也不宣称仅有 NOTICE 就完成了这部分义务。
-发布核对状态见 `release-review.json`；待办未关闭时自动产物上传会中止。
+发布核对状态见 `release-review.json`。目前决定继续官方 ADB 分发方案，并保留上述
+未核实事项；这项分发决策不表示对应源码或重新链接材料已核实完成。
 
 ADB source/relinking review is pending. The AOSP development repository is not
 proof of source correspondence for Google's prebuilt build 15733141. Its bundled

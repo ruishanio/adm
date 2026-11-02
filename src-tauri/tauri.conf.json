@@ -69,7 +69,8 @@
           "SimpChinese",
           "English"
         ],
-        "displayLanguageSelector": false
+        "displayLanguageSelector": false,
+        "compression": "zlib"
       }
     }
   }

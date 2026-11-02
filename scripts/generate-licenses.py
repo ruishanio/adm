@@ -118,7 +118,7 @@ def main():
         files = [(str(f.relative_to(directory)), f.read_text(encoding="utf-8")) for f in license_files(directory)]
         for item in upstream:
             if item["component"] == f"{name}@{version}":
-                files.append((item["url"], (LEGAL / "vendor" / item["file"]).read_text(encoding="utf-8")))
+                files.append((item["url"], (LEGAL / "vendor" / item["file"]).read_text(encoding=item.get("encoding", "utf-8"))))
         # objc2 上游仅以链接指向 MIT 正文，保留其原文及作者元数据，并附完整标准条款。
         if p.get("repository", "").rstrip("/") == "https://github.com/madsmtm/objc2":
             if p["authors"]:
@@ -154,7 +154,7 @@ def main():
         if item.get("entry"):
             e = item["entry"]
             add(item["file"], e["name"], e["version"], e["license"], e["group"], item["url"],
-                [(item["file"], (LEGAL / "vendor" / item["file"]).read_text(encoding="utf-8"))], e.get("note", ""))
+                [(item["file"], (LEGAL / "vendor" / item["file"]).read_text(encoding=item.get("encoding", "utf-8")))], e.get("note", ""))
     write_json(LEGAL / "catalog.json", entries)
     write_json(LEGAL / "sources.json", sources)
     shutil.copyfile(ROOT / "LICENSE", LEGAL / "LICENSE")
@@ -174,7 +174,8 @@ def main():
     inputs = ["package.json", "package-lock.json", "src-tauri/Cargo.toml", "src-tauri/Cargo.lock",
               "src-tauri/tauri.conf.json", "src-tauri/tauri.windows.conf.json",
               "rust-toolchain.toml", "vite.config.ts", "LICENSE",
-              "scripts/package_ci.py", "scripts/generate-licenses.py"]
+              "scripts/package_ci.py", "scripts/generate-licenses.py",
+              "scripts/verify_windows_license.py", "scripts/verify_windows_runtime.ps1"]
     payload = [p for p in LEGAL.rglob("*") if p.is_file() and p.name != "manifest.json"]
     write_json(LEGAL / "manifest.json", dict(schema=1, version=metadata["version"],
         inputs={n: digest(ROOT / n) for n in inputs},

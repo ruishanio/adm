@@ -46,3 +46,24 @@ test('分发核对未完成时可本地构建，但不能通过上传前检查',
   checkLicenses(target);
   assert.throws(() => checkLicenses(target, { release: true }), /待验证源码/);
 });
+
+test('继续官方 ADB 须保留明确决策和未决记录，不能仅修改状态绕过检查', (t) => {
+  const target = fixture(t);
+  const name = 'release-review.json';
+  const update = (review) => {
+    const data = JSON.stringify(review);
+    writeFileSync(resolve(target, 'legal', name), data);
+    const path = resolve(target, 'legal/manifest.json');
+    const manifest = JSON.parse(readFileSync(path, 'utf8'));
+    manifest.files[name] = createHash('sha256').update(data).digest('hex');
+    writeFileSync(path, JSON.stringify(manifest));
+  };
+  const review = { status: 'open-review', distributionPolicy: 'retain-official-adb',
+    unresolved: ['源码对应关系尚未核实'], evidence: ['继续采用官方 ADB 的分发决策'] };
+  update(review);
+  assert.doesNotThrow(() => checkLicenses(target, { release: true }));
+  update({ ...review, distributionPolicy: undefined });
+  assert.throws(() => checkLicenses(target, { release: true }), /公开分发核对/);
+  update({ ...review, evidence: [] });
+  assert.throws(() => checkLicenses(target, { release: true }), /公开分发核对/);
+});

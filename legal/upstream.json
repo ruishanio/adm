@@ -197,5 +197,64 @@
       "group": "platform",
       "note": "Official Evergreen license terms, HTML converted to plain text; original wording retained. Runtime updates may carry new terms."
     }
+  },
+  {
+    "component": "NSIS@3.13",
+    "file": "nsis-3.13-COPYING.txt",
+    "url": "https://github.com/tauri-apps/binary-releases/releases/download/nsis-3.13/nsis-3.13.zip",
+    "archiveSha256": "ba63dffc4410ee89193e1cb5a41989991bd77c61068da17e3156d136b7b0b3d8",
+    "archiveEntry": "nsis-3.13/COPYING",
+    "sha256": "388357c1215ff403c5ebde3a5ecd273e68f8b79a579996775245d1ee65442aba",
+    "entry": {
+      "name": "NSIS installer and bundled plugins",
+      "version": "3.13",
+      "license": "Zlib / See component notices",
+      "group": "platform",
+      "note": "ADM uses the unmodified x86-unicode installer with zlib compression, NSISdl, StartMenu, System and nsDialogs. The aggregate COPYRIGHT also retains notices for compressors not used by ADM."
+    }
+  },
+  {
+    "component": "NSIS@3.13",
+    "file": "nsis-3.13-NSISdl-LICENSE.txt",
+    "url": "https://github.com/tauri-apps/binary-releases/releases/download/nsis-3.13/nsis-3.13.zip",
+    "archiveSha256": "ba63dffc4410ee89193e1cb5a41989991bd77c61068da17e3156d136b7b0b3d8",
+    "archiveEntry": "nsis-3.13/Docs/NSISdl/License.txt",
+    "sha256": "326e587f36ca58e14bd09cca153f9e69f1c5ed701189aa47d2d0627af7e16280",
+    "entry": {
+      "name": "NSISdl downloader plugin",
+      "version": "3.13",
+      "license": "Zlib",
+      "group": "platform",
+      "note": "ADM uses the unmodified x86-unicode installer with zlib compression, NSISdl, StartMenu, System and nsDialogs. The aggregate COPYRIGHT also retains notices for compressors not used by ADM."
+    }
+  },
+  {
+    "component": "NSIS@3.13",
+    "file": "nsis-3.13-MUI-LICENSE.txt",
+    "url": "https://github.com/tauri-apps/binary-releases/releases/download/nsis-3.13/nsis-3.13.zip",
+    "archiveSha256": "ba63dffc4410ee89193e1cb5a41989991bd77c61068da17e3156d136b7b0b3d8",
+    "archiveEntry": "nsis-3.13/Docs/Modern UI 2/License.txt",
+    "sha256": "36608f72902ac188e45eab9bf6f673df72dd76f871f61d0c6d60592dfc15461c",
+    "entry": {
+      "name": "NSIS Modern UI 2",
+      "version": "3.13",
+      "license": "Zlib",
+      "group": "platform",
+      "note": "ADM uses the unmodified x86-unicode installer with zlib compression, NSISdl, StartMenu, System and nsDialogs. The aggregate COPYRIGHT also retains notices for compressors not used by ADM."
+    },
+    "encoding": "cp1252"
+  },
+  {
+    "component": "nsis-tauri-utils@0.5.3",
+    "file": "nsis-tauri-utils-0.5.3-LICENSE-MIT.txt",
+    "url": "https://raw.githubusercontent.com/tauri-apps/nsis-tauri-utils/nsis_tauri_utils-v0.5.3/LICENSE_MIT",
+    "sha256": "1c1020fa10a6bf318717e82c911bcc54ebdfb9bb280460ae332bcb2f82f57fbe",
+    "entry": {
+      "name": "Tauri NSIS utilities plugin",
+      "version": "0.5.3",
+      "license": "MIT",
+      "group": "platform",
+      "note": "Unmodified installer plugin pinned by Tauri CLI 2.12.4. Rust standard library and windows-sys notices are retained in the offline catalog."
+    }
   }
 ]

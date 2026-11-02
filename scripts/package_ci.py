@@ -161,6 +161,7 @@ def verify(platform, arch):
         "adbVersion": SDK_VERSION,
         "legalManifestSha256": legal_files["manifest.json"],
         "distributionReview": json.loads((ROOT / "legal/release-review.json").read_text(encoding="utf-8"))["status"],
+        "distributionPolicy": json.loads((ROOT / "legal/release-review.json").read_text(encoding="utf-8")).get("distributionPolicy"),
         "files": files,
     }
     (ROOT / "release/build-info.json").write_text(json.dumps(info, indent=2) + "\n", encoding="utf-8")

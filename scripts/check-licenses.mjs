@@ -74,10 +74,17 @@ export function checkLicenses(root = project, { release = false, frontend = fals
   }
   if (release) {
     const review = json(resolve(legal, 'release-review.json'));
-    if (review.status !== 'ready' || review.unresolved.length || !review.evidence.length)
+    const completed = review.status === 'ready' && !review.unresolved.length && review.evidence.length;
+    // 继续使用官方 ADB 的明确分发决策与“核对完成”分开记录，不能把未决事项伪装成 ready。
+    const retainedOfficialAdb = review.status === 'open-review'
+      && review.distributionPolicy === 'retain-official-adb'
+      && review.unresolved.length > 0 && review.evidence.length > 0;
+    if (!completed && !retainedOfficialAdb)
       throw new Error(
         `公开分发核对未完成：\n${review.unresolved.join('\n')}\n本地构建可继续，禁止将此状态当作合规通过。`,
       );
+    if (retainedOfficialAdb)
+      console.warn('继续官方 ADB 分发方案；以下事项仍未核实，不代表合规审查完成：\n' + review.unresolved.join('\n'));
   }
   return catalog;
 }
@@ -89,7 +96,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       frontend: process.argv.includes('--frontend'),
     });
     console.log(
-      `许可材料校验通过：${entries.length} 项声明；${process.argv.includes('--release') ? '发布核对已完成' : '不代表未决分发问题已解决'}。`,
+      `许可材料完整性校验通过：${entries.length} 项声明；审阅状态见 legal/release-review.json。`,
     );
   } catch (error) {
     console.error(error instanceof Error ? error.message : error);
