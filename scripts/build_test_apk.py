@@ -28,9 +28,10 @@ def main():
     run(tools / "aapt2", "compile", "--dir", fixture / "res", "-o", output / "resources.zip")
     run(tools / "aapt2", "link", "-o", output / "unsigned.apk", "-I", android,
         "--manifest", fixture / "AndroidManifest.xml", output / "resources.zip")
-    run("javac", "--release", "8", "-classpath", android, "-d", classes, fixture / "AdminReceiver.java")
+    run("javac", "--release", "8", "-classpath", android, "-d", classes, fixture / "AdminReceiver.java", fixture / "SmokeActivity.java")
     run(tools / "d8", "--lib", android, "--min-api", "23", "--output", output,
-        classes / "com/ruinext/androidtool/fixture/AdminReceiver.class")
+        classes / "com/ruinext/androidtool/fixture/AdminReceiver.class",
+        classes / "com/ruinext/androidtool/fixture/SmokeActivity.class")
     with zipfile.ZipFile(output / "unsigned.apk", "a") as z:
         z.write(output / "classes.dex", "classes.dex")
         (fixture / "AndroidManifest.axml").write_bytes(z.read("AndroidManifest.xml"))

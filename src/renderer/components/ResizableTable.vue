@@ -64,7 +64,7 @@ defineExpose({
           <thead>
             <tr>
               <th v-for="(column, index) in widths.columns.value" :key="column.label">
-                <span :class="column.resizable === false ? 'sr-only' : 'table-column-label'">{{
+                <span :class="column.hiddenLabel ? 'sr-only' : 'table-column-label'">{{
                   t(column.label)
                 }}</span>
                 <span

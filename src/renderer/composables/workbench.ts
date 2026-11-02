@@ -13,6 +13,7 @@ import {
   type InstalledApp,
   type AppDetails,
   type Target,
+  type AppAction,
 } from '../../shared/contracts';
 type Tab = 'performance' | 'info' | 'apps' | 'files' | 'logs';
 /**
@@ -28,9 +29,17 @@ export function createWorkbench(api: Api) {
     apps: [] as InstalledApp[],
     appsLoaded: false,
     appQuery: '',
+    appStateEpoch: 0,
     showSystemApps: false,
     application: undefined as
-      | { target: Target; deviceName: string; packageName: string; details?: AppDetails; error: string }
+      | {
+          target: Target;
+          deviceName: string;
+          packageName: string;
+          details?: AppDetails;
+          error: string;
+          action?: Exclude<AppAction, 'launch'> | 'uninstall';
+        }
       | undefined,
     details: undefined as Details | undefined,
     apk: undefined as Apk | undefined,
@@ -52,6 +61,7 @@ export function createWorkbench(api: Api) {
       | 'file-delete'
       | 'app-details'
       | 'app-uninstall'
+      | 'app-confirm'
       | 'install'
       | null,
     renameDevice: undefined as Device | undefined,
@@ -139,7 +149,7 @@ export function createWorkbench(api: Api) {
       state.apps = [];
       state.appsLoaded = false;
       state.application = undefined;
-      if (['app-details', 'app-uninstall', 'install'].includes(state.modal || '')) {
+      if (['app-details', 'app-uninstall', 'app-confirm', 'install'].includes(state.modal || '')) {
         state.modal = null;
         state.dragging = false;
       }
@@ -312,18 +322,19 @@ export function createWorkbench(api: Api) {
         void loadApps();
     },
   );
-  async function openApp(app: InstalledApp) {
+  async function openApp(app: InstalledApp, action?: Exclude<AppAction, 'launch'> | 'uninstall') {
     if (!device.value || !online.value || state.busy) return;
     // 弹窗绑定打开时的设备和包名；确认动作不能从之后变化的选中行重新推导目标。
     const pending = {
       target: { ...device.value },
       deviceName: title.value,
       packageName: app.packageName,
+      action,
       error: '',
       details: undefined as AppDetails | undefined,
     };
     state.application = pending;
-    state.modal = 'app-details';
+    state.modal = action === 'uninstall' ? 'app-uninstall' : action ? 'app-confirm' : 'app-details';
     await run(t('读取应用信息'), async () => {
       try {
         const details = await api.appDetails(pending.target, pending.packageName);
@@ -339,6 +350,56 @@ export function createWorkbench(api: Api) {
         throw error;
       }
     });
+  }
+  async function launchApp(app: InstalledApp) {
+    if (!device.value || !online.value || state.busy || app.system || !app.enabled || !app.launchComponent)
+      return;
+    const chosen = { ...device.value };
+    await run(t('正在打开应用'), async () => {
+      const version = app.version?.code || (await api.appDetails(chosen, app.packageName)).versionCode;
+      await api.appAction(chosen, app.packageName, version, 'launch', false);
+      if (state.selected === targetKey(chosen) && online.value) {
+        state.appStateEpoch++;
+        state.notice = { text: t('已发送打开应用请求。') };
+      }
+    });
+  }
+  async function confirmAppAction() {
+    const pending = state.application,
+      details = pending?.details,
+      action = pending?.action;
+    if (
+      !pending ||
+      !details ||
+      !action ||
+      action === 'uninstall' ||
+      details.system ||
+      state.modal !== 'app-confirm' ||
+      state.busy ||
+      !online.value ||
+      state.selected !== targetKey(pending.target)
+    )
+      return;
+    pending.error = '';
+    await run(action === 'clear-data' ? t('正在清除应用数据') : t('正在强制停止应用'), async () => {
+      try {
+        await api.appAction(pending.target, details.packageName, details.versionCode, action, true);
+        if (state.application !== pending || state.selected !== targetKey(pending.target) || !online.value)
+          return;
+        state.modal = null;
+        state.application = undefined;
+        state.appStateEpoch++;
+        state.notice = {
+          text: action === 'clear-data' ? t('应用数据已清除。') : t('已执行强制停止，运行状态将重新读取。'),
+        };
+      } catch (error) {
+        pending.error = error instanceof Error ? error.message : String(error);
+        throw error;
+      }
+    });
+  }
+  async function copyPackage(app: InstalledApp) {
+    await run(t('复制包名'), () => api.copyPackage(app.packageName), t('包名已复制。'));
   }
   async function uninstallApp() {
     const pending = state.application,
@@ -454,6 +515,9 @@ export function createWorkbench(api: Api) {
     loadApps,
     openApp,
     uninstallApp,
+    launchApp,
+    confirmAppAction,
+    copyPackage,
     openInstall,
     closeInstall,
     chooseApk,

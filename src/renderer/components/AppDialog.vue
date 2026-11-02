@@ -3,9 +3,16 @@ import { t } from '../../shared/i18n';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { X } from '@lucide/vue';
-const props = defineProps<{ title: string; busy?: boolean; description?: string; contentClass?: string }>();
-// 弹窗由工作台状态打开，没有 DialogTrigger 时显式恢复原焦点。
-const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+const props = defineProps<{
+  title: string;
+  busy?: boolean;
+  description?: string;
+  contentClass?: string;
+  returnFocus?: HTMLElement;
+}>();
+// 弹窗由工作台状态打开，没有 DialogTrigger 时显式恢复原焦点；菜单可传入稳定的行节点。
+const previousFocus =
+  props.returnFocus || (document.activeElement instanceof HTMLElement ? document.activeElement : null);
 function restoreFocus(event: Event) {
   event.preventDefault();
   if (previousFocus?.isConnected) previousFocus.focus();

@@ -1312,45 +1312,92 @@ button.log-row.log-crash {
 .apps-table td:first-child {
   padding-left: 20px;
 }
-.apps-table tr:hover td {
+.application-row {
+  --focus-outline-offset: -2px;
+  cursor: pointer;
+}
+.application-row[aria-disabled='true'] {
+  cursor: default;
+}
+.apps-table .application-row:not([aria-disabled='true']):not(.selected):hover td {
   background: var(--surface-subtle);
 }
-.app-package {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  width: 100%;
-  gap: 8px;
-  height: auto;
-  min-height: 32px;
-  padding: 4px 0;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-  text-align: left;
-  color: var(--foreground);
-  font-size: 13px;
+.apps-table .application-row.selected td {
+  background: var(--selection);
 }
-.app-package span {
-  min-width: 0;
+.apps-table .application-row td {
+  height: 44px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-}
-.app-package svg {
-  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
 }
 .app-identity {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: var(--foreground);
+}
+.installed-app-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+.installed-app-icon img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+.installed-app-icon svg {
+  width: 22px;
+  height: 22px;
 }
 .app-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
   font-weight: 500;
 }
-.app-identifier {
-  font-size: 12px;
+.app-disabled-label {
+  font-size: 11px;
   color: var(--muted);
+  flex-shrink: 0;
+}
+.app-running {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.app-running.running {
+  color: var(--success);
+}
+.app-running i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.app-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  /* 抵消文字按钮自身的内边距，让“详情”文字与表头从同一位置开始。 */
+  margin-inline-start: -4px;
+}
+.app-details-button {
+  padding-inline: 4px;
+  font-size: 12px;
+}
+.app-menu-separator {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--line);
 }
 .apps-empty {
   padding: 32px 12px;
@@ -2081,14 +2128,25 @@ button.log-row.log-crash {
   padding: 0;
   flex: 0 0 16px;
 }
-[data-slot='checkbox'][data-state='checked'] {
+/* 复选框底层同样是 button，选中态必须覆盖通用按钮的悬停和按下背景。 */
+button[data-slot='checkbox'][data-state='checked'] {
   background: var(--accent);
   border-color: var(--accent);
-  color: white;
+  color: var(--on-accent);
 }
-[data-slot='checkbox'] svg {
+button[data-slot='checkbox'][data-state='checked']:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+button[data-slot='checkbox']:disabled {
+  background: var(--surface-subtle);
+  border-color: var(--line);
+  color: var(--muted);
+}
+button[data-slot='checkbox'] svg {
   width: 13px;
   height: 13px;
+  color: inherit;
 }
 .device-context-menu {
   min-width: 196px;
@@ -2102,7 +2160,8 @@ button.log-row.log-crash {
     0 1px 3px rgb(0 0 0 / 8%);
   animation: none;
 }
-.device-context-menu [data-slot='context-menu-item'] {
+.device-context-menu [data-slot='context-menu-item'],
+.app-action-menu [role='menuitem'] {
   display: flex;
   align-items: center;
   gap: 9px;
@@ -2113,7 +2172,8 @@ button.log-row.log-crash {
   cursor: pointer;
   font-size: 13px;
 }
-.device-context-menu [data-slot='context-menu-item'] svg {
+.device-context-menu [data-slot='context-menu-item'] svg,
+.app-action-menu [role='menuitem'] svg {
   width: 15px;
   height: 15px;
   stroke-width: 1.5;
@@ -2126,6 +2186,13 @@ button.log-row.log-crash {
 .device-context-menu [data-disabled] {
   color: var(--disabled);
   cursor: default;
+}
+.app-action-menu [role='menuitem'].destructive:not([data-disabled]),
+.app-action-menu [role='menuitem'].destructive:not([data-disabled]) svg {
+  color: var(--error);
+}
+.app-action-menu [data-disabled] svg {
+  color: var(--disabled);
 }
 .device-context-menu [data-slot='context-menu-separator'] {
   margin: 4px 3px;

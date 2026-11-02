@@ -32,6 +32,11 @@ export const api: Api = {
   install: (t, id, allow) => call('install', target(t), id, allow),
   listApps: (t) => call('listApps', target(t)),
   appDetails: (t, packageName) => call('appDetails', target(t), packageName),
+  appIcons: (t, packages) => call('appIcons', target(t), packages),
+  appRunning: (t) => call('appRunning', target(t)),
+  appAction: (t, packageName, versionCode, action, consent) =>
+    call('appAction', target(t), packageName, versionCode, action, consent),
+  copyPackage: (packageName) => call('copyPackage', packageName),
   uninstallApp: (t, packageName, versionCode, consent) =>
     call('uninstallApp', target(t), packageName, versionCode, consent),
   checkOwner: (t, c) => call('checkOwner', target(t), c),

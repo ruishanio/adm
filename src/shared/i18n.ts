@@ -4,6 +4,41 @@ export type Locale = 'zh-CN' | 'en';
 export type LanguagePreference = Locale;
 // 中文键即默认文案；新增语言必须覆盖整份字典，不能在组件中分支硬编码。
 export const english = {
+  安装包大小: 'APK size',
+  操作: 'Actions',
+  详情: 'Details',
+  已禁用: 'Disabled',
+  启用状态: 'Enabled status',
+  运行中: 'Running',
+  未运行: 'Not running',
+  打开应用: 'Open app',
+  复制包名: 'Copy package name',
+  强制停止应用: 'Force stop app',
+  清除应用数据: 'Clear app data',
+  '系统应用仅支持查看。': 'System apps are read-only.',
+  '设备所有者应用不支持停止、清除数据或卸载。':
+    'Device owner apps cannot be stopped, cleared or uninstalled.',
+  '此应用没有可用的启动入口。': 'This app has no available launch activity.',
+  '{name} 的更多操作': 'More actions for {name}',
+  '主 APK 与拆分 APK 的合计，不含应用数据和缓存。':
+    'Total size of the base and split APKs, excluding app data and cache.',
+  '按关联进程判断，包含后台和缓存进程；约每 5 秒更新。':
+    'Based on associated processes, including background and cached processes; updated about every 5 seconds.',
+  '正在读取运行状态…': 'Reading process status…',
+  '将删除此应用的登录状态、设置、数据库及缓存，无法撤销。应用仍会保留安装。':
+    'This permanently deletes login sessions, settings, databases and cache. The app remains installed.',
+  '将停止此应用的所有关联进程，当前任务可能中断；保存的数据不会被清除。':
+    'Stops all processes associated with this app. Current tasks may be interrupted; saved data will be kept.',
+  确认清除数据: 'Clear data',
+  确认强制停止: 'Force stop',
+  正在打开应用: 'Opening app',
+  '已发送打开应用请求。': 'App launch requested.',
+  正在清除应用数据: 'Clearing app data',
+  正在强制停止应用: 'Force stopping app',
+  '应用数据已清除。': 'App data cleared.',
+  '已执行强制停止，运行状态将重新读取。': 'Force stop completed. Process status will be refreshed.',
+  '包名已复制。': 'Package name copied.',
+
   性能监控: 'Performance',
   设备性能: 'Device performance',
   '最近 2 分钟': 'Last 2 minutes',
@@ -34,16 +69,20 @@ export const english = {
   网络收发速率: 'Network throughput',
   '当前设备不支持读取网络计数。': 'Network counters are unavailable on this device.',
   应用性能: 'App performance',
-  '选择应用，查看渲染帧率、卡顿比例和 PSS 内存。':
-    'Select an app to view rendering FPS, jank and PSS memory.',
+  '选择一个应用，查看性能数据。': 'Select an app to view its performance.',
   '渲染 FPS': 'Rendering FPS',
   卡顿比例: 'Janky frames',
-  '基于 HWUI 新增渲染帧统计，静止画面可能为 0；部分游戏和视频不适用。':
-    'Based on new HWUI frames. Static screens may read 0; some games and videos are not supported.',
-  '应用未运行或未提供 HWUI 帧统计。': 'The app is not running or has no HWUI frame statistics.',
-  '应用 PSS': 'App PSS',
-  '显示最近 2 分钟；“—”表示等待采样或设备未提供数据。':
-    'Last 2 minutes. “—” means waiting for samples or data unavailable.',
+  'FPS：应用界面每秒绘制的帧数。画面静止时可为 0。':
+    'FPS: UI frames drawn per second. A static screen may show 0.',
+  '卡顿比例：采样期间，系统判定为卡顿的帧所占比例。':
+    'Janky frames: the percentage of frames the system identifies as janky during the sampling interval.',
+  'PSS：应用占用的内存，共享内存按比例计入。':
+    'PSS: app memory usage, including a proportional share of shared memory.',
+  '帧率来自 Android 界面渲染统计（HWUI），不代表屏幕刷新率，部分游戏和视频画面不计入。':
+    'Frame rates use Android UI rendering statistics (HWUI), not the display refresh rate. Some game and video frames are not included.',
+  '暂无帧率数据，应用可能未运行或不支持此项统计。':
+    'No frame-rate data. The app may not be running or may not support these statistics.',
+  '内存（PSS）': 'Memory (PSS)',
   重试: 'Retry',
 
   '部分日志缺少 UID，无法按应用归属筛选。': 'Some entries have no UID and cannot be matched to an app.',

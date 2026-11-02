@@ -1,8 +1,8 @@
-//! 应用查询与卸载只针对主用户 0，与安装功能保持一致，不跨用户删除应用。
+//! 应用查询、资源和管理操作只针对主用户 0，与安装功能保持一致，不跨用户修改应用。
 use crate::{
     adb::Adb,
     models::*,
-    parsing::{friendly_error, re, valid_package},
+    parsing::{component, friendly_error, parse_owner, re, valid_package},
     process::{cancellation, check_cancel},
 };
 use std::collections::{BTreeMap, HashSet};
@@ -34,6 +34,45 @@ fn parse_labels(text: &str) -> Result<BTreeMap<String, String>> {
             .then_some((package, label))
         })
         .collect())
+}
+
+/// 只接受版本化、大小受限的辅助数据；缺失字段保持未知，不把失败伪装成零字节。
+fn reader_json<T: serde::de::DeserializeOwned>(text: &str, marker: &str) -> Result<T> {
+    if text.len() > 4 * 1024 * 1024 {
+        return Err("应用资源数据过大。".into());
+    }
+    let value = text
+        .lines()
+        .find_map(|line| line.strip_prefix(marker))
+        .ok_or("应用资源读取失败。")?;
+    serde_json::from_str(value).map_err(|_| "应用资源格式无效。".into())
+}
+fn parse_metadata(text: &str) -> Result<BTreeMap<String, AppMetadata>> {
+    let mut data: BTreeMap<String, AppMetadata> = reader_json(text, "ADM_APPS_V1:")?;
+    data.retain(|package, item| {
+        if !package_valid(package) {
+            return false;
+        }
+        if item
+            .version
+            .as_ref()
+            .is_some_and(|v| v.name.len() > 1024 || !re(r"^\d{1,20}$").is_match(&v.code))
+        {
+            item.version = None;
+        }
+        if item.apk_size == Some(0) {
+            item.apk_size = None;
+        }
+        if item
+            .launch_component
+            .as_ref()
+            .is_some_and(|c| !c.starts_with(&format!("{package}/")) || component(c).is_err())
+        {
+            item.launch_component = None;
+        }
+        true
+    });
+    Ok(data)
 }
 
 fn package_valid(package: &str) -> bool {
@@ -137,8 +176,8 @@ fn parse_details(text: &str, app: InstalledApp) -> Result<AppDetails> {
 }
 
 impl Adb {
-    /// 临时运行自有 DEX 批量读取设备语言下的名称；输入为固定传输会话，返回包名到名称的映射。
-    fn app_labels(&self, target: &Target) -> Result<BTreeMap<String, String>> {
+    /// 临时运行自有 DEX；输入为固定传输会话和读取模式，返回带版本标记的资源 JSON。
+    fn app_reader(&self, target: &Target, mode: &[&str]) -> Result<String> {
         let mut local = tempfile::NamedTempFile::new().map_err(|e| e.to_string())?;
         local.write_all(LABEL_READER).map_err(|e| e.to_string())?;
         let remote = format!("/data/local/tmp/adm-app-labels-{}.jar", Uuid::new_v4());
@@ -152,16 +191,16 @@ impl Adb {
             self.cmd(push, 20000, None)?;
             // 新版 Android 禁止加载可写 DEX；读取器不需要持久化或修改应用权限。
             self.shell(target, &["chmod", "444", &remote])?;
-            parse_labels(&self.shell(
-                target,
-                &[
-                    "env",
-                    &format!("CLASSPATH={remote}"),
-                    "app_process",
-                    "/",
-                    "com.ruinext.adm.AppLabels",
-                ],
-            )?)
+            let classpath = format!("CLASSPATH={remote}");
+            let mut args = vec![
+                "env",
+                &classpath,
+                "app_process",
+                "/",
+                "com.ruinext.adm.AppLabels",
+            ];
+            args.extend_from_slice(mode);
+            self.shell(target, &args)
         })();
         // 取消等待后仍尝试清理本次唯一文件；固定 transport_id，绝不切换到重连后的设备。
         let mut cleanup = self.target(target)?;
@@ -191,16 +230,19 @@ impl Adb {
         .into_keys()
         .collect();
         // 厂商限制 app_process 或某个资源损坏时保留包名列表，取消和断线则仍然中止。
-        let mut labels = if all.is_empty() {
-            BTreeMap::new()
+        let resources = if all.is_empty() {
+            String::new()
         } else {
-            self.app_labels(target).unwrap_or_default()
+            self.app_reader(target, &[]).unwrap_or_default()
         };
+        let mut labels = parse_labels(&resources).unwrap_or_default();
+        let mut metadata = parse_metadata(&resources).unwrap_or_default();
         check_cancel(&self.cancel)?;
         self.ensure_online(target)?;
         Ok(all
             .into_iter()
             .map(|(package_name, apk_path)| InstalledApp {
+                metadata: metadata.remove(&package_name).unwrap_or_default(),
                 system: system.contains(&package_name),
                 enabled: !disabled.contains(&package_name),
                 label: labels.remove(&package_name),
@@ -208,6 +250,122 @@ impl Adb {
                 apk_path,
             })
             .collect())
+    }
+
+    pub fn app_icons(
+        &self,
+        target: &Target,
+        packages: &[String],
+    ) -> Result<BTreeMap<String, String>> {
+        if packages.is_empty() || packages.len() > 24 || packages.iter().any(|p| !package_valid(p))
+        {
+            return Err("图标请求参数无效。".into());
+        }
+        self.ensure_online(target)?;
+        let mut mode = vec!["icons"];
+        mode.extend(packages.iter().map(String::as_str));
+        let data: BTreeMap<String, String> =
+            reader_json(&self.app_reader(target, &mode)?, "ADM_ICONS_V1:")?;
+        self.ensure_online(target)?;
+        Ok(data
+            .into_iter()
+            .filter(|(package, icon)| {
+                packages.contains(package)
+                    && icon.len() <= 65536
+                    && icon.starts_with("iVBORw0KGgo")
+                    && re(r"^[A-Za-z0-9+/]+={0,2}$").is_match(icon)
+            })
+            .map(|(package, icon)| (package, format!("data:image/png;base64,{icon}")))
+            .collect())
+    }
+    /// 一次查询主用户的全部关联进程，包括多进程及缓存进程；失败交由界面显示未知。
+    pub fn app_running(&self, target: &Target) -> Result<Vec<String>> {
+        self.ensure_online(target)?;
+        let mut packages: Vec<String> =
+            reader_json(&self.app_reader(target, &["running"])?, "ADM_RUNNING_V1:")?;
+        if packages.is_empty()
+            || packages.len() > 20000
+            || packages.iter().any(|p| !package_valid(p))
+        {
+            return Err("无法确认应用运行状态。".into());
+        }
+        packages.sort();
+        packages.dedup();
+        self.ensure_online(target)?;
+        Ok(packages)
+    }
+    /// 危险操作只面向主用户普通应用，拒绝所有者；固定会话与版本，确认后再次核对。
+    pub fn app_action(
+        &self,
+        target: &Target,
+        package: &str,
+        version: &str,
+        action: &str,
+        consent: bool,
+    ) -> Result<()> {
+        if !["launch", "force-stop", "clear-data"].contains(&action)
+            || !package_valid(package)
+            || !re(r"^\d{1,20}$").is_match(version)
+        {
+            return Err("应用操作参数无效。".into());
+        }
+        if action != "launch" && !consent {
+            return Err("请先确认应用操作。".into());
+        }
+        let details = self.app_details(target, package)?;
+        if details.app.system {
+            return Err("系统应用仅支持查看。".into());
+        }
+        if details.version_code != version {
+            return Err("应用版本已变化，请重新确认操作。".into());
+        }
+        if action != "launch" {
+            self.check_app_owner(target, package)?;
+        }
+        self.ensure_online(target)?;
+        match action {
+            "launch" => {
+                if !details.app.enabled {
+                    return Err("应用已禁用，无法打开。".into());
+                }
+                let component = details
+                    .app
+                    .metadata
+                    .launch_component
+                    .ok_or("此应用没有可用的启动入口。")?;
+                let output = self.shell(
+                    target,
+                    &["am", "start", "-W", "--user", "0", "-n", &component],
+                )?;
+                if !output.contains("Starting: Intent")
+                    || output.contains("Error")
+                    || output.contains("Exception")
+                {
+                    return Err(friendly_error(&output));
+                }
+            }
+            "clear-data" => {
+                let output = self.shell(target, &["pm", "clear", "--user", "0", package])?;
+                if !re(r"(?m)^Success\s*$").is_match(&output) {
+                    return Err(friendly_error(&output));
+                }
+            }
+            _ => {
+                let output = self.shell(target, &["am", "force-stop", "--user", "0", package])?;
+                if !output.trim().is_empty() {
+                    return Err(friendly_error(&output));
+                }
+            }
+        }
+        self.ensure_online(target)?;
+        Ok(())
+    }
+    fn check_app_owner(&self, target: &Target, package: &str) -> Result<()> {
+        let owner = parse_owner(&self.shell(target, &["dumpsys", "device_policy"])?)?;
+        if owner.is_some_and(|c| c.starts_with(&format!("{package}/"))) {
+            return Err("设备所有者应用不支持此操作。".into());
+        }
+        Ok(())
     }
 
     pub fn app_details(&self, target: &Target, package: &str) -> Result<AppDetails> {
@@ -246,6 +404,7 @@ impl Adb {
         if details.version_code != version {
             return Err("应用版本已变化，请重新查看信息并确认卸载。".into());
         }
+        self.check_app_owner(target, package)?;
         // --versionCode 在设备端再次核对，避免确认后更新造成误卸载；不使用 -k 保留数据。
         let output = self.shell(
             target,
@@ -287,6 +446,7 @@ mod tests {
     struct FakeState {
         calls: Vec<Vec<String>>,
         system: bool,
+        owner: bool,
         removed: bool,
         failure: bool,
         stale: bool,
@@ -329,13 +489,43 @@ mod tests {
                 if s.stale_after_labels {
                     s.stale = true;
                 }
-                "ADM_LABELS_V1:{\"com.example.app\":\"中文应用\",\"com.example.other\":\"其他用户应用\"}\n".into()
+                if has("running") {
+                    "ADM_RUNNING_V1:[\"com.example.app\"]".into()
+                } else if has("icons") {
+                    "ADM_ICONS_V1:{\"com.example.app\":\"iVBORw0KGgoAAAA=\",\"com.other.app\":\"iVBORw0KGgoAAAA=\"}".into()
+                } else {
+                    "ADM_LABELS_V1:{\"com.example.app\":\"中文应用\",\"com.example.other\":\"其他用户应用\"}\nADM_APPS_V1:{\"com.example.app\":{\"version\":{\"name\":\"1.0\",\"code\":\"42\"},\"apkSize\":2048,\"launchComponent\":\"com.example.app/.Main\"}}".into()
+                }
+            } else if has("clear") {
+                if s.failure {
+                    "Failed".into()
+                } else {
+                    "Success\n".into()
+                }
+            } else if has("force-stop") {
+                if s.failure {
+                    "SecurityException: denied".into()
+                } else {
+                    String::new()
+                }
+            } else if has("start") {
+                if s.failure {
+                    "Error: Activity not found".into()
+                } else {
+                    "Starting: Intent { cmp=com.example.app/.Main }".into()
+                }
             } else if has("uninstall") {
                 if s.failure {
                     "Failure [DELETE_FAILED_DEVICE_POLICY_MANAGER]".into()
                 } else {
                     s.removed = !s.retain;
                     "Success\n".into()
+                }
+            } else if has("device_policy") {
+                if s.owner {
+                    "Device Policy Manager state:\nDevice Owner:\n admin=ComponentInfo{com.example.app/.Admin}".into()
+                } else {
+                    "Device Policy Manager state:".into()
                 }
             } else if has("dumpsys") {
                 "Packages:\n  Package [com.example.app] (abc):\n    versionCode=42 minSdk=23 targetSdk=35\n    versionName=1.0\n    User 0: installed=true enabled=0\n".into()
@@ -537,6 +727,7 @@ mod tests {
     #[test]
     fn details_use_exact_package_and_user_zero() {
         let app = InstalledApp {
+            metadata: AppMetadata::default(),
             package_name: "com.example.app".into(),
             label: Some("示例应用".into()),
             apk_path: "/data/app/base.apk".into(),
@@ -554,5 +745,100 @@ mod tests {
         )
         .is_err());
         assert!(parse_details("Unable to find package", app).is_err());
+    }
+    #[test]
+    fn metadata_and_icons_are_bounded_and_running_failures_stay_unknown() {
+        let (adb, runner, target) = fake();
+        let app = adb.list_apps(&target).unwrap().remove(0);
+        assert_eq!(app.metadata.version.unwrap().code, "42");
+        assert_eq!(app.metadata.apk_size, Some(2048));
+        let icons = adb.app_icons(&target, &["com.example.app".into()]).unwrap();
+        assert_eq!(icons.len(), 1);
+        assert!(icons["com.example.app"].starts_with("data:image/png;base64,"));
+        assert!(adb
+            .app_icons(&target, &["com.example.app;reboot".into()])
+            .is_err());
+        assert!(adb
+            .app_icons(&target, &vec!["com.example.app".into(); 25])
+            .is_err());
+        assert_eq!(adb.app_running(&target).unwrap(), vec!["com.example.app"]);
+        runner.0.lock().unwrap().labels_fail = true;
+        assert!(adb.app_running(&target).is_err());
+        let invalid = parse_metadata(r#"ADM_APPS_V1:{"com.example.app":{"version":{"name":"x","code":"bad"},"apkSize":0,"launchComponent":"com.other.app/.Main"}}"#).unwrap();
+        let meta = &invalid["com.example.app"];
+        assert!(
+            meta.version.is_none() && meta.apk_size.is_none() && meta.launch_component.is_none()
+        );
+    }
+    #[test]
+    fn app_actions_require_consent_current_version_and_protect_system_and_owner() {
+        let (adb, runner, target) = fake();
+        for action in ["force-stop", "clear-data"] {
+            assert!(adb
+                .app_action(&target, "com.example.app", "42", action, false)
+                .is_err());
+            assert!(adb
+                .app_action(&target, "com.example.app", "41", action, true)
+                .is_err());
+        }
+        assert!(adb
+            .app_action(&target, "com.example.app", "42", "shell", true)
+            .is_err());
+        assert!(adb
+            .app_action(&target, "com.example.app;reboot", "42", "launch", true)
+            .is_err());
+        runner.0.lock().unwrap().system = true;
+        assert!(adb
+            .app_action(&target, "com.example.app", "42", "force-stop", true)
+            .is_err());
+        {
+            let mut s = runner.0.lock().unwrap();
+            s.system = false;
+            s.owner = true;
+        }
+        assert!(adb
+            .app_action(&target, "com.example.app", "42", "clear-data", true)
+            .is_err());
+        assert!(adb
+            .uninstall_app(&target, "com.example.app", "42", true)
+            .is_err());
+        let state = runner.0.lock().unwrap();
+        assert!(!state.calls.iter().any(|c| c.iter().any(|arg| [
+            "force-stop",
+            "clear",
+            "start",
+            "uninstall"
+        ]
+        .contains(&arg.as_str()))));
+    }
+    #[test]
+    fn app_actions_scope_user_and_surface_device_failure() {
+        let (adb, runner, target) = fake();
+        for action in ["launch", "force-stop", "clear-data"] {
+            adb.app_action(&target, "com.example.app", "42", action, true)
+                .unwrap();
+        }
+        {
+            let s = runner.0.lock().unwrap();
+            for command in ["start", "force-stop", "clear"] {
+                let args = s
+                    .calls
+                    .iter()
+                    .find(|a| a.iter().any(|v| v == command))
+                    .unwrap();
+                assert_eq!(&args[..2], &["-t", "42"]);
+                assert!(args.windows(2).any(|w| w == ["--user", "0"]));
+            }
+        }
+        runner.0.lock().unwrap().failure = true;
+        for action in ["launch", "force-stop", "clear-data"] {
+            assert!(adb
+                .app_action(&target, "com.example.app", "42", action, true)
+                .is_err());
+        }
+        runner.0.lock().unwrap().stale = true;
+        assert!(adb
+            .app_action(&target, "com.example.app", "42", "clear-data", true)
+            .is_err());
     }
 }

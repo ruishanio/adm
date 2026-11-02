@@ -72,7 +72,11 @@ export interface OwnerCheck {
   alreadySet: boolean;
   summary: string;
 }
+export type AppAction = 'launch' | 'force-stop' | 'clear-data';
 export interface InstalledApp {
+  version?: { name: string; code: string } | null;
+  apkSize?: number | null;
+  launchComponent?: string | null;
   packageName: string;
   label: string | null;
   apkPath: string;
@@ -163,6 +167,16 @@ export interface Api {
   install(target: Target, apkId: string, allowTest: boolean): Promise<void>;
   listApps(target: Target): Promise<InstalledApp[]>;
   appDetails(target: Target, packageName: string): Promise<AppDetails>;
+  appIcons(target: Target, packages: string[]): Promise<Record<string, string>>;
+  appRunning(target: Target): Promise<string[]>;
+  appAction(
+    target: Target,
+    packageName: string,
+    versionCode: string,
+    action: AppAction,
+    consent: boolean,
+  ): Promise<void>;
+  copyPackage(packageName: string): Promise<void>;
   uninstallApp(target: Target, packageName: string, versionCode: string, consent: boolean): Promise<void>;
   checkOwner(target: Target, component: string): Promise<OwnerCheck>;
   setOwner(target: Target, component: string, consent: boolean): Promise<void>;

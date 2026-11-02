@@ -7,6 +7,7 @@ export interface ColumnDefinition {
   min: number;
   max: number;
   resizable?: boolean;
+  hiddenLabel?: boolean;
 }
 
 /** 按表格分别保存列宽；flexColumn 填满剩余空间，spacing 表示列间距与外侧内边距之和。 */

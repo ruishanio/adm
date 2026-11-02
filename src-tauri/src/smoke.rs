@@ -103,6 +103,48 @@ fn dedicated_application_management() {
         assert_eq!(details.version_code, apk.info.version_code);
         assert_eq!(details.version_name, apk.info.version_name);
         assert!(!details.app.apk_path.is_empty());
+        let package = &apk.info.package_name;
+        assert_eq!(
+            details.app.metadata.version.as_ref().unwrap().code,
+            apk.info.version_code
+        );
+        assert_eq!(
+            details.app.metadata.apk_size,
+            Some(fs::metadata(&apk.path).unwrap().len())
+        );
+        assert!(adb
+            .app_icons(&target, std::slice::from_ref(package))
+            .unwrap()[package]
+            .starts_with("data:image/png;base64,"));
+        adb.app_action(&target, package, &apk.info.version_code, "launch", false)
+            .unwrap();
+        assert!(adb.app_running(&target).unwrap().contains(package));
+        // 用可执行的系统 shell 检查夹具数据；明确区分不存在与 run-as 本身失败。
+        let fixture_data = || {
+            adb.shell(
+                &target,
+                &[
+                    "run-as",
+                    package,
+                    "/system/bin/sh",
+                    "-c",
+                    "if [ -f shared_prefs/adm-smoke.xml ]; then echo exists; else echo missing; fi",
+                ],
+            )
+            .unwrap()
+        };
+        assert_eq!(fixture_data().trim(), "exists");
+        adb.app_action(&target, package, &apk.info.version_code, "force-stop", true)
+            .unwrap();
+        assert!(!adb.app_running(&target).unwrap().contains(package));
+        adb.app_action(&target, package, &apk.info.version_code, "clear-data", true)
+            .unwrap();
+        assert_eq!(fixture_data().trim(), "missing");
+        assert!(
+            adb.app_details(&target, package).is_ok(),
+            "清除数据后应用应仍然安装"
+        );
+
         assert!(adb
             .uninstall_app(
                 &target,
@@ -126,7 +168,7 @@ fn dedicated_application_management() {
         assert!(adb.app_details(&target, &apk.info.package_name).is_err());
         assert_eq!(adb.details(&target).unwrap().owner, owner);
         println!(
-            "通过：已安装列表、应用信息、拒绝未确认卸载、主用户卸载和回读；设备所有者保持原状"
+            "通过：应用名称、版本、大小、图标、启动、进程状态、强制停止、清除数据、主用户卸载回读；设备所有者保持原状"
         );
     }));
     // 无论断言是否失败，只清理本次新建的测试包，不碰业务应用。

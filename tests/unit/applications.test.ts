@@ -16,6 +16,9 @@ const app: InstalledApp = {
   apkPath: '/data/app/base.apk',
   system: false,
   enabled: true,
+  version: { name: '2.0', code: '42' },
+  apkSize: 2048,
+  launchComponent: 'com.example.notes/.Main',
 };
 const system: InstalledApp = {
   ...app,
@@ -38,7 +41,14 @@ const details: AppDetails = {
 const cleanup: (() => void)[] = [];
 beforeEach(() => {
   setLanguage('zh-CN');
-  localStorage.removeItem('adm.apps-column-widths');
+  localStorage.removeItem('adm.apps-column-widths.v2');
+  vi.stubGlobal(
+    'IntersectionObserver',
+    class {
+      observe() {}
+      disconnect() {}
+    },
+  );
   vi.stubGlobal(
     'ResizeObserver',
     class {
@@ -53,7 +63,7 @@ afterEach(() => {
     .reverse()
     .forEach((f) => f());
   document.body.innerHTML = '';
-  localStorage.removeItem('adm.apps-column-widths');
+  localStorage.removeItem('adm.apps-column-widths.v2');
   vi.unstubAllGlobals();
 });
 async function setup() {
@@ -77,6 +87,10 @@ async function setup() {
     listApps: vi.fn(async () => [app, system]),
     appDetails: vi.fn(async () => ({ ...details })),
     uninstallApp: vi.fn(async () => {}),
+    appRunning: vi.fn(async () => [app.packageName]),
+    appIcons: vi.fn(async () => ({})),
+    appAction: vi.fn(async () => {}),
+    copyPackage: vi.fn(async () => {}),
     chooseApk: vi.fn(async () => ({
       id: 'apk',
       fileName: 'test.apk',
@@ -126,7 +140,11 @@ it('名称优先显示，支持中文名称及包名搜索，系统应用可选�
   const { view, w } = await setup();
   expect(view.findAll('tbody tr')).toHaveLength(1);
   expect(view.get('.app-name').text()).toBe('随手笔记 Notes');
-  expect(view.get('.app-identifier').text()).toBe(app.packageName);
+  expect(view.find('.app-identifier').exists()).toBe(false);
+  expect(view.get('.app-identity').attributes('title')).toContain(app.packageName);
+  expect(view.get('tbody tr').text()).toContain('运行中');
+  expect(view.get('tbody tr').text()).toContain('2.0');
+  expect(view.get('tbody tr').text()).toContain('2.0 KB');
   await view.get('input[type="search"]').setValue('笔记');
   expect(view.findAll('tbody tr')).toHaveLength(1);
   await view.get('input[type="search"]').setValue('NOTES');
@@ -137,14 +155,14 @@ it('名称优先显示，支持中文名称及包名搜索，系统应用可选�
   expect(view.text()).toContain('没有匹配的应用');
   await view.get('#show-system-apps').trigger('click');
   expect(view.findAll('tbody tr')).toHaveLength(1);
-  expect(view.get('tbody').text()).toContain('已停用');
+  expect(view.get('tbody').text()).toContain('已禁用');
   w.state.appQuery = '';
   await nextTick();
   expect(view.findAll('tbody tr')).toHaveLength(2);
 });
 it('信息页和卸载确认分开，取消不执行卸载，确认携带原设备和版本', async () => {
   const { view, api, w } = await setup();
-  await view.get('.app-package').trigger('click');
+  await view.get('tbody tr').trigger('dblclick');
   await flushPromises();
   expect(document.body.textContent).toContain('2.0');
   const click = async (text: string) => {
@@ -177,7 +195,7 @@ it('同名应用仍按包名区分，名称缺失时保留可搜索的包名', a
     '随手笔记 Notes',
     'com.example.unnamed',
   ]);
-  await view.findAll('.app-package')[1].trigger('click');
+  await view.findAll('tbody tr')[1].trigger('dblclick');
   await flushPromises();
   expect(api.appDetails).toHaveBeenCalledWith(first, other.packageName);
   w.state.modal = null;
@@ -356,13 +374,13 @@ it('安装过程中断线关闭旧弹窗，迟到结果不进入另一会话的�
 it('应用列宽可拖动、复位并持久保存，表头独立滚动且详情入口可用', async () => {
   const { view, api } = await setup();
   const handles = view.findAll('.table-column-resizer');
-  expect(handles).toHaveLength(3);
+  expect(handles).toHaveLength(4);
   const name = handles[0];
   await name.trigger('mousedown', { button: 0, clientX: 300 });
   window.dispatchEvent(new MouseEvent('mousemove', { clientX: 540 }));
   window.dispatchEvent(new MouseEvent('mouseup'));
   await nextTick();
-  expect(name.attributes('aria-valuenow')).toBe('540');
+  expect(name.attributes('aria-valuenow')).toBe('480');
   expect(view.get('.resizable-table-head col').attributes('style')).toBe(
     view.get('#installed-apps-table col').attributes('style'),
   );
@@ -379,19 +397,84 @@ it('应用列宽可拖动、复位并持久保存，表头独立滚动且详情�
   expect(body.element.scrollLeft).toBe(60);
   expect(body.element.scrollTop).toBe(300);
   const restored = (await setup()).view;
-  expect(restored.findAll('.table-column-resizer')[0].attributes('aria-valuenow')).toBe('540');
+  expect(restored.findAll('.table-column-resizer')[0].attributes('aria-valuenow')).toBe('480');
   await handles[1].trigger('mousedown', { button: 0, clientX: 600 });
   window.dispatchEvent(new MouseEvent('mousemove', { clientX: -100 }));
   window.dispatchEvent(new MouseEvent('mouseup'));
   await nextTick();
-  expect(handles[1].attributes('aria-valuenow')).toBe('76');
+  expect(handles[1].attributes('aria-valuenow')).toBe('70');
   await handles[1].trigger('dblclick');
-  expect(handles[1].attributes('aria-valuenow')).toBe('88');
+  expect(handles[1].attributes('aria-valuenow')).toBe('90');
   await handles[2].trigger('keydown', { key: 'ArrowRight' });
-  expect(handles[2].attributes('aria-valuenow')).toBe('86');
+  expect(handles[2].attributes('aria-valuenow')).toBe('110');
   await handles[2].trigger('keydown', { key: 'Home' });
-  expect(handles[2].attributes('aria-valuenow')).toBe('76');
-  await view.get('.app-package').trigger('click');
+  expect(handles[2].attributes('aria-valuenow')).toBe('100');
+  await view.get('tbody tr').trigger('dblclick');
   await flushPromises();
   expect(api.appDetails).toHaveBeenCalledWith(first, app.packageName);
+});
+
+it('单击整行选择不打开弹窗，方向键切换选中，回车查看详情', async () => {
+  const { view, w, api } = await setup();
+  w.state.apps = [app, { ...app, packageName: 'com.example.second', label: null }];
+  await nextTick();
+  const rows = view.findAll('tbody tr');
+  await rows[0].get('td:nth-child(3)').trigger('click');
+  expect(rows[0].attributes('aria-selected')).toBe('true');
+  expect(rows[0].classes()).toContain('selected');
+  expect(w.state.modal).toBeNull();
+  expect(api.appDetails).not.toHaveBeenCalled();
+  await rows[0].trigger('keydown', { key: 'ArrowDown' });
+  expect(rows[1].attributes('aria-selected')).toBe('true');
+  expect(view.text()).not.toContain('名称不可用');
+  await rows[1].trigger('keydown', { key: 'Enter' });
+  await flushPromises();
+  expect(api.appDetails).toHaveBeenCalledWith(first, 'com.example.second');
+});
+it('更多菜单与右键提供相同操作，清除数据需确认且取消不会调用后端', async () => {
+  const { view, api, w } = await setup();
+  await view.get('tbody tr').trigger('contextmenu', { button: 2, clientX: 100, clientY: 100 });
+  await flushPromises();
+  const items = [...document.querySelectorAll<HTMLElement>('[role="menuitem"]')];
+  expect(items.map((n) => n.textContent?.trim())).toEqual([
+    '应用信息',
+    '打开应用',
+    '复制包名',
+    '强制停止应用',
+    '清除应用数据',
+    '卸载应用',
+  ]);
+  items.find((n) => n.textContent?.includes('清除应用数据'))!.click();
+  await flushPromises();
+  expect(w.state.modal).toBe('app-confirm');
+  expect(document.querySelector('[role="dialog"]')?.textContent).toContain('无法撤销');
+  expect(api.appAction).not.toHaveBeenCalled();
+  [...document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')]
+    .find((n) => n.textContent === '取消')!
+    .click();
+  await flushPromises();
+  expect(w.state.modal).toBeNull();
+  expect(api.appAction).not.toHaveBeenCalled();
+  await vi.waitFor(() => expect(document.activeElement).toBe(view.get('tbody tr').element));
+  await w.openApp(app, 'clear-data');
+  await w.confirmAppAction();
+  expect(api.appAction).toHaveBeenCalledExactlyOnceWith(first, app.packageName, '42', 'clear-data', true);
+  expect(w.state.notice?.text).toBe('应用数据已清除。');
+});
+it('操作失败保留确认和错误，断连撤销确认，打开应用后触发运行状态刷新', async () => {
+  const { w, api, snapshot } = await setup();
+  await w.launchApp(app);
+  expect(api.appAction).toHaveBeenCalledWith(first, app.packageName, '42', 'launch', false);
+  expect(w.state.appStateEpoch).toBe(1);
+  await w.openApp(app, 'force-stop');
+  vi.mocked(api.appAction).mockRejectedValueOnce(new Error('设备策略拒绝操作'));
+  await w.confirmAppAction();
+  expect(w.state.modal).toBe('app-confirm');
+  expect(w.state.application?.error).toContain('设备策略');
+  snapshot.devices = [{ ...first, transportId: '99' }, second];
+  await w.refresh();
+  expect(w.state.modal).toBeNull();
+  const calls = vi.mocked(api.appAction).mock.calls.length;
+  await w.confirmAppAction();
+  expect(api.appAction).toHaveBeenCalledTimes(calls);
 });

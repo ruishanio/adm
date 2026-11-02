@@ -126,6 +126,14 @@ impl Service {
         }
         // 日志与性能监控各自管理只读会话，不占用安装、文件操作的任务锁。
         match method.as_str() {
+            "appIcons" => {
+                let (target, packages): (Target, Vec<String>) = decoded(args)?;
+                return encoded(self.adb(cancellation())?.app_icons(&target, &packages)?);
+            }
+            "appRunning" => {
+                let (target,): (Target,) = decoded(args)?;
+                return encoded(self.adb(cancellation())?.app_running(&target)?);
+            }
             "startPerformance" => {
                 let (target,): (Target,) = decoded(args)?;
                 return encoded(self.performance.start(self.adb(cancellation())?, target)?);
@@ -239,6 +247,28 @@ impl Service {
             "appDetails" => {
                 let (target, package): (Target, String) = decoded(args)?;
                 encoded(self.adb(cancel)?.app_details(&target, &package)?)
+            }
+            "appAction" => {
+                let (target, package, version, action, consent): (
+                    Target,
+                    String,
+                    String,
+                    String,
+                    bool,
+                ) = decoded(args)?;
+                self.adb(cancel)?
+                    .app_action(&target, &package, &version, &action, consent)?;
+                Ok(Value::Null)
+            }
+            "copyPackage" => {
+                let (package,): (String,) = decoded(args)?;
+                if package != "android" && !parsing::valid_package(&package) {
+                    return Err("应用包名无效。".into());
+                }
+                app.clipboard()
+                    .write_text(package)
+                    .map_err(|e| e.to_string())?;
+                Ok(Value::Null)
             }
             "uninstallApp" => {
                 let (target, package, version, consent): (Target, String, String, bool) =

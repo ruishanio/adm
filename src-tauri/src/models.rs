@@ -93,9 +93,23 @@ pub struct OwnerCheck {
     pub already_set: bool,
     pub summary: String,
 }
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct AppVersion {
+    pub name: String,
+    pub code: String,
+}
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AppMetadata {
+    pub version: Option<AppVersion>,
+    pub apk_size: Option<u64>,
+    pub launch_component: Option<String>,
+}
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InstalledApp {
+    #[serde(flatten)]
+    pub metadata: AppMetadata,
     pub package_name: String,
     pub label: Option<String>,
     pub apk_path: String,
