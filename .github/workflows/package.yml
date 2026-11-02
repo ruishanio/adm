@@ -73,6 +73,10 @@ jobs:
       - name: 验证安装包内容与安装流程
         run: python scripts/package_ci.py smoke-install ${{ matrix.platform }} ${{ matrix.arch }}
 
+      # ADB 对应源码等问题必须有可复核证据；构建成功不能替代分发许可核对。
+      - name: 核对公开分发许可
+        run: npm run licenses:release-check
+
       # 应用 ZIP 保留内部权限和符号链接；同平台安装包及校验清单一并上传。
       - name: 上传可下载产物
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7

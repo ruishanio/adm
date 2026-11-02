@@ -1,0 +1,8 @@
+{
+  "status": "pending",
+  "unresolved": [
+    "ADB 37.0.1-15733141：尚未取得与官方二进制匹配的完整源码映射、libusb 对应源码及可实际使用的重新链接材料；NOTICE 与 AOSP 主分支链接不能替代这些交付。",
+    "Windows：需核对最终安装包使用的 NSIS 插件、MSVC 运行库来源和可再分发条件，并在实际 Windows 安装流程验证 WebView2 条款及通知。"
+  ],
+  "evidence": []
+}

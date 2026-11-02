@@ -96,6 +96,7 @@ export interface Snapshot {
   error?: string;
 }
 export interface Api {
+  openThirdPartyNotices(): Promise<void>;
   refresh(): Promise<Snapshot>;
   details(target: Target): Promise<Details>;
   connect(endpoint: string): Promise<void>;

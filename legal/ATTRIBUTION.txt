@@ -1,0 +1,24 @@
+ADM — Device manager for Android
+
+ADM original code: MIT License, Copyright (c) 2026 RuiNext.
+Third-party code, software, artwork and trademarks retain their own terms.
+The ADM MIT license does not replace these terms or grant trademark rights.
+
+Android is a trademark of Google LLC.
+
+The Android robot is reproduced or modified from work created and shared by
+Google and used according to terms described in the Creative Commons 3.0
+Attribution License (https://creativecommons.org/licenses/by/3.0/).
+
+Changes: the robot is recolored and placed on a three-device dock in the ADM
+application icon. Original artwork and brand guidelines:
+https://developer.android.com/distribute/marketing-tools/brand-guidelines
+
+ADM is an independent project and is not endorsed by Google or Microsoft.
+
+Copied UI components in src/renderer/components/ui are derived from shadcn-vue
+and adapted for ADM. Their upstream MIT copyright and license are retained in
+THIRD-PARTY-NOTICES.txt, accessible from Settings > Third-party licenses > View full notices.
+
+System fonts and macOS system WebKit are used through operating-system APIs;
+ADM does not redistribute their implementations or font files.

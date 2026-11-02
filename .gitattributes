@@ -2,3 +2,10 @@
 
 # aapt 输出的 Android 二进制清单，不参与换行转换或文本合并
 *.axml binary
+
+# 原始第三方材料及源码归档按字节校验，不执行平台换行转换。
+legal/** -text
+legal/vendor/** -whitespace
+legal/THIRD-PARTY-NOTICES.txt -whitespace
+legal/WINDOWS-INSTALLER.txt -whitespace
+*.crate binary

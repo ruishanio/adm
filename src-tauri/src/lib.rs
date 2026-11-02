@@ -1,6 +1,7 @@
 mod adb;
 mod apk;
 mod device_info;
+mod licenses;
 mod models;
 #[cfg(target_os = "macos")]
 mod native_menu;
@@ -72,6 +73,12 @@ impl Service {
     }
     /// 分发主窗口业务请求：app 提供原生对话框，method/args 为方法名及参数数组；返回 JSON 结果或中文错误。
     fn dispatch(&self, app: tauri::AppHandle, method: String, args: Value) -> Result<Value> {
+        // 本地声明独立于设备任务，读取时不占用 ADB 操作锁。
+        if method == "openThirdPartyNotices" {
+            decoded_empty(args)?;
+            licenses::open_notices(&self.resources)?;
+            return Ok(Value::Null);
+        }
         if method == "cancel" {
             let (): () = decoded_empty(args)?;
             self.cancel();

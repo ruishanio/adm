@@ -1,0 +1,43 @@
+Windows runtime notice / Windows 运行时说明
+
+ADM 的自有代码按 MIT 许可提供；Microsoft Edge WebView2 Runtime 是独立的
+第三方软件，适用微软的许可条款，不因 ADM 的 MIT 许可而被重新授权。
+Windows 版本通过 WebView2 显示界面。缺少运行时时，安装程序从微软下载
+Evergreen Bootstrapper；运行时可自动更新。
+
+本软件使用的 WebView2 包含 Microsoft Defender SmartScreen，默认启用。
+SmartScreen 会收集用户的信息并发送给微软，具体见微软隐私声明和
+Microsoft Edge 隐私白皮书。WebView2 也可能向微软发送诊断数据。
+这些行为由微软运行时及系统策略控制，不表示 ADM 将 Android 设备文件
+上传给微软。ADM 未关闭 SmartScreen 安全保护。
+
+Microsoft Privacy Statement / 微软隐私声明:
+https://aka.ms/privacy
+Microsoft Edge Privacy Whitepaper — SmartScreen:
+https://learn.microsoft.com/en-us/microsoft-edge/privacy-whitepaper#smartscreen
+WebView2 data and privacy / 数据与隐私:
+https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/data-privacy
+
+ADM original code is licensed under MIT. Microsoft Edge WebView2 Runtime is
+separate software governed by Microsoft's license terms, not ADM's MIT license.
+The Windows edition uses WebView2 to display its interface. When the runtime is
+missing, the installer downloads the Evergreen Bootstrapper from Microsoft.
+The runtime can update automatically.
+
+This software uses WebView2, which includes Microsoft Defender SmartScreen,
+enabled by default. SmartScreen collects and sends end-user information to
+Microsoft as disclosed in the Microsoft Privacy Statement and the Microsoft
+Edge Privacy Whitepaper linked above. WebView2 may also send diagnostic data
+to Microsoft. These behaviors are controlled by the runtime and system policy;
+they do not mean ADM uploads Android device files to Microsoft. ADM does not
+disable SmartScreen.
+
+Runtime license terms / 运行时许可条款:
+https://developer.microsoft.com/en-us/microsoft-edge/webview2/
+The terms are shown by the official page's Runtime download controls before
+acceptance. The runtime and its updates may include additional terms.
+
+WebView2 SDK 1.0.3800.47 and WebView2LoaderStatic.lib are separate from the
+Runtime. The SDK's original Microsoft BSD-style license and NOTICE are included
+in vendor/webview2-sdk-LICENSE.txt and vendor/webview2-sdk-NOTICE.txt.
+The Rust wrappers have their own MIT license entries in the catalog.

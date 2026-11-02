@@ -1,6 +1,6 @@
 # ADM UI / UX 约束
 
-软件名称为 ADM，不设中文名；Android Device Manager 仅在设置说明和文档中解释全称。窗口、系统菜单和安装包中的应用名称均使用 ADM；原应用标识和数据目录作为兼容身份保留。
+软件名称为 ADM，不设中文名；Device manager for Android 仅在设置说明和文档中解释全称。窗口、系统菜单和安装包中的应用名称均使用 ADM；原应用标识和数据目录作为兼容身份保留。
 
 界面和交互修改先读取 `design-system/android-tool/MASTER.md`。UI UX Pro Max 仅作为本机可选辅助工具，不随仓库提交；本机已安装时可读取 `.agents/skills/ui-ux-pro-max/SKILL.md`，按实际问题检索并核对结果与 Tauri 桌面场景是否匹配。
 
