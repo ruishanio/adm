@@ -94,6 +94,29 @@ pub struct OwnerCheck {
     pub summary: String,
 }
 #[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InstalledApp {
+    pub package_name: String,
+    pub label: Option<String>,
+    pub apk_path: String,
+    pub system: bool,
+    pub enabled: bool,
+}
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AppDetails {
+    #[serde(flatten)]
+    pub app: InstalledApp,
+    pub version_name: String,
+    pub version_code: String,
+    pub minimum_sdk: String,
+    pub target_sdk: String,
+    pub uid: String,
+    pub first_install_time: String,
+    pub last_update_time: String,
+    pub installer: String,
+}
+#[derive(Clone, Debug, Serialize)]
 pub struct DeviceFile {
     pub name: String,
     pub path: String,

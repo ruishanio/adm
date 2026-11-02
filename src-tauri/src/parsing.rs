@@ -182,6 +182,15 @@ pub fn parse_files(directory: &str, output: &str) -> Result<Vec<DeviceFile>> {
 pub fn friendly_error(text: &str) -> String {
     let hints = [
         (
+            "DELETE_FAILED_DEVICE_POLICY_MANAGER",
+            "应用受设备管理策略保护，无法卸载。",
+        ),
+        (
+            "DELETE_FAILED_USER_RESTRICTED",
+            "设备限制阻止卸载，请检查设备策略。",
+        ),
+        ("DELETE_FAILED_OWNER_BLOCKED", "设备管理者阻止卸载此应用。"),
+        (
             "INSTALL_FAILED_UPDATE_INCOMPATIBLE",
             "应用签名不一致，无法覆盖安装。",
         ),

@@ -22,6 +22,10 @@ export const api: Api = {
   chooseApk: () => call('chooseApk'),
   dropApk: (path) => call('inspectApk', path),
   install: (t, id, allow) => call('install', target(t), id, allow),
+  listApps: (t) => call('listApps', target(t)),
+  appDetails: (t, packageName) => call('appDetails', target(t), packageName),
+  uninstallApp: (t, packageName, versionCode, consent) =>
+    call('uninstallApp', target(t), packageName, versionCode, consent),
   checkOwner: (t, c) => call('checkOwner', target(t), c),
   setOwner: (t, c, consent) => call('setOwner', target(t), c, consent),
   listFiles: (t, path) => call('listFiles', target(t), path),

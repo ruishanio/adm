@@ -1,5 +1,6 @@
 mod adb;
 mod apk;
+mod apps;
 mod device_info;
 mod licenses;
 mod models;
@@ -175,6 +176,21 @@ impl Service {
                 }
                 self.adb(cancel)?
                     .install(&target, &record.info, &record.path, allow_test)?;
+                Ok(Value::Null)
+            }
+            "listApps" => {
+                let (target,): (Target,) = decoded(args)?;
+                encoded(self.adb(cancel)?.list_apps(&target)?)
+            }
+            "appDetails" => {
+                let (target, package): (Target, String) = decoded(args)?;
+                encoded(self.adb(cancel)?.app_details(&target, &package)?)
+            }
+            "uninstallApp" => {
+                let (target, package, version, consent): (Target, String, String, bool) =
+                    decoded(args)?;
+                self.adb(cancel)?
+                    .uninstall_app(&target, &package, &version, consent)?;
                 Ok(Value::Null)
             }
             "checkOwner" => {

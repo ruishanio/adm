@@ -1,6 +1,153 @@
 //! 显式启用的专用模拟器验收，不参与 CI，也不允许对物理或业务设备执行写入。
 use crate::{adb::Adb, apk::read_apk, models::Target, process::cancellation};
 use std::{fs, path::PathBuf};
+/// 只读取指定模拟器的应用名称，核对临时读取器已清理；不安装或卸载任何应用。
+#[test]
+#[ignore = "需要 ADM_LABEL_SERIAL、ADM_LABEL_PACKAGE、ADM_LABEL_EXPECTED，显式选择模拟器"]
+fn application_labels() {
+    let serial = std::env::var("ADM_LABEL_SERIAL").expect("缺少模拟器序列号");
+    assert!(serial.starts_with("emulator-"));
+    let package = std::env::var("ADM_LABEL_PACKAGE").expect("缺少已安装包名");
+    let expected = std::env::var("ADM_LABEL_EXPECTED").expect("缺少预期应用名称");
+    let adb = Adb::new(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("resources/platform-tools")
+            .join(if cfg!(windows) { "adb.exe" } else { "adb" }),
+        cancellation(),
+    );
+    let device = adb
+        .devices()
+        .unwrap()
+        .into_iter()
+        .find(|d| d.serial == serial && d.state == "device")
+        .unwrap();
+    let target = Target {
+        serial: device.serial,
+        transport_id: device.transport_id,
+    };
+    let temporary_files = || {
+        let output = adb
+            .shell(
+                &target,
+                &[
+                    "find",
+                    "/data/local/tmp",
+                    "-maxdepth",
+                    "1",
+                    "-name",
+                    "adm-app-labels-*.jar",
+                ],
+            )
+            .unwrap();
+        let mut files: Vec<_> = output.lines().map(str::to_string).collect();
+        files.sort();
+        files
+    };
+    let before = temporary_files();
+    let apps = adb.list_apps(&target).unwrap();
+    let app = apps.iter().find(|a| a.package_name == package).unwrap();
+    assert_eq!(app.label.as_deref(), Some(expected.as_str()));
+    assert_eq!(
+        adb.app_details(&target, &package).unwrap().app.label,
+        app.label
+    );
+    assert_eq!(temporary_files(), before, "名称读取后不应遗留临时文件");
+    println!("通过：{serial} / {package} → {expected}；列表、详情、临时文件清理");
+}
+
+/// 只在专用模拟器安装本项目夹具并卸载，拒绝覆盖已有安装，不修改设备所有者。
+#[test]
+#[ignore = "需要 ADM_SMOKE_SERIAL 与 ADM_SMOKE_APK，仅允许 AndroidToolSmoke_ 专用模拟器"]
+fn dedicated_application_management() {
+    let serial = std::env::var("ADM_SMOKE_SERIAL").expect("缺少专用模拟器序列号");
+    assert!(serial.starts_with("emulator-"));
+    let path = PathBuf::from(std::env::var("ADM_SMOKE_APK").expect("缺少测试 APK"));
+    let adb = Adb::new(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("resources/platform-tools")
+            .join(if cfg!(windows) { "adb.exe" } else { "adb" }),
+        cancellation(),
+    );
+    assert!(adb
+        .simple(&["-s", &serial, "emu", "avd", "name"])
+        .unwrap()
+        .starts_with("AndroidToolSmoke_"));
+    let apk = read_apk(&path, &cancellation()).unwrap();
+    assert_eq!(apk.info.package_name, "com.ruinext.androidtool.fixture");
+    let device = adb
+        .devices()
+        .unwrap()
+        .into_iter()
+        .find(|d| d.serial == serial && d.state == "device")
+        .unwrap();
+    let target = Target {
+        serial: device.serial,
+        transport_id: device.transport_id,
+    };
+    assert!(
+        !adb.list_apps(&target)
+            .unwrap()
+            .iter()
+            .any(|a| a.package_name == apk.info.package_name),
+        "夹具已存在，拒绝覆盖"
+    );
+    let owner = adb.details(&target).unwrap().owner;
+    let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        adb.install(&target, &apk.info, &apk.path, true).unwrap();
+        assert!(adb
+            .list_apps(&target)
+            .unwrap()
+            .iter()
+            .any(|a| a.package_name == apk.info.package_name && !a.system && a.enabled));
+        let details = adb.app_details(&target, &apk.info.package_name).unwrap();
+        assert_eq!(details.version_code, apk.info.version_code);
+        assert_eq!(details.version_name, apk.info.version_name);
+        assert!(!details.app.apk_path.is_empty());
+        assert!(adb
+            .uninstall_app(
+                &target,
+                &apk.info.package_name,
+                &apk.info.version_code,
+                false
+            )
+            .is_err());
+        adb.uninstall_app(
+            &target,
+            &apk.info.package_name,
+            &apk.info.version_code,
+            true,
+        )
+        .unwrap();
+        assert!(!adb
+            .list_apps(&target)
+            .unwrap()
+            .iter()
+            .any(|a| a.package_name == apk.info.package_name));
+        assert!(adb.app_details(&target, &apk.info.package_name).is_err());
+        assert_eq!(adb.details(&target).unwrap().owner, owner);
+        println!(
+            "通过：已安装列表、应用信息、拒绝未确认卸载、主用户卸载和回读；设备所有者保持原状"
+        );
+    }));
+    // 无论断言是否失败，只清理本次新建的测试包，不碰业务应用。
+    if adb
+        .list_apps(&target)
+        .unwrap()
+        .iter()
+        .any(|a| a.package_name == apk.info.package_name)
+    {
+        adb.uninstall_app(
+            &target,
+            &apk.info.package_name,
+            &apk.info.version_code,
+            true,
+        )
+        .unwrap();
+    }
+    if let Err(error) = outcome {
+        std::panic::resume_unwind(error);
+    }
+}
 #[test]
 #[ignore = "需要 ADM_SMOKE_SERIAL 与 ADM_SMOKE_APK，仅允许 AndroidToolSmoke_ 专用模拟器"]
 fn dedicated_emulator() {

@@ -43,7 +43,7 @@ impl Adb {
     pub fn devices(&self) -> Result<Vec<Device>> {
         Ok(parse_devices(&self.simple(&["devices", "-l"])?))
     }
-    fn target(&self, device: &Target) -> Result<Vec<String>> {
+    pub(crate) fn target(&self, device: &Target) -> Result<Vec<String>> {
         if device.serial.is_empty()
             || device.serial.len() > 512
             || device.transport_id.len() > 32

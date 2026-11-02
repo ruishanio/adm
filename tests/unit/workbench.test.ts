@@ -125,6 +125,7 @@ it('断连撤销所有者授权，重连要求重新选择传输会话', async (
 it('跨页和换设备保留已选安装包', async () => {
   const w = await ready();
   await w.chooseApk();
+  expect(w.state.tab).toBe('apps');
   w.state.tab = 'info';
   w.select(second);
   await vi.waitFor(() => expect(w.state.details?.serial).toBe('two'));
@@ -135,6 +136,7 @@ it('安装后没有组件也展开手动填写入口且不自动授权', async (
   await w.chooseApk();
   w.state.ownerAfter = true;
   await w.install();
+  expect(w.state.modal).toBeNull();
   expect(w.state.tab).toBe('info');
   expect(w.state.ownerExpanded).toBe(true);
   expect(w.state.consent).toBe(false);

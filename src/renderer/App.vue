@@ -4,7 +4,17 @@ import { onMounted, onBeforeUnmount, provide, computed, ref } from 'vue';
 import { isTauri } from '@tauri-apps/api/core';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { Smartphone, Package, FolderOpen, LoaderCircle, Check, X, Minus, Square } from '@lucide/vue';
+import {
+  Smartphone,
+  AppWindow,
+  PackagePlus,
+  FolderOpen,
+  LoaderCircle,
+  Check,
+  X,
+  Minus,
+  Square,
+} from '@lucide/vue';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +24,8 @@ import { connection, deviceStatus } from '../shared/contracts';
 import Sidebar from './components/Sidebar.vue';
 import SidebarDivider from './components/SidebarDivider.vue';
 import DeviceInfoPage from './components/DeviceInfoPage.vue';
-import InstallPage from './components/InstallPage.vue';
+import ApplicationsPage from './components/ApplicationsPage.vue';
+import InstallDialog from './components/InstallDialog.vue';
 import FilesPage from './components/FilesPage.vue';
 import ConnectionDialog from './components/ConnectionDialog.vue';
 import SettingsDialog from './components/SettingsDialog.vue';
@@ -29,7 +40,7 @@ const fullscreen = ref(false);
 const initialPlatform = /Mac/.test(navigator.platform) ? 'darwin' : 'win32';
 const tabs = computed(() => [
   { value: 'info', label: t('设备信息'), icon: Smartphone },
-  { value: 'install', label: t('安装应用'), icon: Package },
+  { value: 'apps', label: t('应用管理'), icon: AppWindow },
   { value: 'files', label: t('文件管理'), icon: FolderOpen },
 ]);
 async function windowAction(action: 'minimize' | 'toggleMaximize' | 'close') {
@@ -52,10 +63,7 @@ onMounted(async () => {
     const stop = await getCurrentWebviewWindow().onDragDropEvent((event) => {
       if (event.payload.type === 'drop') void w.drop(event.payload.paths);
       else if (event.payload.type === 'over' || event.payload.type === 'enter') {
-        if (!s.busy && !s.modal) {
-          s.dragging = true;
-          s.tab = 'install';
-        }
+        w.dragEnter();
       } else s.dragging = false;
     });
     if (disposed) stop();
@@ -79,6 +87,10 @@ onBeforeUnmount(() => {
     <div class="native-drag-area" data-tauri-drag-region aria-hidden="true" />
     <Sidebar /><SidebarDivider />
     <main class="workspace">
+      <div v-if="s.dragging && !s.modal" class="apk-drop-overlay" role="status">
+        <PackagePlus class="icon-install" aria-hidden="true" />
+        <strong>{{ t('松开以打开安装窗口') }}</strong>
+      </div>
       <div v-if="(s.snapshot?.platform || initialPlatform) === 'win32'" class="window-controls">
         <Button variant="ghost" :aria-label="t('最小化窗口')" @click="windowAction('minimize')"
           ><Minus aria-hidden="true" /></Button
@@ -114,13 +126,21 @@ onBeforeUnmount(() => {
             }}</TabsTrigger
           ></TabsList
         >
-        <div :class="['task-content', { 'file-content': s.tab === 'files' }]">
+        <div
+          :class="[
+            'task-content',
+            {
+              'file-content': s.tab === 'files',
+              'installed-app-content': s.tab === 'apps',
+            },
+          ]"
+        >
           <TabsContent value="info"><DeviceInfoPage /></TabsContent
-          ><TabsContent value="install"><InstallPage /></TabsContent
+          ><TabsContent value="apps"><ApplicationsPage /></TabsContent
           ><TabsContent value="files"><FilesPage /></TabsContent></div
       ></Tabs>
       <div
-        v-if="s.busy || s.notice"
+        v-if="s.modal !== 'install' && (s.busy || s.notice)"
         :class="['task-notice', { error: s.notice?.error }]"
         :role="s.notice?.error ? 'alert' : 'status'"
       >
@@ -140,6 +160,7 @@ onBeforeUnmount(() => {
         /></Button>
       </div>
     </main>
+    <InstallDialog v-if="s.modal === 'install'" />
     <ConnectionDialog v-if="s.modal === 'connect'" /><SettingsDialog v-if="s.modal === 'settings'" />
     <AppDialog
       v-if="s.modal === 'rename' || s.modal === 'folder'"

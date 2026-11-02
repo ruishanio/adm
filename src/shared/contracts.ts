@@ -72,6 +72,23 @@ export interface OwnerCheck {
   alreadySet: boolean;
   summary: string;
 }
+export interface InstalledApp {
+  packageName: string;
+  label: string | null;
+  apkPath: string;
+  system: boolean;
+  enabled: boolean;
+}
+export interface AppDetails extends InstalledApp {
+  versionName: string;
+  versionCode: string;
+  minimumSdk: string;
+  targetSdk: string;
+  uid: string;
+  firstInstallTime: string;
+  lastUpdateTime: string;
+  installer: string;
+}
 export interface DeviceFile {
   name: string;
   path: string;
@@ -104,6 +121,9 @@ export interface Api {
   chooseApk(): Promise<Apk | null>;
   dropApk(path: string): Promise<Apk>;
   install(target: Target, apkId: string, allowTest: boolean): Promise<void>;
+  listApps(target: Target): Promise<InstalledApp[]>;
+  appDetails(target: Target, packageName: string): Promise<AppDetails>;
+  uninstallApp(target: Target, packageName: string, versionCode: string, consent: boolean): Promise<void>;
   checkOwner(target: Target, component: string): Promise<OwnerCheck>;
   setOwner(target: Target, component: string, consent: boolean): Promise<void>;
   listFiles(target: Target, path: string): Promise<DeviceFile[]>;

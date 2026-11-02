@@ -127,7 +127,8 @@ button svg {
 svg.icon-info {
   color: var(--device);
 }
-svg.icon-install {
+svg.icon-install,
+svg.icon-apps {
   color: var(--install);
 }
 svg.icon-files {
@@ -890,6 +891,201 @@ code {
   background: var(--success-surface);
   color: var(--success);
 }
+.applications-page {
+  gap: 0;
+  min-width: 0;
+}
+.applications-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 20px 16px;
+  flex-shrink: 0;
+}
+/* 应用列表独立滚动，安装入口、搜索和表头在紧凑窗口中仍保持可用。 */
+.installed-app-content {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  /* 列表贴齐工作区，水平边距仅留给上方控件，滚动条靠窗口右侧。 */
+  padding-inline: 0;
+  padding-bottom: 0;
+  scrollbar-gutter: auto;
+}
+.installed-app-content > [data-slot='tabs-content'][data-state='active'],
+.installed-app-content .applications-page,
+.installed-apps {
+  min-height: 0;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+.apps-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-inline: 20px;
+}
+.apps-search {
+  flex: 1;
+  min-width: 180px;
+  position: relative;
+}
+.apps-search > svg {
+  width: 16px;
+  height: 16px;
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+}
+.apps-search input {
+  padding-left: 30px;
+  width: 100%;
+}
+.apps-toolbar .checkbox {
+  white-space: nowrap;
+  margin: 0;
+  font-size: 12px;
+}
+.apps-summary {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 12px;
+  padding: 12px 20px 8px;
+}
+.apps-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.apps-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: left;
+  table-layout: fixed;
+}
+.apps-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 7px 8px;
+  background: var(--surface-subtle);
+  border-block: 1px solid var(--line);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.apps-table th:nth-child(2) {
+  width: 88px;
+}
+.apps-table th:nth-child(3) {
+  width: 76px;
+}
+.apps-table th:last-child {
+  width: 40px;
+}
+.apps-table td {
+  border-bottom: 1px solid var(--line);
+  padding: 4px 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.apps-table th:first-child,
+.apps-table td:first-child {
+  padding-left: 20px;
+}
+.apps-table tr:hover td {
+  background: var(--surface-subtle);
+}
+.app-package {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  gap: 8px;
+  height: auto;
+  min-height: 32px;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  text-align: left;
+  color: var(--foreground);
+  font-size: 13px;
+}
+.app-package span {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.app-package svg {
+  flex-shrink: 0;
+}
+.app-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.app-name {
+  font-weight: 500;
+}
+.app-identifier {
+  font-size: 12px;
+  color: var(--muted);
+}
+.apps-empty {
+  padding: 32px 12px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+.dialog.app-details-dialog {
+  width: 580px;
+  max-height: min(640px, calc(100vh - 48px));
+  display: flex;
+  flex-direction: column;
+}
+.app-details-body {
+  overflow: auto;
+  min-height: 0;
+}
+.app-target {
+  font-size: 12px;
+  margin-bottom: 16px;
+  overflow-wrap: anywhere;
+}
+.app-properties > div {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 12px;
+  padding: 6px 0;
+  font-size: 13px;
+}
+.app-properties dt {
+  color: var(--muted);
+}
+.app-properties dd {
+  overflow-wrap: anywhere;
+  user-select: text;
+  margin: 0;
+}
+.app-uninstall-package {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  margin-bottom: 12px;
+}
+.app-confirm-version {
+  margin-bottom: 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
 .drop-zone {
   border: 1px dashed var(--control-border);
   border-radius: var(--radius-control);
@@ -984,22 +1180,69 @@ code {
 .install-options .field-hint {
   margin-top: 15px;
 }
-.install-action {
+.dialog.install-dialog {
+  width: 560px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  border-top: 1px solid var(--line);
-  margin-top: 20px;
-  padding-top: 16px;
+  flex-direction: column;
+  overflow: hidden;
 }
-.install-action > span {
+.install-dialog-body {
+  min-height: 0;
+  overflow: auto;
+}
+.install-dialog-body section + section {
+  margin-top: 20px;
+}
+.install-target {
+  margin-bottom: 16px;
   font-size: 12px;
   overflow-wrap: anywhere;
-  min-width: 0;
 }
-.install-action button {
+.install-target span {
+  display: block;
+  margin-top: 4px;
+}
+.install-feedback {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
   font-size: 12px;
+  flex-shrink: 0;
+}
+.install-feedback.error {
+  color: var(--error);
+}
+.install-feedback > span {
+  min-width: 0;
+  max-height: 80px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.install-feedback > svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+.install-dialog > .dialog-footer {
+  flex-shrink: 0;
+}
+.apk-drop-overlay {
+  position: absolute;
+  inset: 20px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 2px dashed var(--accent);
+  border-radius: var(--radius-dialog);
+  background: var(--surface);
+  color: var(--foreground);
+  pointer-events: none;
 }
 .empty-state {
   display: flex;
