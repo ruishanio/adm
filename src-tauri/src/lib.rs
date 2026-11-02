@@ -3,6 +3,7 @@ mod apk;
 mod apps;
 mod device_info;
 mod licenses;
+mod logcat;
 mod models;
 #[cfg(target_os = "macos")]
 mod native_menu;
@@ -32,6 +33,7 @@ struct Service {
     active: Mutex<Option<Cancel>>,
     drops: Mutex<HashSet<PathBuf>>,
     resources: PathBuf,
+    logs: logcat::Logcat,
 }
 struct Operation<'a>(&'a Service, Cancel);
 impl Drop for Operation<'_> {
@@ -119,6 +121,43 @@ impl Service {
             return Ok(
                 json!({"devices":devices,"settings":store,"adbPath":adb_path,"platform":if cfg!(windows){"win32"}else{"darwin"},"version":app.package_info().version.to_string(),"error":error}),
             );
+        }
+        // 实时日志拥有独立的只读进程和缓存，不占用安装、文件操作的任务锁。
+        match method.as_str() {
+            "startLogcat" => {
+                let (target,): (Target,) = decoded(args)?;
+                return encoded(self.logs.start(self.adb(cancellation())?, target)?);
+            }
+            "readLogcat" => {
+                let (id, after): (String, u64) = decoded(args)?;
+                return encoded(self.logs.read(&id, after)?);
+            }
+            "stopLogcat" => {
+                let (id,): (String,) = decoded(args)?;
+                self.logs.stop(&id);
+                return Ok(Value::Null);
+            }
+            "logcatApps" => {
+                let (target,): (Target,) = decoded(args)?;
+                return encoded(self.adb(cancellation())?.logcat_apps(&target)?);
+            }
+            "exportLogcat" => {
+                let (id, filter, through): (String, logcat::LogFilter, u64) = decoded(args)?;
+                let text = self.logs.export(&id, filter, through)?;
+                let path = app
+                    .dialog()
+                    .file()
+                    .set_title("导出日志")
+                    .set_file_name("logcat.log")
+                    .add_filter("Logcat", &["log", "txt"])
+                    .blocking_save_file();
+                if let Some(path) = path {
+                    logcat::save_export(&path.into_path().map_err(|e| e.to_string())?, &text)?;
+                    return Ok(json!(true));
+                }
+                return Ok(json!(false));
+            }
+            _ => {}
         }
         let operation = self.begin()?;
         let cancel = operation.1.clone();
@@ -441,6 +480,7 @@ pub fn run() {
                 active: Mutex::new(None),
                 drops: Mutex::new(HashSet::new()),
                 resources: app.path().resource_dir()?,
+                logs: logcat::Logcat::default(),
             }));
             Ok(())
         })
@@ -456,7 +496,10 @@ pub fn run() {
                         grants.insert(paths[0].clone());
                     }
                 }
-                WindowEvent::Destroyed => state.cancel(),
+                WindowEvent::Destroyed => {
+                    state.cancel();
+                    state.logs.stop_all();
+                }
                 _ => {}
             }
         })

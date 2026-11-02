@@ -9,6 +9,7 @@ import {
   AppWindow,
   PackagePlus,
   FolderOpen,
+  ScrollText,
   LoaderCircle,
   Check,
   X,
@@ -28,6 +29,7 @@ import DeviceInfoPage from './components/DeviceInfoPage.vue';
 import ApplicationsPage from './components/ApplicationsPage.vue';
 import InstallDialog from './components/InstallDialog.vue';
 import FilesPage from './components/FilesPage.vue';
+import DeviceLogsPage from './components/DeviceLogsPage.vue';
 import ConnectionDialog from './components/ConnectionDialog.vue';
 import SettingsDialog from './components/SettingsDialog.vue';
 import AppDialog from './components/AppDialog.vue';
@@ -44,6 +46,7 @@ const tabs = computed(() => [
   { value: 'info', label: t('设备信息'), icon: Smartphone },
   { value: 'apps', label: t('应用管理'), icon: AppWindow },
   { value: 'files', label: t('文件管理'), icon: FolderOpen },
+  { value: 'logs', label: t('设备日志'), icon: ScrollText },
 ]);
 async function windowAction(action: 'minimize' | 'toggleMaximize' | 'close') {
   if (isTauri()) await getCurrentWindow()[action]();
@@ -134,12 +137,14 @@ onBeforeUnmount(() => {
             {
               'file-content': s.tab === 'files',
               'installed-app-content': s.tab === 'apps',
+              'logs-content': s.tab === 'logs',
             },
           ]"
         >
           <TabsContent value="info"><DeviceInfoPage /></TabsContent
           ><TabsContent value="apps"><ApplicationsPage /></TabsContent
-          ><TabsContent value="files"><FilesPage /></TabsContent></div
+          ><TabsContent value="files"><FilesPage /></TabsContent
+          ><TabsContent value="logs"><DeviceLogsPage v-if="s.tab === 'logs'" /></TabsContent></div
       ></Tabs>
       <div
         v-if="s.modal !== 'install' && (s.busy || s.notice)"

@@ -96,6 +96,38 @@ export interface DeviceFile {
   size: number;
   modified: number;
 }
+export interface LogEntry {
+  id: number;
+  time: string;
+  uid: string;
+  pid: string;
+  tid: string;
+  level: string;
+  tag: string;
+  message: string;
+  raw: string;
+  crash: boolean;
+}
+export interface LogBatch {
+  entries: LogEntry[];
+  firstId: number;
+  nextId: number;
+  dropped: number;
+  truncated: number;
+  running: boolean;
+  error: string | null;
+}
+export interface LogFilter {
+  uid: string;
+  level: string;
+  keyword: string;
+  crashesOnly: boolean;
+}
+export interface LogApp {
+  packageName: string;
+  label: string | null;
+  uid: string;
+}
 export interface Settings {
   language?: import('./i18n').LanguagePreference | '';
   adbPath: string;
@@ -113,6 +145,11 @@ export interface Snapshot {
   error?: string;
 }
 export interface Api {
+  startLogcat(target: Target): Promise<string>;
+  readLogcat(id: string, after: number): Promise<LogBatch>;
+  stopLogcat(id: string): Promise<void>;
+  logcatApps(target: Target): Promise<LogApp[]>;
+  exportLogcat(id: string, filter: LogFilter, through: number): Promise<boolean>;
   openThirdPartyNotices(): Promise<void>;
   refresh(): Promise<Snapshot>;
   details(target: Target): Promise<Details>;

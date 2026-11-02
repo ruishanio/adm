@@ -14,6 +14,11 @@ async function call<T>(method: string, ...args: unknown[]): Promise<T> {
 }
 // 前端仅暴露业务调用；本地路径、ADB 进程与文件读写均由 Rust 校验并执行。
 export const api: Api = {
+  startLogcat: (t) => call('startLogcat', target(t)),
+  readLogcat: (id, after) => call('readLogcat', id, after),
+  stopLogcat: (id) => call('stopLogcat', id),
+  logcatApps: (t) => call('logcatApps', target(t)),
+  exportLogcat: (id, filter, through) => call('exportLogcat', id, { ...filter }, through),
   openThirdPartyNotices: () => call('openThirdPartyNotices'),
   refresh: () => call('refresh'),
   details: (t) => call('details', target(t)),
