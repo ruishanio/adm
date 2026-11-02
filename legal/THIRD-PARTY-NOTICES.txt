@@ -4,7 +4,7 @@ ADM's MIT license applies to its original code, not to third-party components.
 This conservative inventory includes build-only dependencies.
 
 ========================================================================
-ADM 0.1.1
+ADM 0.1.2
 License: MIT
 License selection: MIT
 Source: https://github.com/ruishanio/adm
