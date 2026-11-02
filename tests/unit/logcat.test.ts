@@ -33,6 +33,7 @@ const batch = (entries: LogEntry[], extra: Partial<LogBatch> = {}): LogBatch => 
 });
 const cleanup: (() => void)[] = [];
 beforeEach(() => {
+  localStorage.removeItem('adm.log-column-widths');
   // jsdom 不实现滚动；可检索选择器切换高亮项时会请求滚动定位。
   HTMLElement.prototype.scrollIntoView = vi.fn();
   vi.useFakeTimers();
@@ -53,6 +54,103 @@ afterEach(() => {
   vi.useRealTimers();
   vi.unstubAllGlobals();
   document.body.innerHTML = '';
+  localStorage.removeItem('adm.log-column-widths');
+});
+
+async function mountLogPage() {
+  const { api } = setup();
+  vi.mocked(api.readLogcat).mockResolvedValueOnce(batch([entry(1)]));
+  const view = mount(DeviceLogsPage, {
+    attachTo: document.body,
+    global: {
+      provide: {
+        [workbenchKey as symbol]: {
+          api,
+          state: { selected: 'device' },
+          online: computed(() => true),
+          device: computed(() => target),
+        },
+      },
+    },
+  });
+  cleanup.push(() => view.unmount());
+  await flushPromises();
+  return view;
+}
+
+it('日志列可拖动并遵守最小宽度，结束拖动后不再改变，双击恢复且不误暂停日志', async () => {
+  const view = await mountLogPage();
+  const handles = view.findAll('.log-column-resizer');
+  expect(handles).toHaveLength(5);
+  const tag = handles[3];
+  await tag.trigger('pointerdown');
+  await tag.trigger('mousedown', { button: 0, clientX: 500 });
+  window.dispatchEvent(new MouseEvent('mousemove', { clientX: 680 }));
+  await nextTick();
+  expect(tag.attributes('aria-valuenow')).toBe('280');
+  expect(view.find('[aria-pressed="true"]').exists()).toBe(false);
+  expect(document.body.style.cursor).toBe('col-resize');
+  window.dispatchEvent(new MouseEvent('mousemove', { clientX: -500 }));
+  await nextTick();
+  expect(tag.attributes('aria-valuenow')).toBe('64');
+  window.dispatchEvent(new MouseEvent('mouseup'));
+  window.dispatchEvent(new MouseEvent('mousemove', { clientX: 1200 }));
+  await nextTick();
+  expect(tag.attributes('aria-valuenow')).toBe('64');
+  expect(document.body.style.cursor).toBe('');
+  await tag.trigger('dblclick');
+  expect(tag.attributes('aria-valuenow')).toBe('100');
+});
+
+it('最后一列按实际宽度拖动，独立表头与正文双向同步横向滚动，重新进入保留列宽', async () => {
+  let view = await mountLogPage();
+  const message = view.findAll('.log-column-resizer')[4];
+  vi.spyOn(message.element.parentElement!, 'getBoundingClientRect').mockReturnValue({
+    width: 420,
+  } as DOMRect);
+  await message.trigger('mousedown', { button: 0, clientX: 800 });
+  window.dispatchEvent(new MouseEvent('mousemove', { clientX: 1000 }));
+  window.dispatchEvent(new MouseEvent('mouseup'));
+  await nextTick();
+  expect(message.attributes('aria-valuenow')).toBe('620');
+  expect(view.get('.logs-table').attributes('style')).toContain('min-width: 1003px');
+  const scroller = view.get<HTMLElement>('.logs-scroller').element;
+  const header = view.get<HTMLElement>('.logs-header-viewport').element;
+  expect(scroller.contains(view.get('.logs-column-head').element)).toBe(false);
+  expect(scroller.contains(view.get('.log-row').element)).toBe(true);
+  scroller.scrollLeft = 140;
+  scroller.scrollTop = 260;
+  await view.get('.logs-scroller').trigger('scroll');
+  expect(header.scrollLeft).toBe(140);
+  expect(header.scrollTop).toBe(0);
+  header.scrollLeft = 80;
+  await view.get('.logs-header-viewport').trigger('scroll');
+  expect(scroller.scrollLeft).toBe(80);
+  expect(scroller.scrollTop).toBe(260);
+  cleanup.pop()?.();
+  view = await mountLogPage();
+  expect(view.findAll('.log-column-resizer')[4].attributes('aria-valuenow')).toBe('620');
+  const tag = view.findAll('.log-column-resizer')[3];
+  await tag.trigger('keydown', { key: 'ArrowRight' });
+  expect(tag.attributes('aria-valuenow')).toBe('110');
+  await tag.trigger('keydown', { key: 'Home' });
+  expect(tag.attributes('aria-valuenow')).toBe('100');
+  expect(view.find('[aria-pressed="true"]').exists()).toBe(false);
+});
+
+it('列宽偏好损坏时回退默认，卸载中途拖动时释放全局事件和光标', async () => {
+  localStorage.setItem('adm.log-column-widths', '{bad json');
+  const view = await mountLogPage();
+  const tag = view.findAll('.log-column-resizer')[3];
+  expect(tag.attributes('aria-valuenow')).toBe('100');
+  await tag.trigger('mousedown', { button: 0, clientX: 500 });
+  expect(document.body.style.userSelect).toBe('none');
+  cleanup.pop()?.();
+  expect(document.body.style.userSelect).toBe('');
+  expect(document.body.style.cursor).toBe('');
+  window.dispatchEvent(new MouseEvent('mousemove', { clientX: 900 }));
+  window.dispatchEvent(new MouseEvent('mouseup'));
+  expect(localStorage.getItem('adm.log-column-widths')).toBe('{bad json');
 });
 function setup() {
   const api = {

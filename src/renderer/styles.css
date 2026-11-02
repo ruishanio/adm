@@ -763,6 +763,14 @@ code {
   font-size: 12px;
   margin: 4px 0 0;
 }
+.logs-header {
+  flex-shrink: 0;
+  background: var(--surface-subtle);
+  border-bottom: 1px solid var(--line);
+}
+.logs-header-viewport {
+  overflow: hidden;
+}
 .logs-scroller {
   --focus-outline-offset: -2px;
   flex: 1;
@@ -770,21 +778,61 @@ code {
   overflow: auto;
   overflow-anchor: none;
 }
+.logs-table {
+  width: 100%;
+}
 .logs-column-head,
 button.log-row {
   display: grid;
-  grid-template-columns: 95px 36px 80px 100px minmax(0, 1fr);
+  grid-template-columns: var(--log-columns);
   gap: 8px;
   text-align: left;
   padding: 0 20px;
 }
 .logs-column-head {
-  min-height: 28px;
+  height: 27px;
   align-items: center;
   color: var(--muted);
   font-size: 12px;
   background: var(--surface-subtle);
-  border-bottom: 1px solid var(--line);
+}
+.log-column {
+  position: relative;
+  min-width: 0;
+}
+.log-column > span:first-child {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.log-column-resizer {
+  --focus-outline-width: 0px;
+  position: absolute;
+  width: 12px;
+  right: -10px;
+  top: -4px;
+  bottom: -4px;
+  cursor: col-resize;
+  user-select: none;
+  touch-action: none;
+}
+.log-column-resizer::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 50%;
+  width: 1px;
+  background: var(--line);
+  pointer-events: none;
+}
+.log-column-resizer:hover::after,
+.log-column-resizer.resizing::after {
+  background: var(--control-border);
+}
+:root[data-focus-mode='keyboard'] .log-column-resizer:focus-visible::after {
+  background: var(--focus);
 }
 button.log-row {
   --focus-outline-offset: -2px;
@@ -1155,10 +1203,68 @@ button.log-row.log-crash {
   font-size: 12px;
   padding: 12px 20px 8px;
 }
-.apps-scroll {
+/* 可调列宽表格将表头与正文分开，纵向滚动条从表头下方开始。 */
+.resizable-table {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.resizable-table-header {
+  flex-shrink: 0;
+  background: var(--surface-subtle);
+  border-block: 1px solid var(--line);
+}
+.table-header-viewport {
+  overflow: hidden;
+}
+.resizable-table-scroll {
   flex: 1;
   min-height: 0;
   overflow: auto;
+  overflow-anchor: none;
+}
+.resizable-table-head th {
+  position: relative;
+}
+.table-column-label {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.table-column-resizer {
+  --focus-outline-width: 0px;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -6px;
+  z-index: 1;
+  width: 12px;
+  cursor: col-resize;
+  user-select: none;
+  touch-action: none;
+}
+.resizable-table-head th:last-child .table-column-resizer {
+  right: 0;
+}
+.table-column-resizer::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 50%;
+  width: 1px;
+  background: var(--line);
+  pointer-events: none;
+}
+.table-column-resizer:hover::after,
+.table-column-resizer.resizing::after {
+  background: var(--control-border);
+}
+:root[data-focus-mode='keyboard'] .table-column-resizer:focus-visible::after {
+  background: var(--focus);
 }
 /* 尾部间距随列表内容滚动，仅在到达末尾时露出，不占用固定的窗口底部空间。 */
 .apps-scroll::after,
@@ -1175,24 +1281,11 @@ button.log-row.log-crash {
   table-layout: fixed;
 }
 .apps-table th {
-  position: sticky;
-  top: 0;
-  z-index: 1;
   padding: 7px 8px;
   background: var(--surface-subtle);
-  border-block: 1px solid var(--line);
   font-size: 12px;
   font-weight: 500;
   color: var(--muted);
-}
-.apps-table th:nth-child(2) {
-  width: 88px;
-}
-.apps-table th:nth-child(3) {
-  width: 76px;
-}
-.apps-table th:last-child {
-  width: 40px;
 }
 .apps-table td {
   border-bottom: 1px solid var(--line);
@@ -1224,9 +1317,10 @@ button.log-row.log-crash {
   font-size: 13px;
 }
 .app-package span {
-  white-space: normal;
-  overflow-wrap: anywhere;
   min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .app-package svg {
   flex-shrink: 0;
@@ -1585,13 +1679,6 @@ button.log-row.log-crash {
   margin-inline: 4px;
   background: var(--line);
 }
-/* 只让文件列表滚动，目录导航与操作按钮留在上方，表头固定在列表顶部。 */
-.file-scroll {
-  min-height: 0;
-  flex: 1;
-  overflow: auto;
-  padding: 0;
-}
 .file-table {
   border-collapse: separate;
   border-spacing: 0;
@@ -1600,21 +1687,11 @@ button.log-row.log-crash {
   text-align: left;
 }
 .file-table th {
-  position: sticky;
-  top: 0;
-  z-index: 1;
   color: var(--muted);
   font-size: 12px;
   font-weight: 500;
-  border-block: 1px solid var(--line);
   padding: 6px 8px;
   background: var(--surface-subtle);
-}
-.file-table th:nth-child(2) {
-  width: 85px;
-}
-.file-table th:nth-child(3) {
-  width: 140px;
 }
 .file-table th:first-child,
 .file-table td:first-child {

@@ -7,9 +7,17 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useWorkbench } from '@/composables/workbench';
 import { t } from '../../shared/i18n';
 import AppDialog from './AppDialog.vue';
+import ResizableTable from './ResizableTable.vue';
+import type { ColumnDefinition } from '@/composables/column-widths';
 
 const w = useWorkbench(),
   s = w.state;
+const appColumns: readonly ColumnDefinition[] = [
+  { label: '应用名称', width: 300, min: 200, max: 2400 },
+  { label: '应用类型', width: 88, min: 76, max: 360 },
+  { label: '应用状态', width: 76, min: 72, max: 360 },
+  { label: '应用信息', width: 44, min: 44, max: 44, resizable: false },
+];
 const filtered = computed(() => {
   const query = s.appQuery.trim().toLowerCase();
   return s.apps.filter(
@@ -78,59 +86,60 @@ function close() {
     <div v-if="!s.appsLoaded" class="apps-empty" role="status">
       <p>{{ s.busy ? t('正在读取应用列表…') : t('应用列表尚未加载，请刷新。') }}</p>
     </div>
-    <div v-else class="apps-scroll">
-      <table class="apps-table" :aria-label="t('已安装应用')">
-        <thead>
-          <tr>
-            <th scope="col">{{ t('应用名称') }}</th>
-            <th scope="col">{{ t('应用类型') }}</th>
-            <th scope="col">{{ t('应用状态') }}</th>
-            <th scope="col">
-              <span class="sr-only">{{ t('应用信息') }}</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="app in filtered" :key="app.packageName">
-            <td>
-              <button class="app-package" :disabled="!!s.busy" @click="w.openApp(app)">
-                <AppWindow class="icon-apps" aria-hidden="true" />
-                <span class="app-identity">
-                  <span class="app-name">{{ app.label || app.packageName }}</span>
-                  <span class="app-identifier">{{ app.label ? app.packageName : t('名称不可用') }}</span>
-                </span>
-              </button>
-            </td>
-            <td>{{ app.system ? t('系统应用') : t('用户应用') }}</td>
-            <td>{{ app.enabled ? t('已启用') : t('已停用') }}</td>
-            <td>
-              <Button
-                variant="ghost"
-                class="icon-button"
-                :aria-label="
-                  t('查看 {package} 的信息', {
-                    package: app.label ? `${app.label} (${app.packageName})` : app.packageName,
-                  })
-                "
-                :title="t('应用信息')"
-                :disabled="!!s.busy"
-                @click="w.openApp(app)"
-                ><Info aria-hidden="true"
-              /></Button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <p v-if="!filtered.length" class="apps-empty">
-        {{
-          s.appQuery.trim()
-            ? t('没有匹配的应用')
-            : s.showSystemApps
-              ? t('没有已安装的应用')
-              : t('没有已安装的用户应用')
-        }}
-      </p>
-    </div>
+    <ResizableTable
+      v-else
+      id="installed-apps-table"
+      :label="t('已安装应用')"
+      :columns="appColumns"
+      storage-key="adm.apps-column-widths"
+      table-class="apps-table"
+      scroll-class="apps-scroll"
+      :busy="!!s.busy"
+    >
+      <tr v-for="app in filtered" :key="app.packageName">
+        <td>
+          <button class="app-package" :disabled="!!s.busy" @click="w.openApp(app)">
+            <AppWindow class="icon-apps" aria-hidden="true" />
+            <span class="app-identity">
+              <span class="app-name" :title="app.label || app.packageName">{{
+                app.label || app.packageName
+              }}</span>
+              <span class="app-identifier" :title="app.label ? app.packageName : undefined">{{
+                app.label ? app.packageName : t('名称不可用')
+              }}</span>
+            </span>
+          </button>
+        </td>
+        <td>{{ app.system ? t('系统应用') : t('用户应用') }}</td>
+        <td>{{ app.enabled ? t('已启用') : t('已停用') }}</td>
+        <td>
+          <Button
+            variant="ghost"
+            class="icon-button"
+            :aria-label="
+              t('查看 {package} 的信息', {
+                package: app.label ? `${app.label} (${app.packageName})` : app.packageName,
+              })
+            "
+            :title="t('应用信息')"
+            :disabled="!!s.busy"
+            @click="w.openApp(app)"
+            ><Info aria-hidden="true"
+          /></Button>
+        </td>
+      </tr>
+      <template #empty>
+        <p v-if="!filtered.length" class="apps-empty">
+          {{
+            s.appQuery.trim()
+              ? t('没有匹配的应用')
+              : s.showSystemApps
+                ? t('没有已安装的应用')
+                : t('没有已安装的用户应用')
+          }}
+        </p>
+      </template>
+    </ResizableTable>
   </div>
   <AppDialog
     v-if="s.modal === 'app-details' || s.modal === 'app-uninstall'"

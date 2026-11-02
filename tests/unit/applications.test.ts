@@ -36,13 +36,25 @@ const details: AppDetails = {
   installer: '',
 };
 const cleanup: (() => void)[] = [];
-beforeEach(() => setLanguage('zh-CN'));
+beforeEach(() => {
+  setLanguage('zh-CN');
+  localStorage.removeItem('adm.apps-column-widths');
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      observe() {}
+      disconnect() {}
+    },
+  );
+});
 afterEach(() => {
   cleanup
     .splice(0)
     .reverse()
     .forEach((f) => f());
   document.body.innerHTML = '';
+  localStorage.removeItem('adm.apps-column-widths');
+  vi.unstubAllGlobals();
 });
 async function setup() {
   const snapshot: Snapshot = {
@@ -339,4 +351,47 @@ it('安装过程中断线关闭旧弹窗，迟到结果不进入另一会话的�
   expect(w.state.ownerExpanded).toBe(false);
   expect(w.state.consent).toBe(false);
   expect(w.state.apps).toEqual([]);
+});
+
+it('应用列宽可拖动、复位并持久保存，表头独立滚动且详情入口可用', async () => {
+  const { view, api } = await setup();
+  const handles = view.findAll('.table-column-resizer');
+  expect(handles).toHaveLength(3);
+  const name = handles[0];
+  await name.trigger('mousedown', { button: 0, clientX: 300 });
+  window.dispatchEvent(new MouseEvent('mousemove', { clientX: 540 }));
+  window.dispatchEvent(new MouseEvent('mouseup'));
+  await nextTick();
+  expect(name.attributes('aria-valuenow')).toBe('540');
+  expect(view.get('.resizable-table-head col').attributes('style')).toBe(
+    view.get('#installed-apps-table col').attributes('style'),
+  );
+  const body = view.get<HTMLElement>('.apps-scroll');
+  const header = view.get<HTMLElement>('.table-header-viewport');
+  expect(body.element.contains(header.element)).toBe(false);
+  body.element.scrollLeft = 120;
+  body.element.scrollTop = 300;
+  await body.trigger('scroll');
+  expect(header.element.scrollLeft).toBe(120);
+  expect(header.element.scrollTop).toBe(0);
+  header.element.scrollLeft = 60;
+  await header.trigger('scroll');
+  expect(body.element.scrollLeft).toBe(60);
+  expect(body.element.scrollTop).toBe(300);
+  const restored = (await setup()).view;
+  expect(restored.findAll('.table-column-resizer')[0].attributes('aria-valuenow')).toBe('540');
+  await handles[1].trigger('mousedown', { button: 0, clientX: 600 });
+  window.dispatchEvent(new MouseEvent('mousemove', { clientX: -100 }));
+  window.dispatchEvent(new MouseEvent('mouseup'));
+  await nextTick();
+  expect(handles[1].attributes('aria-valuenow')).toBe('76');
+  await handles[1].trigger('dblclick');
+  expect(handles[1].attributes('aria-valuenow')).toBe('88');
+  await handles[2].trigger('keydown', { key: 'ArrowRight' });
+  expect(handles[2].attributes('aria-valuenow')).toBe('86');
+  await handles[2].trigger('keydown', { key: 'Home' });
+  expect(handles[2].attributes('aria-valuenow')).toBe('76');
+  await view.get('.app-package').trigger('click');
+  await flushPromises();
+  expect(api.appDetails).toHaveBeenCalledWith(first, app.packageName);
 });

@@ -37,17 +37,24 @@ import {
   DropdownMenuItem,
 } from 'reka-ui';
 import AppDialog from './AppDialog.vue';
+import ResizableTable from './ResizableTable.vue';
+import type { ColumnDefinition } from '@/composables/column-widths';
 import type { Target, DeviceFile } from '../../shared/contracts';
 import { locale } from '../../shared/i18n';
 const w = useWorkbench(),
   s = w.state;
 const editing = ref(false);
-const fileScroll = ref<HTMLElement | null>(null);
+const fileColumns: readonly ColumnDefinition[] = [
+  { label: '名称', width: 300, min: 180, max: 2400 },
+  { label: '大小', width: 85, min: 70, max: 360 },
+  { label: '修改时间', width: 160, min: 130, max: 800 },
+];
+const fileScroll = ref<InstanceType<typeof ResizableTable> | null>(null);
 // 切换目录或设备时回到列表顶部；普通刷新保留当前浏览位置。
 watch(
   [() => s.path, () => s.selected],
   () => {
-    if (fileScroll.value) fileScroll.value.scrollTop = 0;
+    fileScroll.value?.scrollToTop();
   },
   { flush: 'post' },
 );
@@ -264,85 +271,85 @@ const date = (value: number) =>
         <span class="muted">{{ t('{count} 项', { count: s.files.length }) }}</span>
       </div>
     </header>
-    <div ref="fileScroll" class="file-scroll" :aria-busy="!!s.busy">
-      <table class="file-table" :aria-label="t('设备文件')">
-        <thead>
-          <tr>
-            <th>{{ t('名称') }}</th>
-            <th>{{ t('大小') }}</th>
-            <th>{{ t('修改时间') }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <ContextMenu
-            v-for="f in s.files"
-            :key="f.path"
-            @update:open="
-              (value) => {
-                if (value && !s.busy) s.file = f;
-              }
-            "
+    <ResizableTable
+      id="device-files-table"
+      ref="fileScroll"
+      :label="t('设备文件')"
+      :columns="fileColumns"
+      storage-key="adm.files-column-widths"
+      table-class="file-table"
+      scroll-class="file-scroll"
+      :busy="!!s.busy"
+    >
+      <ContextMenu
+        v-for="f in s.files"
+        :key="f.path"
+        @update:open="
+          (value) => {
+            if (value && !s.busy) s.file = f;
+          }
+        "
+      >
+        <ContextMenuTrigger as-child :disabled="!!s.busy">
+          <tr
+            :tabindex="s.busy ? -1 : 0"
+            :aria-selected="s.file?.path === f.path"
+            :aria-disabled="!!s.busy"
+            :class="{ selected: s.file?.path === f.path }"
+            @click="!s.busy && (s.file = f)"
+            @dblclick="open(f)"
+            @keydown.enter="open(f)"
+            @keydown.space.prevent="!s.busy && (s.file = f)"
           >
-            <ContextMenuTrigger as-child :disabled="!!s.busy">
-              <tr
-                :tabindex="s.busy ? -1 : 0"
-                :aria-selected="s.file?.path === f.path"
-                :aria-disabled="!!s.busy"
-                :class="{ selected: s.file?.path === f.path }"
-                @click="!s.busy && (s.file = f)"
-                @dblclick="open(f)"
-                @keydown.enter="open(f)"
-                @keydown.space.prevent="!s.busy && (s.file = f)"
+            <td>
+              <span class="file-name"
+                ><Folder v-if="f.type === 'directory'" aria-hidden="true" class="folder-icon" /><File
+                  v-else
+                  aria-hidden="true"
+                /><span :title="f.name">{{ displayPath(f.name) }}</span
+                ><small v-if="f.type === 'link'">{{ t('链接') }}</small></span
               >
-                <td>
-                  <span class="file-name"
-                    ><Folder v-if="f.type === 'directory'" aria-hidden="true" class="folder-icon" /><File
-                      v-else
-                      aria-hidden="true"
-                    /><span :title="f.name">{{ displayPath(f.name) }}</span
-                    ><small v-if="f.type === 'link'">{{ t('链接') }}</small></span
-                  >
-                </td>
-                <td>{{ f.type === 'file' ? sizeLabel(f.size) : '—' }}</td>
-                <td>{{ date(f.modified) }}</td>
-              </tr>
-            </ContextMenuTrigger>
-            <ContextMenuContent
-              class="device-context-menu file-menu"
-              @close-auto-focus="
-                (e) => {
-                  if (s.modal) e.preventDefault();
-                }
-              "
-            >
-              <ContextMenuItem v-if="f.type === 'directory'" :disabled="!!s.busy" @select="open(f)"
-                ><FolderOpen aria-hidden="true" />{{ t('打开文件夹') }}</ContextMenuItem
-              >
-              <ContextMenuItem
-                v-if="f.type === 'file'"
-                :disabled="!!s.busy"
-                @select="
-                  s.file = f;
-                  download();
-                "
-                ><Download aria-hidden="true" />{{ t('下载') }}</ContextMenuItem
-              >
-              <ContextMenuItem :disabled="!canModify(f)" @select="fileAction(f, 'file-rename')"
-                ><Pencil aria-hidden="true" />{{ t('重命名…') }}</ContextMenuItem
-              >
-              <ContextMenuSeparator />
-              <ContextMenuItem
-                class="destructive"
-                :disabled="!canModify(f)"
-                @select="fileAction(f, 'file-delete')"
-                ><Trash2 aria-hidden="true" />{{ t('删除…') }}</ContextMenuItem
-              >
-            </ContextMenuContent>
-          </ContextMenu>
-        </tbody>
-      </table>
-      <div v-if="!s.files.length && !s.busy" class="empty-directory">{{ t('此目录为空') }}</div>
-    </div>
+            </td>
+            <td>{{ f.type === 'file' ? sizeLabel(f.size) : '—' }}</td>
+            <td>{{ date(f.modified) }}</td>
+          </tr>
+        </ContextMenuTrigger>
+        <ContextMenuContent
+          class="device-context-menu file-menu"
+          @close-auto-focus="
+            (e) => {
+              if (s.modal) e.preventDefault();
+            }
+          "
+        >
+          <ContextMenuItem v-if="f.type === 'directory'" :disabled="!!s.busy" @select="open(f)"
+            ><FolderOpen aria-hidden="true" />{{ t('打开文件夹') }}</ContextMenuItem
+          >
+          <ContextMenuItem
+            v-if="f.type === 'file'"
+            :disabled="!!s.busy"
+            @select="
+              s.file = f;
+              download();
+            "
+            ><Download aria-hidden="true" />{{ t('下载') }}</ContextMenuItem
+          >
+          <ContextMenuItem :disabled="!canModify(f)" @select="fileAction(f, 'file-rename')"
+            ><Pencil aria-hidden="true" />{{ t('重命名…') }}</ContextMenuItem
+          >
+          <ContextMenuSeparator />
+          <ContextMenuItem
+            class="destructive"
+            :disabled="!canModify(f)"
+            @select="fileAction(f, 'file-delete')"
+            ><Trash2 aria-hidden="true" />{{ t('删除…') }}</ContextMenuItem
+          >
+        </ContextMenuContent>
+      </ContextMenu>
+      <template #empty>
+        <div v-if="!s.files.length && !s.busy" class="empty-directory">{{ t('此目录为空') }}</div>
+      </template>
+    </ResizableTable>
   </div>
   <AppDialog
     v-if="pending && (s.modal === 'file-rename' || s.modal === 'file-delete')"

@@ -9,6 +9,7 @@ import AppSelect from './AppSelect.vue';
 import AppSearchSelect from './AppSearchSelect.vue';
 import { useWorkbench } from '@/composables/workbench';
 import { createLogcat } from '@/composables/logcat';
+import { useLogColumns } from '@/composables/log-columns';
 import { t } from '../../shared/i18n';
 import type { LogEntry } from '../../shared/contracts';
 
@@ -16,10 +17,13 @@ const w = useWorkbench();
 const logs = createLogcat(w.api),
   s = logs.state;
 const scroller = ref<HTMLElement>(),
+  headerViewport = ref<HTMLElement>(),
+  scrollbarWidth = ref(0),
   scrollTop = ref(0),
   viewport = ref(400);
 const selected = ref<LogEntry>();
 const rowHeight = 26;
+const columns = useLogColumns();
 // 仅渲染视口附近的行；长日志和持续输出不会让 DOM 随缓存规模增长。
 const startIndex = computed(() =>
   Math.max(0, Math.min(logs.filtered.value.length - 1, Math.floor(scrollTop.value / rowHeight)) - 8),
@@ -64,7 +68,12 @@ const watchTarget = watch(
 let observer: ResizeObserver | undefined;
 onMounted(() => {
   observer = new ResizeObserver(() => {
-    viewport.value = scroller.value?.clientHeight || 400;
+    const body = scroller.value;
+    viewport.value = Math.max(rowHeight, body?.clientHeight || 400);
+    columns.viewportWidth.value = body?.clientWidth || 0;
+    // Windows 常驻滚动条和 macOS 浮动滚动条宽度不同，表头按正文可用宽度对齐。
+    scrollbarWidth.value = body ? body.offsetWidth - body.clientWidth : 0;
+    void nextTick(syncHeaderScroll);
   });
   if (scroller.value) observer.observe(scroller.value);
 });
@@ -82,6 +91,15 @@ watch([logs.filtered, () => s.paused], () => {
 });
 function onScroll() {
   scrollTop.value = scroller.value?.scrollTop || 0;
+  syncHeaderScroll();
+}
+function syncHeaderScroll() {
+  if (headerViewport.value && scroller.value) headerViewport.value.scrollLeft = scroller.value.scrollLeft;
+}
+function onHeaderScroll() {
+  // 表头的键盘焦点也可能触发横向滚动，需要反向同步到正文。
+  if (scroller.value && headerViewport.value && scroller.value.scrollLeft !== headerViewport.value.scrollLeft)
+    scroller.value.scrollLeft = headerViewport.value.scrollLeft;
 }
 function pauseOnNavigate(event: KeyboardEvent) {
   if (['ArrowUp', 'PageUp', 'Home'].includes(event.key)) logs.pause();
@@ -179,10 +197,35 @@ function pauseOnNavigate(event: KeyboardEvent) {
         {{ s.exportNotice }}
       </p>
     </div>
-    <div class="logs-column-head" aria-hidden="true">
-      <span>{{ t('时间') }}</span
-      ><span>{{ t('级别') }}</span
-      ><span>PID / TID</span><span>Tag</span><span>{{ t('日志内容') }}</span>
+    <div class="logs-header">
+      <div
+        ref="headerViewport"
+        class="logs-header-viewport"
+        :style="{ marginRight: `${scrollbarWidth}px` }"
+        @scroll="onHeaderScroll"
+      >
+        <div class="logs-column-head logs-table" :style="columns.style.value">
+          <div v-for="(column, index) in columns.columns.value" :key="column.label" class="log-column">
+            <span>{{ t(column.label) }}</span>
+            <span
+              class="log-column-resizer"
+              :class="{ resizing: columns.resizing.value === index }"
+              role="separator"
+              aria-orientation="vertical"
+              aria-controls="device-log-table"
+              :aria-label="t('调整 {column} 列宽', { column: t(column.label) })"
+              :aria-valuemin="column.min"
+              :aria-valuemax="column.max"
+              :aria-valuenow="column.width"
+              :title="t('拖动调整列宽，双击恢复默认')"
+              tabindex="0"
+              @mousedown="columns.startResize(index, $event)"
+              @keydown="columns.onKey(index, $event)"
+              @dblclick.prevent="columns.reset(index)"
+            />
+          </div>
+        </div>
+      </div>
     </div>
     <div
       ref="scroller"
@@ -198,46 +241,48 @@ function pauseOnNavigate(event: KeyboardEvent) {
       "
       @keydown="pauseOnNavigate"
     >
-      <div v-if="!logs.filtered.value.length" class="logs-empty" role="status">
-        {{
-          !w.online.value
-            ? t('请选择已连接的设备查看日志。')
-            : s.starting
-              ? t('正在连接 Logcat…')
-              : logs.entries.value.length
-                ? t('没有匹配的日志')
-                : s.error
-                  ? t('已停止接收')
-                  : t('等待设备输出日志…')
-        }}
-      </div>
-      <div
-        v-else
-        class="logs-virtual"
-        :style="{ height: `${logs.filtered.value.length * rowHeight + 12}px` }"
-      >
-        <div :style="{ transform: `translateY(${startIndex * rowHeight}px)` }">
-          <button
-            v-for="entry in rows"
-            :key="entry.id"
-            type="button"
-            :class="[
-              'log-row',
-              {
-                'log-crash': entry.crash,
-                'log-warning': entry.level === 'W',
-                'log-error': entry.level === 'E',
-              },
-            ]"
-            :aria-label="entry.crash ? `${t('崩溃日志')}: ${entry.raw}` : undefined"
-            @focus="logs.pause"
-            @click="selected = entry"
-          >
-            <time :title="entry.time">{{ entry.time.slice(11) }}</time
-            ><span class="log-level">{{ entry.level }}</span> <span>{{ entry.pid }}/{{ entry.tid }}</span
-            ><span>{{ entry.tag }}</span>
-            <span class="log-message">{{ entry.message }}</span>
-          </button>
+      <div id="device-log-table" class="logs-table" :style="columns.style.value">
+        <div v-if="!logs.filtered.value.length" class="logs-empty" role="status">
+          {{
+            !w.online.value
+              ? t('请选择已连接的设备查看日志。')
+              : s.starting
+                ? t('正在连接 Logcat…')
+                : logs.entries.value.length
+                  ? t('没有匹配的日志')
+                  : s.error
+                    ? t('已停止接收')
+                    : t('等待设备输出日志…')
+          }}
+        </div>
+        <div
+          v-else
+          class="logs-virtual"
+          :style="{ height: `${logs.filtered.value.length * rowHeight + 12}px` }"
+        >
+          <div :style="{ transform: `translateY(${startIndex * rowHeight}px)` }">
+            <button
+              v-for="entry in rows"
+              :key="entry.id"
+              type="button"
+              :class="[
+                'log-row',
+                {
+                  'log-crash': entry.crash,
+                  'log-warning': entry.level === 'W',
+                  'log-error': entry.level === 'E',
+                },
+              ]"
+              :aria-label="entry.crash ? `${t('崩溃日志')}: ${entry.raw}` : undefined"
+              @focus="logs.pause"
+              @click="selected = entry"
+            >
+              <time :title="entry.time">{{ entry.time.slice(11) }}</time
+              ><span class="log-level">{{ entry.level }}</span> <span>{{ entry.pid }}/{{ entry.tid }}</span
+              ><span>{{ entry.tag }}</span>
+              <span class="log-message">{{ entry.message }}</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

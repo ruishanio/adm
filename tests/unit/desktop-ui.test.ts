@@ -13,13 +13,25 @@ import { createWorkbench, workbenchKey } from '../../src/renderer/composables/wo
 import { useFocusMode } from '../../src/renderer/composables/focus-mode';
 import type { Api } from '../../src/shared/contracts';
 const cleanups: (() => void)[] = [];
-beforeEach(() => setLanguage('zh-CN'));
+beforeEach(() => {
+  setLanguage('zh-CN');
+  localStorage.removeItem('adm.files-column-widths');
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      observe() {}
+      disconnect() {}
+    },
+  );
+});
 afterEach(() => {
   cleanups
     .splice(0)
     .reverse()
     .forEach((fn) => fn());
   document.body.innerHTML = '';
+  localStorage.removeItem('adm.files-column-widths');
+  vi.unstubAllGlobals();
 });
 function setup() {
   const scope = effectScope();
@@ -369,4 +381,40 @@ it('概览显示常用状态，明细默认收起，刷新仍重新读取详情'
   );
   await view.get('.info-refresh').trigger('click');
   expect(refresh).toHaveBeenCalledWith(true);
+});
+
+it('文件列宽与应用独立保存，表头避开滚动条，切换目录仍回到顶部', async () => {
+  localStorage.setItem('adm.apps-column-widths', '[800,88,76,44]');
+  const { w, view } = await fileSetup();
+  const handles = view.findAll('.table-column-resizer');
+  expect(handles).toHaveLength(3);
+  expect(handles[0].attributes('aria-valuenow')).toBe('300');
+  await handles[0].trigger('mousedown', { button: 0, clientX: 300 });
+  window.dispatchEvent(new MouseEvent('mousemove', { clientX: 720 }));
+  window.dispatchEvent(new MouseEvent('mouseup'));
+  await nextTick();
+  expect(handles[0].attributes('aria-valuenow')).toBe('720');
+  expect(localStorage.getItem('adm.apps-column-widths')).toBe('[800,88,76,44]');
+  expect(localStorage.getItem('adm.files-column-widths')).toBe('[720,85,160]');
+  expect(view.get('.resizable-table-head col').attributes('style')).toBe(
+    view.get('#device-files-table col').attributes('style'),
+  );
+  const body = view.get<HTMLElement>('.file-scroll');
+  const header = view.get<HTMLElement>('.table-header-viewport');
+  expect(body.element.contains(header.element)).toBe(false);
+  body.element.scrollTop = 400;
+  body.element.scrollLeft = 180;
+  await body.trigger('scroll');
+  expect(header.element.scrollLeft).toBe(180);
+  expect(header.element.scrollTop).toBe(0);
+  await view.get('tbody tr').trigger('click');
+  expect(w.state.file?.name).toBe('folder');
+  await view.get('tbody tr').trigger('dblclick');
+  await flushPromises();
+  expect(w.state.path).toBe('/sdcard/folder');
+  expect(body.element.scrollTop).toBe(0);
+  expect(handles[0].attributes('aria-valuenow')).toBe('720');
+  const restored = (await fileSetup()).view;
+  expect(restored.findAll('.table-column-resizer')[0].attributes('aria-valuenow')).toBe('720');
+  localStorage.removeItem('adm.apps-column-widths');
 });
