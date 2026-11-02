@@ -53,6 +53,7 @@ function close() {
 </script>
 
 <template>
+  <slot name="heading" :count="w.online.value && s.appsLoaded ? filtered.length : undefined" />
   <div v-if="!w.online.value" class="empty-state">
     <AppWindow class="icon-apps" aria-hidden="true" />
     <h2>{{ t('选择已连接的设备') }}</h2>
@@ -75,13 +76,15 @@ function close() {
           t('显示系统应用')
         }}</label
       >
-      <Button variant="outline" :disabled="!!s.busy" @click="w.loadApps"
-        ><RefreshCw aria-hidden="true" />{{ t('刷新应用') }}</Button
-      >
-    </div>
-    <div class="apps-summary">
-      <span>{{ t('主用户（用户 0）') }}</span
-      ><span v-if="s.appsLoaded">{{ t('{count} 个应用', { count: filtered.length }) }}</span>
+      <Button
+        variant="ghost"
+        class="icon-button apps-refresh"
+        :title="t('刷新应用')"
+        :aria-label="t('刷新应用')"
+        :disabled="!!s.busy"
+        @click="w.loadApps"
+        ><RefreshCw aria-hidden="true"
+      /></Button>
     </div>
     <div v-if="!s.appsLoaded" class="apps-empty" role="status">
       <p>{{ s.busy ? t('正在读取应用列表…') : t('应用列表尚未加载，请刷新。') }}</p>

@@ -1144,8 +1144,25 @@ button.log-row.log-crash {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin: 0 20px 16px;
+  margin: 0 20px 12px;
   flex-shrink: 0;
+}
+.applications-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  min-width: 0;
+}
+.applications-title h2,
+.applications-heading > button {
+  flex-shrink: 0;
+}
+.applications-count {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 /* 应用列表独立滚动，安装入口、搜索和表头在紧凑窗口中仍保持可用。 */
 .installed-app-content {
@@ -1169,12 +1186,13 @@ button.log-row.log-crash {
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
-  margin-inline: 20px;
+  flex-shrink: 0;
+  margin: 0 20px 12px;
 }
 .apps-search {
   flex: 1;
   min-width: 180px;
+  max-width: 480px;
   position: relative;
 }
 .apps-search > svg {
@@ -1196,12 +1214,8 @@ button.log-row.log-crash {
   margin: 0;
   font-size: 12px;
 }
-.apps-summary {
-  display: flex;
-  justify-content: space-between;
-  color: var(--muted);
-  font-size: 12px;
-  padding: 12px 20px 8px;
+.apps-refresh {
+  flex-shrink: 0;
 }
 /* 可调列宽表格将表头与正文分开，纵向滚动条从表头下方开始。 */
 .resizable-table {
