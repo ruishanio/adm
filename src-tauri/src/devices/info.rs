@@ -1,3 +1,5 @@
+#[cfg(test)]
+use crate::devices::DeviceOperations;
 use crate::{models::*, parsing::re};
 use std::collections::BTreeMap;
 
@@ -277,7 +279,7 @@ mod tests {
     #[test]
     #[ignore = "需显式指定 ADM_INFO_SERIAL；仅执行信息读取，不改设备"]
     fn connected_device_read_only() {
-        use crate::{adb::Adb, process::cancellation};
+        use crate::{adb::process::cancellation, adb::Adb};
         let serial = std::env::var("ADM_INFO_SERIAL").expect("缺少目标序列号");
         let adb = Adb::new(
             std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))

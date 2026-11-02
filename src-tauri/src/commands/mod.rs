@@ -5,12 +5,12 @@ mod files;
 mod logs;
 mod performance;
 mod settings;
-use crate::{models::Result, process::cancellation, service::Service};
+use crate::{adb::process::cancellation, models::Result, state::AppState};
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::{json, Value};
 use std::sync::Arc;
 use tauri::Manager;
-impl Service {
+impl AppState {
     pub(crate) fn dispatch(
         &self,
         app: tauri::AppHandle,
@@ -84,7 +84,7 @@ pub(crate) fn encoded(value: impl Serialize) -> Result<Value> {
 #[tauri::command]
 pub(crate) async fn adm_call(
     window: tauri::WebviewWindow,
-    state: tauri::State<'_, Arc<Service>>,
+    state: tauri::State<'_, Arc<AppState>>,
     method: String,
     args: Value,
 ) -> Result<Value> {

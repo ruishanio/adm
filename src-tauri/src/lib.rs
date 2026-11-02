@@ -1,26 +1,23 @@
 mod adb;
-mod apk;
 mod apps;
-mod child_process;
 mod commands;
-mod device_info;
-mod logcat;
+mod devices;
+mod files;
+mod logs;
 mod models;
-#[cfg(target_os = "macos")]
-mod native_menu;
 mod parsing;
 mod performance;
-mod process;
-mod service;
+mod platform;
 mod settings;
 #[cfg(test)]
 mod smoke;
+mod state;
 #[cfg(test)]
 mod tests;
+use adb::process::cancellation;
 use models::Result;
-use process::cancellation;
 use serde_json::{json, Value};
-use service::Service;
+use state::AppState;
 use std::sync::Arc;
 use tauri::{DragDropEvent, Manager, WindowEvent};
 pub fn run() {
@@ -46,12 +43,15 @@ pub fn run() {
             );
             // 菜单与界面使用同一份偏好；重启时不再回到框架默认的英文菜单。
             #[cfg(target_os = "macos")]
-            app.set_menu(native_menu::build(app.handle(), &store.value.language)?)?;
-            app.manage(Arc::new(Service::new(store, app.path().resource_dir()?)));
+            app.set_menu(platform::native_menu::build(
+                app.handle(),
+                &store.value.language,
+            )?)?;
+            app.manage(Arc::new(AppState::new(store, app.path().resource_dir()?)));
             Ok(())
         })
         .on_window_event(|window, event| {
-            let Some(state) = window.try_state::<Arc<Service>>() else {
+            let Some(state) = window.try_state::<Arc<AppState>>() else {
                 return;
             };
             match event {
@@ -74,10 +74,10 @@ pub fn run() {
         .run(|app, event| {
             // 原生菜单退出不保证先销毁窗口；在最终 Exit 回调返回前回收本次进程持有的客户端。
             if matches!(event, tauri::RunEvent::Exit) {
-                if let Some(state) = app.try_state::<Arc<Service>>() {
+                if let Some(state) = app.try_state::<Arc<AppState>>() {
                     state.shutdown();
                 } else {
-                    child_process::shutdown();
+                    adb::child_process::shutdown();
                 }
             }
         });

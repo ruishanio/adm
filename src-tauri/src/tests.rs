@@ -1,4 +1,13 @@
-use crate::{adb::Adb, apk::*, models::*, parsing::*, process::*, settings::SettingsStore};
+use crate::apps::install::InstallOperations;
+use crate::devices::DeviceOperations;
+use crate::files::FileOperations;
+use crate::{
+    adb::{process::*, Adb},
+    apps::apk::*,
+    models::*,
+    parsing::*,
+    settings::SettingsStore,
+};
 use std::{
     fs,
     io::Write,
@@ -501,7 +510,7 @@ fn folder_snapshot_preserves_tree_empty_and_hidden_entries() {
     fs::write(source.join(".hidden"), "hidden").unwrap();
     fs::write(source.join("' $ 文件.txt"), "content").unwrap();
     let destination = temp.path().join("snapshot");
-    crate::adb::copy_upload_tree(&source, &destination, &cancellation(), 0, &mut 0).unwrap();
+    crate::files::copy_upload_tree(&source, &destination, &cancellation(), 0, &mut 0).unwrap();
     assert!(destination.join("中文 空目录").is_dir());
     assert_eq!(
         fs::read_to_string(destination.join(".hidden")).unwrap(),
@@ -520,7 +529,7 @@ fn folder_snapshot_honors_cancellation_and_limits() {
     fs::create_dir(&source).unwrap();
     let cancel = cancellation();
     cancel.store(true, Ordering::SeqCst);
-    assert!(crate::adb::copy_upload_tree(
+    assert!(crate::files::copy_upload_tree(
         &source,
         &temp.path().join("cancelled"),
         &cancel,
@@ -529,7 +538,7 @@ fn folder_snapshot_honors_cancellation_and_limits() {
     )
     .is_err());
     assert!(!temp.path().join("cancelled").exists());
-    assert!(crate::adb::copy_upload_tree(
+    assert!(crate::files::copy_upload_tree(
         &source,
         &temp.path().join("too-deep"),
         &cancellation(),

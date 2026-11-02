@@ -1,14 +1,14 @@
 use super::{decoded, encoded};
 use crate::{
-    logcat,
+    adb::process::{cancellation, Cancel},
+    logs,
     models::*,
-    process::{cancellation, Cancel},
-    service::Service,
+    state::AppState,
 };
 use serde_json::{json, Value};
 use tauri_plugin_dialog::DialogExt;
 
-impl Service {
+impl AppState {
     pub(crate) fn logs_command(
         &self,
         app: &tauri::AppHandle,
@@ -35,7 +35,7 @@ impl Service {
                 encoded(self.adb(cancellation())?.logcat_apps(&target)?)
             }
             "exportLogcat" => {
-                let (id, filter, through): (String, logcat::LogFilter, u64) = decoded(args)?;
+                let (id, filter, through): (String, logs::LogFilter, u64) = decoded(args)?;
                 let text = self.logs.export(&id, filter, through)?;
                 let path = app
                     .dialog()
@@ -45,7 +45,7 @@ impl Service {
                     .add_filter("Logcat", &["log", "txt"])
                     .blocking_save_file();
                 if let Some(path) = path {
-                    logcat::save_export(&path.into_path().map_err(|e| e.to_string())?, &text)?;
+                    logs::save_export(&path.into_path().map_err(|e| e.to_string())?, &text)?;
                     return Ok(json!(true));
                 }
                 Ok(json!(false))

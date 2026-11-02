@@ -1,10 +1,10 @@
 //! 性能采样使用独立、可取消的只读会话，不占用安装与文件任务锁。
 use crate::{
+    adb::process::check_cancel,
     adb::Adb,
-    device_info::parse_runtime,
+    devices::info::parse_runtime,
     models::{Result, Target},
     parsing::{re, shell_arg, valid_package},
-    process::check_cancel,
 };
 use serde::Serialize;
 use std::{
@@ -370,7 +370,7 @@ impl Drop for Performance {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::process::{cancellation, Cancel, Output, Runner};
+    use crate::adb::process::{cancellation, Cancel, Output, Runner};
     use std::path::Path;
     const SNAPSHOT: &str = "\n__ADM_uptime__\n100.5 400\n__ADM_stat__\ncpu 10 2 3 80 5 0 0 0 9 1\ncpu0 10 2 3 80 5 0 0 0\n__ADM_frequency__\ncpu0 1800000 1\ncpu1 - 0\n__ADM_memory__\nMemTotal: 4096 kB\nMemAvailable: 1024 kB\nSwapTotal: 256 kB\nSwapFree: 0 kB\n__ADM_network__\nwlan0: 1000 1 0 0 0 0 0 0 500 1 0 0 0 0 0 0\nlo: 999 1 0 0 0 0 0 0 999 1 0 0 0 0 0 0\n__ADM_battery__\npresent: true\nlevel: 0\nscale: 100\ntemperature: 0\n__ADM_thermal__\nThermal Status: 2\n__ADM_end__\n";
     #[test]

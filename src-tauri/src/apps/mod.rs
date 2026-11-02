@@ -1,15 +1,17 @@
 //! 应用查询、资源和管理操作只针对主用户 0，与安装功能保持一致，不跨用户修改应用。
+pub(crate) mod apk;
+pub(crate) mod install;
 use crate::{
+    adb::process::{cancellation, check_cancel},
     adb::Adb,
     models::*,
     parsing::{component, friendly_error, parse_owner, re, valid_package},
-    process::{cancellation, check_cancel},
 };
 use std::collections::{BTreeMap, HashSet};
 use std::io::Write;
 use uuid::Uuid;
 
-const LABEL_READER: &[u8] = include_bytes!("../../android/app-labels/app-labels.jar");
+const LABEL_READER: &[u8] = include_bytes!("../../../android/app-labels/app-labels.jar");
 
 /// 只接受读取器的版本化 JSON 行；无名称、包名回退和异常资源不伪造友好名称。
 fn parse_labels(text: &str) -> Result<BTreeMap<String, String>> {
@@ -436,7 +438,7 @@ impl Adb {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::process::{cancellation, Cancel, Output, Runner};
+    use crate::adb::process::{cancellation, Cancel, Output, Runner};
     use std::{
         path::Path,
         sync::{Arc, Mutex},

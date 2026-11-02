@@ -1,36 +1,34 @@
 //! 应用服务的共享状态、串行任务和退出回收；各领域命令不自行创建第二套任务锁。
 use crate::{
-    adb, apk,
-    commands::encoded,
-    logcat,
+    adb,
+    adb::process::{cancellation, Cancel},
+    apps::apk,
+    logs,
     models::*,
-    performance,
-    process::{cancellation, Cancel},
-    settings,
+    performance, settings,
 };
-use serde_json::Value;
 use std::{
     collections::HashSet,
     path::PathBuf,
     sync::{atomic::Ordering, Mutex},
 };
-pub(crate) struct Service {
+pub(crate) struct AppState {
     pub(crate) store: Mutex<settings::SettingsStore>,
     pub(crate) devices: Mutex<Vec<Device>>,
     pub(crate) apk: Mutex<Option<apk::ApkRecord>>,
     pub(crate) active: Mutex<Option<Cancel>>,
     pub(crate) drops: Mutex<HashSet<PathBuf>>,
     pub(crate) resources: PathBuf,
-    pub(crate) logs: logcat::Logcat,
+    pub(crate) logs: logs::Logcat,
     pub(crate) performance: performance::Performance,
 }
-pub(crate) struct Operation<'a>(&'a Service, pub(crate) Cancel);
+pub(crate) struct Operation<'a>(&'a AppState, pub(crate) Cancel);
 impl Drop for Operation<'_> {
     fn drop(&mut self) {
         *self.0.active.lock().unwrap() = None;
     }
 }
-impl Service {
+impl AppState {
     pub(crate) fn begin(&self) -> Result<Operation<'_>> {
         let mut active = self.active.lock().unwrap();
         if active.is_some() {
@@ -47,7 +45,7 @@ impl Service {
     }
     pub(crate) fn adb(&self, cancel: Cancel) -> Result<adb::Adb> {
         Ok(adb::Adb::new(
-            settings::find_adb(&self.store.lock().unwrap().value.adb_path, &self.resources)?,
+            adb::find_adb(&self.store.lock().unwrap().value.adb_path, &self.resources)?,
             cancel,
         ))
     }
@@ -57,9 +55,9 @@ impl Service {
         apply(&mut next);
         store.save(next)
     }
-    pub(crate) fn inspect(&self, path: PathBuf, cancel: &Cancel) -> Result<Value> {
+    pub(crate) fn inspect(&self, path: PathBuf, cancel: &Cancel) -> Result<Apk> {
         let record = apk::read_apk(&path, cancel)?;
-        let info = encoded(&record.info)?;
+        let info = record.info.clone();
         *self.apk.lock().unwrap() = Some(record);
         Ok(info)
     }
@@ -71,7 +69,7 @@ impl Service {
             active: Mutex::new(None),
             drops: Mutex::new(HashSet::new()),
             resources,
-            logs: logcat::Logcat::default(),
+            logs: logs::Logcat::default(),
             performance: performance::Performance::default(),
         }
     }
@@ -84,7 +82,7 @@ impl Service {
     pub(crate) fn shutdown(&self) {
         self.cancel();
         self.performance.stop_all();
-        crate::child_process::shutdown();
+        crate::adb::child_process::shutdown();
         self.logs.stop_all();
     }
 }

@@ -1,12 +1,13 @@
 use super::{decoded, decoded_empty, encoded};
+use crate::devices::DeviceOperations;
 use crate::{
+    adb::process::{cancellation, Cancel},
     models::*,
-    process::{cancellation, Cancel},
-    service::Service,
+    state::AppState,
 };
 use serde_json::{json, Value};
 
-impl Service {
+impl AppState {
     pub(crate) fn devices_command(
         &self,
         app: &tauri::AppHandle,

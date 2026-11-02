@@ -1,5 +1,8 @@
 //! 显式启用的专用模拟器验收，不参与 CI，也不允许对物理或业务设备执行写入。
-use crate::{adb::Adb, apk::read_apk, models::Target, process::cancellation};
+use crate::apps::install::InstallOperations;
+use crate::devices::DeviceOperations;
+use crate::files::FileOperations;
+use crate::{adb::process::cancellation, adb::Adb, apps::apk::read_apk, models::Target};
 use std::{fs, path::PathBuf};
 /// 只读取指定模拟器的应用名称，核对临时读取器已清理；不安装或卸载任何应用。
 #[test]

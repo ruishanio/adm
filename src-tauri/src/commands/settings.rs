@@ -1,12 +1,12 @@
 use super::{decoded, decoded_empty};
 #[cfg(target_os = "macos")]
-use crate::native_menu;
-use crate::{adb, models::*, process::Cancel, service::Service};
+use crate::platform::native_menu;
+use crate::{adb, adb::process::Cancel, models::*, state::AppState};
 use serde_json::{json, Value};
 use tauri_plugin_clipboard_manager::ClipboardExt;
 use tauri_plugin_dialog::DialogExt;
 
-impl Service {
+impl AppState {
     pub(crate) fn settings_command(
         &self,
         app: &tauri::AppHandle,

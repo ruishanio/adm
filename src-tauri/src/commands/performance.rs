@@ -1,12 +1,12 @@
 use super::{decoded, encoded};
 use crate::{
+    adb::process::{cancellation, Cancel},
     models::*,
-    process::{cancellation, Cancel},
-    service::Service,
+    state::AppState,
 };
 use serde_json::Value;
 
-impl Service {
+impl AppState {
     pub(crate) fn performance_command(
         &self,
         _app: &tauri::AppHandle,

@@ -75,8 +75,8 @@ impl Runner for NativeRunner {
             use std::os::windows::process::CommandExt;
             command.creation_flags(0x08000000);
         }
-        let child =
-            crate::child_process::spawn(&mut command).map_err(|e| format!("无法启动 ADB：{e}"))?;
+        let child = crate::adb::child_process::spawn(&mut command)
+            .map_err(|e| format!("无法启动 ADB：{e}"))?;
         if let Some(mut stdin) = child.stdin() {
             if let Some(input) = input {
                 let _ = writeln!(stdin, "{input}");

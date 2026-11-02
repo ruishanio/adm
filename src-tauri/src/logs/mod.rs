@@ -1,9 +1,9 @@
 //! Logcat 使用独立客户端与有界缓存，不占用安装/文件任务锁，也不清空设备日志。
 use crate::{
+    adb::process::{cancellation, Cancel},
     adb::Adb,
     models::{Result, Target},
     parsing::re,
-    process::{cancellation, Cancel},
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -269,7 +269,7 @@ impl Logcat {
             use std::os::windows::process::CommandExt;
             command.creation_flags(0x08000000);
         }
-        let child = crate::child_process::spawn(&mut command)
+        let child = crate::adb::child_process::spawn(&mut command)
             .map_err(|e| format!("无法启动 Logcat：{e}"))?;
         let out = child.stdout().unwrap();
         let err = child.stderr().unwrap();

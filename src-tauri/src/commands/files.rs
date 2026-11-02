@@ -1,9 +1,10 @@
 use super::{decoded, encoded};
-use crate::{models::*, process::Cancel, service::Service};
+use crate::files::FileOperations;
+use crate::{adb::process::Cancel, models::*, state::AppState};
 use serde_json::{json, Value};
 use tauri_plugin_dialog::DialogExt;
 
-impl Service {
+impl AppState {
     pub(crate) fn files_command(
         &self,
         app: &tauri::AppHandle,

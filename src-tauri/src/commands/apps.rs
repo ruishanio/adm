@@ -1,17 +1,18 @@
 use super::{decoded, decoded_empty, encoded};
+use crate::apps::install::InstallOperations;
 use crate::{
-    apk,
+    adb::process::{cancellation, Cancel},
+    apps::apk,
     models::*,
     parsing,
-    process::{cancellation, Cancel},
-    service::Service,
+    state::AppState,
 };
 use serde_json::Value;
 use std::path::PathBuf;
 use tauri_plugin_clipboard_manager::ClipboardExt;
 use tauri_plugin_dialog::DialogExt;
 
-impl Service {
+impl AppState {
     pub(crate) fn apps_command(
         &self,
         app: &tauri::AppHandle,
@@ -29,9 +30,9 @@ impl Service {
                     .add_filter("Android 安装包", &["apk"])
                     .blocking_pick_file();
                 match path {
-                    Some(path) => {
-                        self.inspect(path.into_path().map_err(|e| e.to_string())?, &cancel)
-                    }
+                    Some(path) => encoded(
+                        self.inspect(path.into_path().map_err(|e| e.to_string())?, &cancel)?,
+                    ),
                     None => Ok(Value::Null),
                 }
             }
@@ -42,7 +43,7 @@ impl Service {
                 if !self.drops.lock().unwrap().remove(&path) {
                     return Err("拖放文件来源已失效，请重新拖入或使用选择文件。".into());
                 }
-                self.inspect(path, &cancel)
+                encoded(self.inspect(path, &cancel)?)
             }
             "install" => {
                 let (target, id, allow_test): (Target, String, bool) = decoded(args)?;
