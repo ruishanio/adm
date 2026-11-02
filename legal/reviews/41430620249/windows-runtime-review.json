@@ -1,0 +1,107 @@
+{
+  "runtimeLibraries": [
+    {
+      "sha256": "d4cc4c224455825dec1669f9ad6a9872a4f5b37ed1daae1fd0b9044d7650d908",
+      "source": "C:\\Program Files\\Microsoft Visual Studio\\18\\Enterprise\\VC\\Tools\\MSVC\\14.51.36231\\lib\\x64\\libcmt.lib",
+      "file": "libcmt.lib"
+    },
+    {
+      "sha256": "f0a898588ecb26fe4c7530b2495a6fe5e768856309a33391702a3cbcb72b0589",
+      "source": "C:\\Program Files\\Microsoft Visual Studio\\18\\Enterprise\\VC\\Tools\\MSVC\\14.51.36231\\lib\\x64\\libvcruntime.lib",
+      "file": "libvcruntime.lib"
+    }
+  ],
+  "visualStudioVersion": "18.11.12315.225",
+  "nsisPluginSha1": "75197fee3c6a814fe035788d1c34ead39349b860",
+  "visualStudio": "Visual Studio Enterprise 2026",
+  "binaries": [
+    {
+      "dependencies": [
+        "bcryptprimitives.dll",
+        "ntdll.dll",
+        "kernel32.dll",
+        "api-ms-win-core-synch-l1-2-0.dll",
+        "user32.dll",
+        "comctl32.dll",
+        "oleaut32.dll",
+        "ole32.dll",
+        "shlwapi.dll",
+        "dwmapi.dll",
+        "gdi32.dll",
+        "shell32.dll",
+        "combase.dll",
+        "advapi32.dll",
+        "imm32.dll",
+        "api-ms-win-core-winrt-error-l1-1-0.dll",
+        "KERNEL32.dll",
+        "ADVAPI32.dll",
+        "api-ms-win-crt-string-l1-1-0.dll",
+        "api-ms-win-crt-math-l1-1-0.dll",
+        "api-ms-win-crt-runtime-l1-1-0.dll",
+        "api-ms-win-crt-convert-l1-1-0.dll",
+        "api-ms-win-crt-stdio-l1-1-0.dll",
+        "api-ms-win-crt-locale-l1-1-0.dll",
+        "api-ms-win-crt-heap-l1-1-0.dll"
+      ],
+      "sha256": "328eed628da0875944eadca42d4c7f13207ca4b20f920489a82893e121c21856",
+      "file": "adm.exe"
+    },
+    {
+      "dependencies": [
+        "ADVAPI32.dll",
+        "CFGMGR32.dll",
+        "dbghelp.dll",
+        "KERNEL32.dll",
+        "ntdll.dll",
+        "ole32.dll",
+        "SETUPAPI.dll",
+        "SHELL32.dll",
+        "api-ms-win-crt-math-l1-1-0.dll",
+        "api-ms-win-crt-locale-l1-1-0.dll",
+        "api-ms-win-crt-string-l1-1-0.dll",
+        "api-ms-win-crt-time-l1-1-0.dll",
+        "api-ms-win-crt-private-l1-1-0.dll",
+        "api-ms-win-crt-multibyte-l1-1-0.dll",
+        "api-ms-win-crt-runtime-l1-1-0.dll",
+        "api-ms-win-crt-convert-l1-1-0.dll",
+        "api-ms-win-crt-utility-l1-1-0.dll",
+        "api-ms-win-crt-environment-l1-1-0.dll",
+        "api-ms-win-crt-stdio-l1-1-0.dll",
+        "api-ms-win-crt-filesystem-l1-1-0.dll",
+        "api-ms-win-crt-heap-l1-1-0.dll",
+        "USER32.dll",
+        "WINUSB.DLL",
+        "WS2_32.dll",
+        "AdbWinApi.dll",
+        "kernel32.dll",
+        "api-ms-win-core-synch-l1-2-0.dll",
+        "ws2_32.dll",
+        "bcryptprimitives.dll",
+        "ntdll.dll",
+        "iphlpapi.dll"
+      ],
+      "sha256": "b4a6b455702684652cccf7b46258b29e653538904359a58fd4931cf3ef286b3f",
+      "file": "adb.exe"
+    },
+    {
+      "dependencies": [
+        "ole32.dll",
+        "KERNEL32.dll",
+        "SETUPAPI.dll"
+      ],
+      "sha256": "c1d653030b4bde65d3e07e4d0b0979e17be56df1436cdd15528630f27808050d",
+      "file": "AdbWinApi.dll"
+    },
+    {
+      "dependencies": [
+        "ole32.dll",
+        "KERNEL32.dll",
+        "WINUSB.DLL",
+        "AdbWinApi.DLL"
+      ],
+      "sha256": "0710e894d9b40f71a670c13c694079d564c92c1279da382cfe4850983aaebe1b",
+      "file": "AdbWinUsbApi.dll"
+    }
+  ],
+  "msvc": "14.51.36231"
+}

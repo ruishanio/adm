@@ -22,7 +22,7 @@
 ## 发布待办
 
 - ADB：37.0.1-15733141 的实际静态组件与对应源码、libusb 重新链接材料。
-- Windows：实际 NSIS/插件、MSVC 运行库的分发依据与完整安装验收。WebView2 Runtime 的终端用户条款与隐私通知不能由 SDK 的 BSD 许可替代。
+- Windows 预检已完成实际安装、许可页全文、NSIS 插件及运行库来源检查，见 [验证记录](WINDOWS-DISTRIBUTION.md)。WebView2 Runtime 的终端用户条款与隐私通知不能由 SDK 的 BSD 许可替代。
 - 分发者应核实自己的 Xcode / Windows 构建工具使用授权。此目录不代替对工具链协议的接受或权利人的法律判断。
 
 上游依据：

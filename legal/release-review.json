@@ -1,13 +1,14 @@
 {
   "status": "open-review",
   "unresolved": [
-    "ADB 37.0.1-15733141：尚未取得与官方二进制匹配的完整源码映射、libusb 对应源码及可实际使用的重新链接材料；NOTICE 与 AOSP 主分支链接不能替代这些交付。",
-    "Windows：需核对最终安装包使用的 NSIS 插件、MSVC 运行库来源和可再分发条件，并在实际 Windows 安装流程验证 WebView2 条款及通知。"
+    "ADB 37.0.1-15733141：尚未取得与官方二进制匹配的完整源码映射、libusb 对应源码及可实际使用的重新链接材料；NOTICE 与 AOSP 主分支链接不能替代这些交付。"
   ],
   "evidence": [
     "2026-11-02：选择继续内置 Google 官方 ADB 37.0.1，恢复原有分发方案；保留源码/重新链接尚未核实事项，不宣称已完成全部许可审查。",
     "官方下载 URL、SHA-256 和原始 NOTICE 已归档；发布前仍检查声明完整性和真实安装包。",
-    "NSIS 3.13 与 Tauri NSIS utils 0.5.3 原始声明已补齐，见 WINDOWS-DISTRIBUTION.md。"
+    "NSIS 3.13 与 Tauri NSIS utils 0.5.3 原始声明已补齐，见 WINDOWS-DISTRIBUTION.md。",
+    "2026-11-02：提交 5b468bed1631b0c3c0c61c8e40d15afe992e0cd0 的双平台预检通过：https://github.com/ruishanio/adm/actions/runs/41430620249 。Windows 安装、卸载、可见许可页全文、插件摘要及 PE 依赖检查通过；原始报告存于 reviews/41430620249/。",
+    "Windows 构建来源为 Visual Studio Enterprise 2026 18.11.12315.225 / MSVC 14.51.36231；来源记录与适用条款入口见 WINDOWS-DISTRIBUTION.md。该记录不替代构建工具授权或法律判断。"
   ],
   "distributionPolicy": "retain-official-adb"
 }
