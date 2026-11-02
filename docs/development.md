@@ -41,16 +41,22 @@ Vue 界面支持热更新，Rust 后端修改后由 Tauri 自动重新编译。`
 ## 项目结构
 
 ```text
-src/renderer/          Vue 页面、组合式状态、组件与桌面样式
-src/shared/            业务接口类型与多语言资源
-src-tauri/src/         Rust 窗口、业务 IPC、ADB、APK 解析和偏好存储
-src-tauri/             Tauri 配置、权限能力、图标与 Cargo 锁文件
-tests/unit/            前端状态、组件交互与 IPC 契约测试
-tests/Fixtures/        二进制清单夹具与独立测试 APK 源码
-scripts/               打包、产物检查、安装验证与测试 APK 构建
-docs/                  使用、开发与多语言文档
-design-system/         桌面 UI 与交互约束
-.github/workflows/     持续集成与 tag 打包
+src/shared/                  前后端契约与多语言词条
+src/renderer/features/       按设备、应用、安装、文件、日志、性能、Owner 划分
+src/renderer/components/     公共控件与基础 UI
+src/renderer/composables/    工作台组合和跨页面交互
+src/renderer/lib/            IPC、公共格式化与应用选项查询
+src/renderer/styles/         语义变量、共享控件、功能与平台样式
+src-tauri/src/commands/      分领域 IPC 请求解码与业务分发
+src-tauri/src/service.rs     共享状态、任务互斥和取消
+src-tauri/src/child_process.rs  客户端进程生命周期
+src-tauri/                   原生业务、配置、权限、图标与 Cargo 锁文件
+tests/unit/                  前端状态、组件交互与 IPC 契约测试
+tests/Fixtures/              二进制清单夹具与独立测试 APK 源码
+scripts/                     打包、检查、安装验证与测试 APK 构建
+docs/                        使用、开发、多语言文档与历史归档
+design-system/               桌面 UI 与交互约束
+.github/workflows/           持续集成与 tag 打包
 ```
 
 Rust 测试位于 `src-tauri/src/tests.rs` 等模块中。修改 UI 前阅读 [桌面设计约束](../design-system/android-tool/MASTER.md)，开发规范见 [AGENTS.md](../AGENTS.md)。
@@ -58,6 +64,7 @@ Rust 测试位于 `src-tauri/src/tests.rs` 等模块中。修改 UI 前阅读 [�
 ## 本地检查
 
 ```sh
+npm run check:source
 npm run typecheck
 npm test
 npm run build
@@ -66,7 +73,7 @@ cargo clippy --manifest-path src-tauri/Cargo.toml --locked --all-targets -- -D w
 cargo test --manifest-path src-tauri/Cargo.toml --locked
 ```
 
-`npm run build` 检查类型并构建前端；生成桌面安装包使用下面的打包命令。设备连接、APK 安装、设备所有者回读和文件传输仍需要在明确选定的目标设备上验证，自动化测试不能代替设备验收。已有验证见 [VALIDATION.md](../VALIDATION.md)。
+`npm run build` 检查源码引用、许可材料和类型，并构建前端；生成桌面安装包使用下面的打包命令。设备连接、APK 安装、设备所有者回读和文件传输仍需要在明确选定的目标设备上验证，自动化测试不能代替设备验收。已有验证见 [VALIDATION.md](../VALIDATION.md)。
 
 ## 本地打包
 
@@ -112,7 +119,7 @@ Release 附件仅包含 macOS DMG、Windows 安装 EXE 和两平台 ZIP。上传
 
 上传失败会保留草稿，可在原工作流中只重跑失败的发布任务。已公开版本只核对附件，不自动替换；重新构建后若文件摘要不同，应发布新 tag。修改工作流不会补发旧 tag；旧构建也不会包含当前许可材料。
 
-发布脚本的离线回归测试为 `python3 -m unittest discover -s tests/release -v`（Windows 使用 `python`），CI 和 Package 都会执行。测试模拟 GitHub 响应，不上传文件；当前 `legal/release-review.json` 仍有待办时，发布检查按预期阻止上传。
+发布脚本的离线回归测试为 `python3 -m unittest discover -s tests/release -v`（Windows 使用 `python`），CI 和 Package 都会执行。测试模拟 GitHub 响应，不上传文件。发布检查以 `legal/release-review.json` 为准：审阅完成且无待办可通过；当前明确记录的 `open-review` / `retain-official-adb` 决策也允许继续分发，但必须保留证据和未决项，不能解释为合规审查已完成。其他未决状态仍会阻止上传。
 
 CI 不连接真实 Android 设备，也不执行 APK 安装或设置设备所有者。
 
@@ -121,6 +128,7 @@ CI 不连接真实 Android 设备，也不执行 APK 安装或设置设备所有
 - **受控业务命令**：前端使用系统 WebView，CSP 与主窗口 capability 限制脚本及原生调用。Rust 只暴露固定业务命令，不提供通用 shell 或文件系统入口。
 - **路径与设备会话**：本地文件由系统选择器或本窗口原生拖放授予路径；设备操作绑定 `transport_id`，重连后旧会话不能继续操作。
 - **进程与任务**：ADB 使用参数数组，远端 shell 参数单独转义，耗时操作在后台线程运行。用户任务串行执行，轮询在操作期间使用缓存。
+- **退出回收**：正常退出只回收本实例启动的直接客户端，保留共享 ADB server；客户端与日志读线程分别有限等待。`ADM_PROCESS_TRACE=1` 可临时记录启动、回收 PID。强制杀死宿主或断电无法执行退出回调。
 - **APK 与配对**：清单解析限制大小，安装前核对 SHA-256；无线配对码经 stdin 提交，不写入设置或命令参数。
 
 配置保存位置：
@@ -133,6 +141,17 @@ CI 不连接真实 Android 设备，也不执行 APK 安装或设置设备所有
 这些历史路径和应用标识 `com.ruinext.androidtool` 保留以兼容升级，存储语言、设备备注、隐藏条目、侧栏宽度与 ADB 偏好。读取时兼容旧 `AndroidTool/settings.json` 路径及 PascalCase 字段。
 
 依赖、安装包、ADB 下载缓存、Rust target、测试报告与本机技能由 `.gitignore` 排除；依赖版本以 `package-lock.json` 和 `src-tauri/Cargo.lock` 锁定。迁移前的 Electron 实现保留在 Git 历史中，当前构建不依赖旧工程。
+
+## 整理与维护
+
+- 类型检查已开启 `noUnusedLocals` 和 `noUnusedParameters`；构建和 CI 会同时检查。刻意保留的回调占位参数使用 `_` 前缀。
+- `components/ui/` 只保留实际使用的组件；增加组件时同步清理生成器附带但未使用的包装文件和导出。
+- 当前验证入口为根目录 `VALIDATION.md`，历次验证原文集中到 `docs/archive/`，发布说明位于 `docs/releases/`。
+- 图标模型、DEX 读取器、测试夹具、许可原文和源码归档都有明确用途，不能按“二进制文件”或“源码没有 import”批量删除。
+- `npm run check:source` 检查入口与测试可达的 TypeScript / Vue 文件，并按实际命名导入跟踪再导出；不能替代 CSS、原生资源和完整未用导出检查。
+- 样式经 `styles.css` 按固定顺序导入，变量在 `styles/tokens.css`；公共字节与速率显示使用 `lib/format.ts` 的二进制单位，缺失值保留为 `—`。
+- 日志和性能共用短期应用选项读取；手动刷新绕过缓存，设备或应用变化时清除。不要为每个页面再创建独立的永久缓存。
+- 当前职责、清理结果与后续边界见 [代码整理方案与实施记录](maintenance-plan.md)。
 
 ## 维护文档截图
 

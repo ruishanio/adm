@@ -1,3 +1,5 @@
+> 历史归档：保留当时的实现和验收范围，不能作为当前版本的发布结论。当前入口见 [VALIDATION.md](../../VALIDATION.md)。
+
 > 本文记录迁移前 Electron 界面验收。当前 Tauri / Vue 验证见仓库根目录 `VALIDATION.md`，旧记录不代表新版实测结果。
 
 # UI / UX 约束落地验证
