@@ -172,15 +172,35 @@ class ReleaseTests(unittest.TestCase):
                 release.publish(REPOSITORY, TAG, COMMIT, self.prepare())
             gh.assert_called_once()
 
-    def test_only_explicit_404_counts_as_missing_release(self):
-        for status in [404, 403, 500]:
+    def test_tag_404_requires_checking_paginated_drafts(self):
+        error = subprocess.CalledProcessError(1, "gh", stderr="gh: Not Found (HTTP 404)")
+        draft = {"tag_name": TAG, "draft": True, "id": 123}
+        pages = [[{"tag_name": "v0.0.1", "draft": False}], [draft]]
+        with patch.object(release, "gh", side_effect=[error, json.dumps(pages)]) as gh:
+            self.assertEqual(release.get_release(REPOSITORY, TAG), draft)
+            self.assertEqual(gh.call_args.args, (
+                "api", "--paginate", "--slurp", f"repos/{REPOSITORY}/releases?per_page=100",
+            ))
+        with patch.object(release, "gh", side_effect=[error, "[[]]"]):
+            self.assertIsNone(release.get_release(REPOSITORY, TAG))
+        with patch.object(release, "gh", side_effect=[error, error]):
+            with self.assertRaises(subprocess.CalledProcessError):
+                release.get_release(REPOSITORY, TAG)
+
+    def test_duplicate_drafts_are_not_chosen_arbitrarily(self):
+        error = subprocess.CalledProcessError(1, "gh", stderr="gh: Not Found (HTTP 404)")
+        drafts = [[{"tag_name": TAG, "id": 1}, {"tag_name": TAG, "id": 2}]]
+        with patch.object(release, "gh", side_effect=[error, json.dumps(drafts)]):
+            with self.assertRaisesRegex(ValueError, "多个 Release 草稿"):
+                release.get_release(REPOSITORY, TAG)
+
+    def test_permission_and_server_errors_are_not_treated_as_missing(self):
+        for status in [403, 500]:
             error = subprocess.CalledProcessError(1, "gh", stderr=f"gh: failure (HTTP {status})")
-            with self.subTest(status=status), patch.object(release, "gh", side_effect=error):
-                if status == 404:
-                    self.assertIsNone(release.get_release(REPOSITORY, TAG))
-                else:
-                    with self.assertRaises(subprocess.CalledProcessError):
-                        release.get_release(REPOSITORY, TAG)
+            with self.subTest(status=status), patch.object(release, "gh", side_effect=error) as gh:
+                with self.assertRaises(subprocess.CalledProcessError):
+                    release.get_release(REPOSITORY, TAG)
+                gh.assert_called_once()
 
     def test_main_stops_at_existing_distribution_gate(self):
         with patch("sys.argv", ["release_ci.py", "--publish"]):

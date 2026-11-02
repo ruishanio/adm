@@ -76,13 +76,18 @@ def gh(*args):
 
 
 def get_release(repository, tag):
+    """按标签读取正式版本，并在 404 时查找草稿；同标签多草稿时停止，避免修改错对象。"""
     try:
         return json.loads(gh("api", f"repos/{repository}/releases/tags/{quote(tag, safe='')}"))
     except subprocess.CalledProcessError as error:
-        # 只有明确的 404 表示未创建；权限、限流或网络失败不能当成缺失继续发布。
-        if "(HTTP 404)" in (error.stderr or ""):
-            return None
-        raise
+        # 按标签查询的接口不返回草稿，404 不能直接认定版本不存在。
+        if "(HTTP 404)" not in (error.stderr or ""):
+            raise
+    pages = json.loads(gh("api", "--paginate", "--slurp", f"repos/{repository}/releases?per_page=100"))
+    matches = [item for page in pages for item in page if item["tag_name"] == tag]
+    if len(matches) > 1:
+        raise ValueError(f"同一标签 {tag} 存在多个 Release 草稿，停止自动修改，请先核对草稿。")
+    return matches[0] if matches else None
 
 
 def verify_remote_assets(release, assets):
