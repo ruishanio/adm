@@ -14,6 +14,7 @@ import {
 import { useWorkbench } from '@/composables/workbench';
 import { deviceName, deviceStatus, connection, targetKey, type Device } from '../../shared/contracts';
 import { APP_VERSION } from '../../shared/app-info';
+import DeviceConnectionIcon from './DeviceConnectionIcon.vue';
 const w = useWorkbench(),
   s = w.state;
 const connected = computed(() => s.snapshot?.devices.filter((d) => d.state === 'device') || []);
@@ -85,7 +86,8 @@ function rowKey(e: KeyboardEvent) {
               ]"
               :disabled="!!s.busy"
               :aria-pressed="s.selected === targetKey(d)"
-              :title="`${deviceName(d, s.snapshot?.settings)}\n${d.serial} · ${deviceStatus(d)}`"
+              :aria-label="`${deviceName(d, s.snapshot?.settings)} ${connection(d)} ${deviceStatus(d)} ${d.serial}`"
+              :title="`${deviceName(d, s.snapshot?.settings)}\n${d.serial}\n${connection(d)}\n${deviceStatus(d)}`"
               @click="selectDevice($event, d)"
               @keydown="rowKey"
             >
@@ -94,9 +96,12 @@ function rowKey(e: KeyboardEvent) {
                 aria-hidden="true"
               /><span class="device-copy"
                 ><span class="device-name">{{ deviceName(d, s.snapshot?.settings) }}</span
-                ><span class="device-caption"
-                  >{{ d.state === 'device' ? connection(d) : deviceStatus(d) }}<span>·</span
-                  >{{ d.serial }}</span
+                ><span class="device-caption">
+                  <DeviceConnectionIcon :device="d" />
+                  <span class="device-identifier">{{ d.serial }}</span>
+                  <span v-if="d.state !== 'device'" class="device-state-text">{{
+                    deviceStatus(d)
+                  }}</span></span
                 ></span
               >
             </Button></ContextMenuTrigger

@@ -154,8 +154,8 @@ const date = (value: number) =>
     <p>{{ t('浏览共享存储、上传和下载文件。') }}</p>
   </div>
   <div v-else class="file-manager">
-    <header class="file-controls">
-      <div class="file-toolbar">
+    <header class="workspace-toolbar">
+      <div class="toolbar-row">
         <Button
           class="icon-button"
           variant="ghost"
@@ -235,9 +235,10 @@ const date = (value: number) =>
           ><RefreshCw aria-hidden="true"
         /></Button>
       </div>
-      <div class="file-actions">
+      <div class="toolbar-actions file-actions">
         <Button
           variant="ghost"
+          class="quiet"
           :disabled="!!s.busy"
           @click="
             s.name = '';
@@ -249,7 +250,7 @@ const date = (value: number) =>
         <span class="toolbar-separator" aria-hidden="true" />
         <DropdownMenuRoot>
           <DropdownMenuTrigger as-child>
-            <Button variant="ghost" :disabled="!!s.busy"
+            <Button variant="ghost" class="quiet" :disabled="!!s.busy"
               ><Upload aria-hidden="true" />{{ t('上传')
               }}<ChevronDown class="upload-chevron" aria-hidden="true"
             /></Button>
@@ -265,10 +266,15 @@ const date = (value: number) =>
             </DropdownMenuContent>
           </DropdownMenuPortal>
         </DropdownMenuRoot>
-        <Button variant="ghost" :disabled="!!s.busy || s.file?.type !== 'file'" @click="download">
+        <Button
+          variant="ghost"
+          class="quiet"
+          :disabled="!!s.busy || s.file?.type !== 'file'"
+          @click="download"
+        >
           <Download aria-hidden="true" />{{ t('下载') }}
         </Button>
-        <span class="muted">{{ t('{count} 项', { count: s.files.length }) }}</span>
+        <span class="toolbar-meta">{{ t('{count} 项', { count: s.files.length }) }}</span>
       </div>
     </header>
     <ResizableTable

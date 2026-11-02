@@ -16,6 +16,8 @@ import {
   X,
   Minus,
   Square,
+  Layers,
+  Hash,
 } from '@lucide/vue';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -25,6 +27,7 @@ import { createWorkbench, workbenchKey } from '@/composables/workbench';
 import { useFocusMode } from '@/composables/focus-mode';
 import { connection, deviceStatus } from '../shared/contracts';
 import Sidebar from './components/Sidebar.vue';
+import DeviceConnectionIcon from './components/DeviceConnectionIcon.vue';
 import SidebarDivider from './components/SidebarDivider.vue';
 import DeviceInfoPage from './components/DeviceInfoPage.vue';
 import ApplicationsPage from './components/ApplicationsPage.vue';
@@ -116,12 +119,23 @@ onBeforeUnmount(() => {
         <div class="device-symbol"><Smartphone aria-hidden="true" /></div>
         <div class="device-title" data-tauri-drag-region>
           <h1 :title="w.title.value" data-tauri-drag-region>{{ w.title.value }}</h1>
-          <p v-if="w.device.value" data-tauri-drag-region>
-            <span :class="['status-dot', { online: w.online.value }]" />{{ deviceStatus(w.device.value)
-            }}<span class="separator-dot">·</span>{{ connection(w.device.value)
-            }}<template v-if="s.details && w.online.value"
-              ><span class="separator-dot">·</span>Android {{ s.details.android }}</template
-            ><span class="separator-dot">·</span><span class="serial">{{ w.device.value.serial }}</span>
+          <p v-if="w.device.value" class="device-summary" data-tauri-drag-region>
+            <span class="device-connection" data-tauri-drag-region>
+              <span :class="['status-dot', { online: w.online.value }]" aria-hidden="true" />
+              {{ deviceStatus(w.device.value) }}
+            </span>
+            <span class="device-summary-item" data-tauri-drag-region>
+              <DeviceConnectionIcon :device="w.device.value" data-tauri-drag-region />
+              {{ connection(w.device.value) }}
+            </span>
+            <span v-if="s.details && w.online.value" class="device-summary-item" data-tauri-drag-region>
+              <Layers aria-hidden="true" data-tauri-drag-region />
+              Android {{ s.details.android }}
+            </span>
+            <span class="device-summary-item serial" data-tauri-drag-region>
+              <Hash aria-hidden="true" data-tauri-drag-region />
+              <span data-tauri-drag-region>{{ w.device.value.serial }}</span>
+            </span>
           </p>
           <p v-else data-tauri-drag-region>{{ t('连接 Android 设备，开始管理') }}</p>
         </div>

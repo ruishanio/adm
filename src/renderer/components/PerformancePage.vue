@@ -146,7 +146,7 @@ const pssMax = computed(() => Math.max(64 * 1024 ** 2, ...perf.points.value.map(
     <p>{{ t('连接后可查看实时性能曲线。') }}</p>
   </section>
   <section v-else class="performance-page" :aria-label="t('性能监控')">
-    <div class="performance-toolbar">
+    <div class="workspace-toolbar performance-toolbar">
       <div class="performance-vitals">
         <span :title="t('运行时间')"
           ><Timer aria-hidden="true" /><span class="sr-only">{{ t('运行时间') }}</span
@@ -342,7 +342,7 @@ const pssMax = computed(() => Math.max(64 * 1024 ** 2, ...perf.points.value.map(
         </header>
         <p v-if="appsError" class="performance-error" role="alert">{{ appsError }}</p>
         <p v-if="!s.packageName" class="field-hint">
-          {{ t('选择应用，查看渲染帧率、卡顿比例和 PSS 内存。') }}
+          {{ t('选择一个应用，查看性能数据。') }}
         </p>
         <template v-else>
           <div class="performance-metric-row">
@@ -363,28 +363,33 @@ const pssMax = computed(() => Math.max(64 * 1024 ** 2, ...perf.points.value.map(
             />
           </div>
           <p v-if="sample?.app && !sample.app.frames.length" class="field-hint">
-            {{ t('应用未运行或未提供 HWUI 帧统计。') }}
+            {{ t('暂无帧率数据，应用可能未运行或不支持此项统计。') }}
           </p>
           <div class="performance-metric-row">
             <div class="performance-metric-summary">
-              <h3>{{ t('应用 PSS') }}</h3>
+              <h3>{{ t('内存（PSS）') }}</h3>
               <strong class="performance-reading memory-color">{{ bytes(sample?.app?.pssBytes) }}</strong>
             </div>
             <PerformanceChart
-              :label="t('应用 PSS')"
+              :label="t('内存（PSS）')"
               :points="pssPoints"
               :colors="['var(--install)']"
               :maximum="pssMax"
               :maximum-label="bytes(pssMax)"
             />
           </div>
+          <!-- 选中应用后再解释指标，避免空态先展示采样术语和统计限制。 -->
+          <details class="performance-help">
+            <summary><ChevronRight aria-hidden="true" />{{ t('指标说明') }}</summary>
+            <p>{{ t('FPS：应用界面每秒绘制的帧数。画面静止时可为 0。') }}</p>
+            <p>{{ t('卡顿比例：采样期间，系统判定为卡顿的帧所占比例。') }}</p>
+            <p>{{ t('PSS：应用占用的内存，共享内存按比例计入。') }}</p>
+            <p>
+              {{ t('帧率来自 Android 界面渲染统计（HWUI），不代表屏幕刷新率，部分游戏和视频画面不计入。') }}
+            </p>
+          </details>
         </template>
       </section>
-      <details class="performance-help">
-        <summary><ChevronRight aria-hidden="true" />{{ t('指标说明') }}</summary>
-        <p>{{ t('显示最近 2 分钟；“—”表示等待采样或设备未提供数据。') }}</p>
-        <p>{{ t('基于 HWUI 新增渲染帧统计，静止画面可能为 0；部分游戏和视频不适用。') }}</p>
-      </details>
     </div>
   </section>
 </template>

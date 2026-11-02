@@ -108,7 +108,7 @@ function pauseOnNavigate(event: KeyboardEvent) {
 
 <template>
   <section class="logs-page" :aria-label="t('设备日志')">
-    <div class="logs-toolbar">
+    <div class="workspace-toolbar">
       <div class="logs-filters">
         <div class="logs-app-field">
           <label class="sr-only" for="log-app">{{ t('应用') }}</label>
@@ -136,7 +136,7 @@ function pauseOnNavigate(event: KeyboardEvent) {
           <label class="sr-only" for="log-level">{{ t('级别') }}</label>
           <AppSelect id="log-level" v-model="s.level" :options="levels" />
         </div>
-        <label class="logs-search" for="log-keyword"
+        <label class="toolbar-search" for="log-keyword"
           ><Search aria-hidden="true" /><span class="sr-only">{{ t('日志关键词') }}</span>
           <Input
             id="log-keyword"
@@ -146,11 +146,11 @@ function pauseOnNavigate(event: KeyboardEvent) {
             type="search"
           />
         </label>
-        <label class="checkbox logs-crash-filter" for="log-crashes"
+        <label class="checkbox" for="log-crashes"
           ><Checkbox id="log-crashes" v-model="s.crashesOnly" />{{ t('仅崩溃') }}</label
         >
       </div>
-      <div class="logs-command-bar">
+      <div class="toolbar-actions logs-command-bar">
         <div v-if="s.dropped || s.truncated" class="logs-buffer-notice" role="status">
           <span v-if="s.dropped">{{ t('已淘汰 {count} 条旧日志', { count: s.dropped }) }}</span>
           <span v-if="s.truncated">{{ t('{count} 条超长日志已截断', { count: s.truncated }) }}</span>
@@ -293,8 +293,10 @@ function pauseOnNavigate(event: KeyboardEvent) {
       @close="selected = undefined"
     >
       <div class="dialog-body">
-        <p class="field-hint">
-          UID {{ selected.uid || '—' }} · PID {{ selected.pid || '—' }} · TID {{ selected.tid || '—' }}
+        <p class="field-hint metadata-inline">
+          <span>UID {{ selected.uid || '—' }}</span>
+          <span>PID {{ selected.pid || '—' }}</span>
+          <span>TID {{ selected.tid || '—' }}</span>
         </p>
         <pre class="log-detail-text">{{ selected.raw }}</pre>
       </div>

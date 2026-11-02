@@ -115,7 +115,7 @@ pub fn parse_runtime(text: &str) -> RuntimeInfo {
     {
         if let Ok(ip) = m[2].parse::<std::net::Ipv4Addr>() {
             if !ip.is_loopback() && !ip.is_unspecified() {
-                let address = format!("{} · {ip}", &m[1]);
+                let address = format!("{}: {ip}", &m[1]);
                 if !addresses.contains(&address) {
                     addresses.push(address);
                 }
@@ -223,7 +223,7 @@ mod tests {
         assert_eq!(info.battery.temperature, Some(0.0));
         assert_eq!(info.battery.voltage, Some(4.1));
         assert_eq!(info.battery.power, ["USB"]);
-        assert_eq!(info.addresses, ["wlan0 · 192.0.2.4"]);
+        assert_eq!(info.addresses, ["wlan0: 192.0.2.4"]);
     }
 
     #[test]

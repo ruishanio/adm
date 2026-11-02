@@ -11,18 +11,10 @@ const w = useWorkbench();
 <template>
   <div class="applications-page">
     <InstalledAppsPage>
-      <template #heading="{ count }">
-        <header class="applications-heading">
-          <div class="applications-title">
-            <h2>{{ t('已安装应用') }}</h2>
-            <span v-if="count !== undefined" class="applications-count">{{
-              t('{count} 个应用', { count })
-            }}</span>
-          </div>
-          <Button class="primary" :disabled="!!w.state.busy" @click="w.openInstall">
-            <PackagePlus aria-hidden="true" />{{ t('安装应用') }}
-          </Button>
-        </header>
+      <template #actions>
+        <Button variant="ghost" class="quiet" :disabled="!!w.state.busy" @click="w.openInstall">
+          <PackagePlus aria-hidden="true" />{{ t('安装应用') }}
+        </Button>
       </template>
     </InstalledAppsPage>
   </div>

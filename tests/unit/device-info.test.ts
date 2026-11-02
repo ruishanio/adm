@@ -39,7 +39,7 @@ const details: Details = {
       overrideDensity: 320,
       battery: { present: true, percent: 0, status: 3, health: 2, temperature: 0, voltage: 4.1, power: [] },
       uptimeSeconds: 90061,
-      addresses: ['wlan0 · 192.0.2.4'],
+      addresses: ['wlan0: 192.0.2.4'],
     },
   },
 };

@@ -281,8 +281,17 @@ code {
   border-radius: 3px;
   color: var(--muted);
 }
-.separator-dot {
-  margin: 0 8px;
+/* 并列的辅助信息用间距分组，窄窗口按完整字段换行，不插入装饰分隔符。 */
+.metadata-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  min-width: 0;
+}
+.metadata-inline > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
   color: var(--muted);
 }
 .app {
@@ -425,18 +434,31 @@ code {
   color: var(--foreground);
 }
 .device-caption {
-  grid-column: 2/-1;
   font-size: 12px;
   font-weight: 400;
   color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-variant-numeric: tabular-nums;
 }
-.device-caption > span {
-  margin: 0 5px;
+.device-identifier {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.device-caption > svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 1.5;
+  flex-shrink: 0;
+}
+/* 非在线设备保留可见文字状态，不依赖图标或颜色区分授权问题。 */
+.device-state-text {
+  flex-shrink: 0;
 }
 .status-dot {
   display: inline-block;
@@ -590,12 +612,15 @@ code {
 }
 .device-title {
   min-width: 0;
+  flex: 1;
 }
 .device-title h1 {
   font-size: 16px;
   font-weight: 600;
   line-height: 1.5;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .device-title p {
   font-size: 12px;
@@ -606,10 +631,33 @@ code {
   margin-top: 2px;
   min-width: 0;
 }
-.device-title .status-dot {
-  margin-right: 6px;
+.device-summary {
+  gap: 4px 16px;
+}
+.device-summary-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+.device-summary-item > svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 1.5;
+  flex-shrink: 0;
+}
+.device-connection .status-dot {
   width: 5px;
   height: 5px;
+}
+.device-connection {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--muted);
 }
 .serial {
   font-variant-numeric: tabular-nums;
@@ -670,17 +718,89 @@ code {
   display: flex;
   flex-direction: column;
 }
-.logs-toolbar {
+/* 工具栏与性能应用选择器共用浅灰字段样式，表单弹窗保持原有边框。 */
+.workspace-toolbar {
+  --toolbar-field-height: max(30px, var(--control-height));
   flex-shrink: 0;
-  padding: 12px 20px 8px;
+  padding: 10px 20px 8px;
   border-bottom: 1px solid var(--line);
+}
+.toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--toolbar-field-height);
+}
+.workspace-toolbar .app-select-trigger,
+.performance-app-picker .app-select-trigger,
+.toolbar-search input {
+  height: var(--toolbar-field-height, max(30px, var(--control-height)));
+  font-size: 12px;
+  border-color: transparent;
+  background: var(--sidebar);
+  box-shadow: none;
+}
+.workspace-toolbar .app-select-trigger:hover:not(:disabled),
+.workspace-toolbar .app-select-trigger[data-state='open'],
+.performance-app-picker .app-select-trigger:hover:not(:disabled),
+.performance-app-picker .app-select-trigger[data-state='open'],
+.toolbar-search input:hover:not(:disabled):not(:focus) {
+  border-color: transparent;
+  background: var(--hover);
+}
+.toolbar-search {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+.toolbar-search > svg {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: var(--muted);
+  pointer-events: none;
+}
+.toolbar-search input {
+  padding-left: 30px;
+  width: 100%;
+}
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-top: 6px;
+  min-height: calc(var(--control-height) + 6px);
+}
+.workspace-toolbar button.quiet {
+  font-size: 12px;
+  padding-inline: 8px;
+  gap: 6px;
+}
+.workspace-toolbar button.quiet:not(:disabled) > svg {
+  color: var(--muted);
+}
+.workspace-toolbar .checkbox {
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin: 0;
+  font-size: 12px;
+}
+.toolbar-meta {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 /* 筛选只占一行；应用和级别控制宽度，剩余空间留给关键词，窄工作区也不拆散字段。 */
 .logs-filters {
   display: grid;
-  grid-template-columns: minmax(152px, 220px) 152px minmax(140px, 1fr) max-content;
+  grid-template-columns: minmax(152px, 220px) 152px minmax(140px, 1fr) auto;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 .logs-app-field {
   display: flex;
@@ -702,32 +822,9 @@ code {
 .logs-level-field {
   min-width: 0;
 }
-.logs-search {
-  position: relative;
-  min-width: 0;
-}
-.logs-search svg {
-  position: absolute;
-  left: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 16px;
-  height: 16px;
-  color: var(--muted);
-}
-.logs-search input {
-  padding-left: 30px;
-  width: 100%;
-}
-.logs-crash-filter {
-  white-space: nowrap;
-}
 .logs-command-bar {
-  display: flex;
-  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 8px;
 }
 .logs-buffer-notice {
   display: flex;
@@ -746,11 +843,6 @@ code {
   align-items: center;
   gap: 4px;
   margin-left: auto;
-  margin-right: -8px;
-}
-.logs-actions button {
-  padding-inline: 8px;
-  gap: 6px;
 }
 .logs-error {
   color: var(--error);
@@ -1140,39 +1232,13 @@ button.log-row.log-crash {
   gap: 0;
   min-width: 0;
 }
-.applications-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin: 0 20px 12px;
-  flex-shrink: 0;
-}
-.applications-title {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-  min-width: 0;
-}
-.applications-title h2,
-.applications-heading > button {
-  flex-shrink: 0;
-}
-.applications-count {
-  color: var(--muted);
-  font-size: 12px;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-}
 /* 应用列表独立滚动，安装入口、搜索和表头在紧凑窗口中仍保持可用。 */
 .installed-app-content {
   overflow: hidden;
   display: flex;
   flex-direction: column;
   /* 列表贴齐工作区，水平边距仅留给上方控件，滚动条靠窗口右侧。 */
-  padding-inline: 0;
-  padding-bottom: 0;
+  padding: 0;
   scrollbar-gutter: auto;
 }
 .installed-app-content > [data-slot='tabs-content'][data-state='active'],
@@ -1182,41 +1248,6 @@ button.log-row.log-crash {
   display: flex;
   flex: 1;
   flex-direction: column;
-}
-.apps-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-shrink: 0;
-  margin: 0 20px 12px;
-}
-.apps-search {
-  flex: 1;
-  min-width: 180px;
-  max-width: 480px;
-  position: relative;
-}
-.apps-search > svg {
-  width: 16px;
-  height: 16px;
-  position: absolute;
-  left: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--muted);
-  pointer-events: none;
-}
-.apps-search input {
-  padding-left: 30px;
-  width: 100%;
-}
-.apps-toolbar .checkbox {
-  white-space: nowrap;
-  margin: 0;
-  font-size: 12px;
-}
-.apps-refresh {
-  flex-shrink: 0;
 }
 /* 可调列宽表格将表头与正文分开，纵向滚动条从表头下方开始。 */
 .resizable-table {
@@ -1557,8 +1588,7 @@ button.log-row.log-crash {
   font-size: 12px;
   overflow-wrap: anywhere;
 }
-.install-target span {
-  display: block;
+.install-target > .metadata-inline {
   margin-top: 4px;
 }
 .install-feedback {
@@ -1645,17 +1675,6 @@ button.log-row.log-crash {
   flex-direction: column;
   min-height: 0;
 }
-.file-controls {
-  flex-shrink: 0;
-  padding: 10px 20px 8px;
-  border-bottom: 1px solid var(--line);
-}
-.file-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  min-height: 30px;
-}
 .file-breadcrumbs,
 .file-path-editor {
   display: flex;
@@ -1663,7 +1682,7 @@ button.log-row.log-crash {
   min-width: 0;
   flex: 1;
   gap: 2px;
-  height: 30px;
+  height: var(--toolbar-field-height);
   padding: 0 4px;
   border: 1px solid transparent;
   border-radius: var(--radius-control);
@@ -1712,28 +1731,9 @@ button.log-row.log-crash {
   font-family: 'SFMono-Regular', Consolas, monospace;
   font-size: 12px;
 }
-.file-actions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding-top: 6px;
-}
-.file-actions button {
-  font-size: 12px;
-  padding-inline: 8px;
-  background: transparent;
-  border-color: transparent;
-}
-.file-actions button svg {
-  color: var(--muted);
-}
 .file-actions .upload-chevron {
   width: 12px;
   height: 12px;
-}
-.file-actions > .muted {
-  margin-left: auto;
-  font-size: 12px;
 }
 .toolbar-separator {
   height: 16px;
@@ -2494,13 +2494,10 @@ svg.icon-performance {
   flex-direction: column;
 }
 .performance-toolbar {
-  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 12px 10px 20px;
-  border-bottom: 1px solid var(--line);
 }
 .performance-vitals,
 .performance-controls,
@@ -2645,6 +2642,9 @@ button.performance-core-toggle {
   justify-content: space-between;
   color: var(--muted);
   font-size: 10px;
+  /* WebKit 更新时间文字时可能短暂收缩行盒；预留行高，避免底部滚动位置被夹回。 */
+  line-height: 1.5;
+  min-height: 1.5em;
   margin-top: 4px;
   font-variant-numeric: tabular-nums;
 }

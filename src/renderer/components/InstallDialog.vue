@@ -28,7 +28,10 @@ const properties = computed(() =>
     <div class="dialog-body install-dialog-body">
       <p class="install-target muted">
         {{ w.online.value ? t('目标：{name}', { name: w.title.value }) : t('请先选择已连接的设备') }}
-        <span v-if="w.online.value">{{ w.device.value?.serial }} · {{ t('主用户（用户 0）') }}</span>
+        <span v-if="w.online.value" class="metadata-inline">
+          <span>{{ w.device.value?.serial }}</span
+          ><span>{{ t('主用户（用户 0）') }}</span>
+        </span>
       </p>
       <section>
         <div class="section-heading">
@@ -47,9 +50,10 @@ const properties = computed(() =>
             ><div class="package-symbol"><Package aria-hidden="true" /></div>
             <div class="package-title">
               <strong>{{ s.apk.fileName }}</strong
-              ><span
-                >{{ sizeLabel(s.apk.size) }}<span class="separator-dot">·</span>{{ t('APK 安装包') }}</span
-              >
+              ><span class="metadata-inline">
+                <span>{{ sizeLabel(s.apk.size) }}</span
+                ><span>{{ t('APK 安装包') }}</span>
+              </span>
             </div>
             <Button
               variant="ghost"
