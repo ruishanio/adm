@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { api } from '@/lib/api';
 import { createWorkbench, workbenchKey } from '@/composables/workbench';
+import { useFocusMode } from '@/composables/focus-mode';
 import { connection, deviceStatus } from '../shared/contracts';
 import Sidebar from './components/Sidebar.vue';
 import SidebarDivider from './components/SidebarDivider.vue';
@@ -33,6 +34,7 @@ import AppDialog from './components/AppDialog.vue';
 const w = createWorkbench(api),
   s = w.state;
 provide(workbenchKey, w);
+useFocusMode();
 let unlisten: (() => void) | undefined,
   unlistenResize: (() => void) | undefined,
   disposed = false;

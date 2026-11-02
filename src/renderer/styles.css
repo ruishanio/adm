@@ -204,16 +204,30 @@ select:disabled {
   color: var(--muted);
 }
 input:not([type='checkbox']):focus,
-select:focus {
+textarea:focus {
   border-color: var(--focus);
-  outline: 2px solid var(--focus);
-  outline-offset: 1px;
   box-shadow: none;
 }
-button:focus-visible,
-[tabindex]:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
+/* 全局只在键盘交互时画外框，覆盖原生元素及 Portal 中的控件；输入仍保留单层编辑边框。 */
+:where(button, a[href], input, select, textarea, summary, [tabindex]):focus {
+  outline: none;
+}
+:root[data-focus-mode='keyboard']
+  :where(button, a[href], input, select, textarea, summary, [tabindex]):focus-visible:where(
+    :not(
+      :disabled,
+      [aria-disabled='true'],
+      [data-disabled],
+      [role='dialog'],
+      [role='tabpanel'],
+      [role='menu'],
+      [role^='menuitem'],
+      [role='listbox'],
+      [role='option']
+    )
+  ) {
+  outline: var(--focus-outline-width, 2px) solid var(--focus);
+  outline-offset: var(--focus-outline-offset, 2px);
 }
 input[type='checkbox'] {
   appearance: auto;
@@ -222,10 +236,6 @@ input[type='checkbox'] {
   height: 15px;
   margin: 0;
   flex-shrink: 0;
-}
-input[type='checkbox']:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
 }
 input[type='checkbox']:disabled {
   opacity: 0.45;
@@ -378,6 +388,10 @@ code {
 .device-row:disabled {
   opacity: 1;
 }
+.device-row,
+.file-table tr {
+  --focus-outline-offset: -2px;
+}
 /* 图标与名称、连接说明组成的两行内容整体居中。 */
 .device-copy {
   min-width: 0;
@@ -508,6 +522,7 @@ code {
   padding-right: 4px;
 }
 .sidebar-divider {
+  --focus-outline-width: 0px;
   grid-column: 2;
   grid-row: 1;
   position: relative;
@@ -532,7 +547,8 @@ code {
 .sidebar-divider:active::after {
   background: var(--control-border);
 }
-.sidebar-divider:focus-visible::after {
+/* 分栏只使用中间细线提示键盘焦点，不给扩展命中区叠加通用外框。 */
+:root[data-focus-mode='keyboard'] .sidebar-divider:focus-visible::after {
   background: var(--focus);
 }
 .workspace {
@@ -815,11 +831,6 @@ code {
 .owner-config-toggle:hover:not(:disabled) {
   background: var(--surface-subtle);
 }
-.info-disclosure summary:focus-visible,
-.owner-config-toggle:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
-}
 .info-disclosure > .device-properties {
   padding: 0 4px 12px 28px;
 }
@@ -963,6 +974,13 @@ code {
   flex: 1;
   min-height: 0;
   overflow: auto;
+}
+/* 尾部间距随列表内容滚动，仅在到达末尾时露出，不占用固定的窗口底部空间。 */
+.apps-scroll::after,
+.file-scroll::after {
+  content: '';
+  display: block;
+  height: 12px;
 }
 .apps-table {
   width: 100%;
@@ -1343,6 +1361,7 @@ code {
 }
 .file-path-editor input,
 .file-path-editor input:focus {
+  --focus-outline-width: 0px;
   border: none;
   outline: none;
   box-shadow: none;
@@ -1387,7 +1406,6 @@ code {
   flex: 1;
   overflow: auto;
   padding: 0;
-  margin-bottom: 12px;
 }
 .file-table {
   border-collapse: separate;

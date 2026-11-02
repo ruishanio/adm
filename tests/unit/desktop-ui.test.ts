@@ -10,6 +10,7 @@ import Sidebar from '../../src/renderer/components/Sidebar.vue';
 import SettingsDialog from '../../src/renderer/components/SettingsDialog.vue';
 import FilesPage from '../../src/renderer/components/FilesPage.vue';
 import { createWorkbench, workbenchKey } from '../../src/renderer/composables/workbench';
+import { useFocusMode } from '../../src/renderer/composables/focus-mode';
 import type { Api } from '../../src/shared/contracts';
 const cleanups: (() => void)[] = [];
 beforeEach(() => setLanguage('zh-CN'));
@@ -40,7 +41,10 @@ function setup() {
     language: vi.fn(async () => {}),
     listFiles: vi.fn(async () => []),
   } as unknown as Api;
-  const w = scope.run(() => createWorkbench(api))!;
+  const w = scope.run(() => {
+    useFocusMode();
+    return createWorkbench(api);
+  })!;
   w.state.snapshot = {
     devices: [{ serial: 'test', transportId: '1', state: 'device', model: 'Test' }],
     settings: { adbPath: '', endpoint: 'host:5555', deviceNames: {}, hiddenDevices: [], sidebarWidth: 248 },
@@ -73,7 +77,7 @@ it('组件到达后展开配置，检查通过并勾选后才可设置', async (
   expect(action().attributes('disabled')).toBeUndefined();
 });
 
-it('鼠标选择设备后保留键盘焦点，F2 不再打开备注编辑', async () => {
+it('鼠标选择设备保留焦点但隐藏焦点框，键盘操作恢复提示，F2 不打开备注编辑', async () => {
   const w = setup();
   const view = mount(Sidebar, {
     global: { provide: { [workbenchKey as symbol]: w } },
@@ -82,8 +86,12 @@ it('鼠标选择设备后保留键盘焦点，F2 不再打开备注编辑', asyn
   cleanups.push(() => view.unmount());
   await flushPromises();
   const row = view.get('.device-row');
+  await row.trigger('pointerdown');
   await row.trigger('click');
   expect(document.activeElement).toBe(row.element);
+  expect(document.documentElement.dataset.focusMode).toBe('pointer');
+  await row.trigger('keydown', { key: 'ArrowDown' });
+  expect(document.documentElement.dataset.focusMode).toBe('keyboard');
   await row.trigger('keydown', { key: 'F2' });
   expect(w.state.modal).toBeNull();
   expect(view.text()).not.toContain('F2');
@@ -99,7 +107,10 @@ it('分栏按拖动位移调整，保持两侧最小宽度，释放后保存并�
   cleanups.push(() => view.unmount());
   const divider = view.get('[role="separator"]');
   // 从边界附近的扩展命中区开始，不应因初始坐标偏差导致跳动。
+  await divider.trigger('pointerdown');
   await divider.trigger('mousedown', { button: 0, clientX: 252 });
+  expect(document.activeElement).toBe(divider.element);
+  expect(document.documentElement.dataset.focusMode).toBe('pointer');
   window.dispatchEvent(new MouseEvent('mousemove', { clientX: 252 }));
   expect(w.sidebar.value).toBe(248);
   window.dispatchEvent(new MouseEvent('mousemove', { clientX: 304 }));
@@ -114,6 +125,7 @@ it('分栏按拖动位移调整，保持两侧最小宽度，释放后保存并�
   window.dispatchEvent(new MouseEvent('mousemove', { clientX: 300 }));
   expect(w.sidebar.value).toBe(459);
   await divider.trigger('keydown', { key: 'ArrowLeft' });
+  expect(document.documentElement.dataset.focusMode).toBe('keyboard');
   expect(w.api.sidebarWidth).toHaveBeenLastCalledWith(449);
   await divider.trigger('keydown', { key: 'Home' });
   expect(w.api.sidebarWidth).toHaveBeenLastCalledWith(248);
