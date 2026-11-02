@@ -2,7 +2,7 @@
 
 # ADM
 
-**Android Device Manager**
+**Device manager for Android™**
 
 在桌面上连接 Android 设备、安装应用、管理文件与配置设备所有者。
 
@@ -28,6 +28,7 @@ ADM 将常用的 ADB 操作放进一个桌面工作台。通过 USB 或网络连
 | **设备工作台**     | 自动发现 USB、网络与模拟器设备；分组查看系统构建、CPU、内存、存储、屏幕与电池；右键备注名称、复制标识或隐藏设备。 |
 | **USB 与网络连接** | 提供 USB 调试指引、网络地址连接和 Android 11+ 无线调试配对。                                                      |
 | **拖拽安装 APK**   | 读取包名、版本与管理组件，覆盖安装到主用户，完成后回读安装结果；支持显式允许测试包。                              |
+| **已安装应用**     | 显示真实应用名称，按名称或包名搜索主用户的应用，查看版本、API、安装时间和路径；确认后卸载用户应用并回读结果，系统应用仅供查看。              |
 | **设备所有者**     | 检查管理应用、现有所有者、用户和账号，确认授权后执行设置，并回读结果。                                            |
 | **文件管理**       | 浏览目录、上传多个文件或文件夹、下载文件、新建文件夹，以及右键重命名和删除。                                      |
 | **桌面体验**       | 可调侧栏、键盘快捷键、平台窗口控件，以及可随时切换的简体中文和英语界面。                                          |
@@ -53,22 +54,24 @@ ADM 将常用的 ADB 操作放进一个桌面工作台。通过 USB 或网络连
 
 当前版本：**0.1.0**，对应标签 `v0.1.0`。
 
-目前通过 **[GitHub Actions → Package](https://github.com/ruishanio/adm/actions/workflows/package.yml)** 提供构建产物：打开一次成功的运行，在页面底部 **Artifacts** 下载对应平台文件。下载需要登录 GitHub，产物保留 **30 天**。
+发布流程完成后，可在 **[GitHub Releases](https://github.com/ruishanio/adm/releases)** 的 **Assets** 下载对应平台安装包。推送包含新发布流程的版本 tag 后，两个平台全部构建、安装验证及分发许可检查通过，才会自动发布；测试后缀 tag 标记为 **Pre-release**。
+
+此前的测试构建仍可从 **[GitHub Actions → Package](https://github.com/ruishanio/adm/actions/workflows/package.yml)** 页面底部 **Artifacts** 下载。Actions 下载需要登录 GitHub，产物保留 **30 天**；历史 tag 不会因修改工作流自动补发 Release。
 
 | 平台        | 系统要求                                      | 安装方式                                                                            |
 | ----------- | --------------------------------------------- | ----------------------------------------------------------------------------------- |
 | **macOS**   | Apple Silicon（ARM64），macOS 13.3 或更新版本 | 打开 `ADM-版本-mac-arm64.dmg`，将 ADM 拖入 Applications。                           |
 | **Windows** | x64，Windows 10 / 11                          | 运行 `ADM-版本-win-x64-setup.exe`，按向导安装。缺少 WebView2 时，安装器会联网下载。 |
 
-每个平台的产物还包含应用 ZIP、`SHA256SUMS.txt` 和记录版本与提交的 `build-info.json`。Windows 便携 ZIP 需要系统已安装 WebView2。
+Release 同时提供两平台应用 ZIP、统一的 `SHA256SUMS.txt`，以及记录版本与提交的 `build-info-mac-arm64.json`、`build-info-win-x64.json`。Actions Artifact 内仍保留各平台的 `SHA256SUMS.txt` 和 `build-info.json`。Windows 便携 ZIP 需要系统已安装 WebView2。
 
-> 当前为测试分发：Package 工作流不自动创建 GitHub Release；macOS 使用 ad-hoc 签名，尚未公证，Windows 尚未代码签名。仅提供以上两个平台的构建。
+> macOS 使用 ad-hoc 签名，尚未公证，Windows 尚未代码签名。仅提供以上两个平台的构建。
 
 ## 快速开始
 
 1. **连接设备**：USB 连接时，先在 Android 上开启 USB 调试并确认授权；网络连接时，点击侧栏「连接设备」，填写调试地址，或先完成无线配对。
 2. **选择目标**：在左侧设备列表选中设备，查看连接状态与系统信息。多台设备可以同时显示，每次操作作用于当前选中的设备。
-3. **开始管理**：在「安装应用」拖入 APK；在「文件管理」浏览和传输文件；需要配置设备所有者时，进入「设备信息 → 配置设备所有者」。
+3. **开始管理**：在「应用管理」点击「安装应用」，或直接拖入 APK 打开安装弹窗；在「文件管理」浏览和传输文件；需要配置设备所有者时，进入「设备信息 → 配置设备所有者」。
 
 需要留意的操作边界：
 
@@ -116,6 +119,18 @@ npm run dev
 
 提交改动前请阅读 [AGENTS.md](AGENTS.md)，运行与改动相关的检查，并在 PR 中说明行为变化与验证结果。
 
+## 许可与第三方声明
+
+ADM 自有代码采用 [MIT 许可](LICENSE)。第三方软件、复制组件及图形保持各自的许可，MIT 不覆盖第三方商标或独立运行时条款。
+
+在应用中打开 **设置 → 第三方许可**，仅显示必要图形署名和适用的平台通知；点击“查看完整声明”可用系统文本应用离线阅读原文。安装包也附带可读的 `legal/` 目录，包含完整原文、Android 图形署名、WebView2 条款与隐私通知，以及五个 MPL 组件的精确版本源码归档。获取位置见 [源码说明](legal/SOURCE-CODE.md)，更新流程见 [许可材料维护](legal/README.md)。
+
+当前 ADB 37.0.1 对应源码、libusb 重新链接材料，以及 Windows 最终分发核对仍有待办，见 [发布核对状态](legal/release-review.json)。本地构建可以继续；在这些问题关闭前，自动公开产物上传会中止。材料校验通过不等于所有分发义务已解决。
+
+Android is a trademark of Google LLC.
+
+The Android robot is reproduced or modified from work created and shared by Google and used according to terms described in the [Creative Commons 3.0 Attribution License](https://creativecommons.org/licenses/by/3.0/). ADM 对机器人颜色及其在设备底座上的布局进行了调整。
+
 ## 致谢
 
-ADM 基于 [Tauri](https://tauri.app/)、[Vue](https://vuejs.org/)、[shadcn-vue](https://www.shadcn-vue.com/)、[Tailwind CSS](https://tailwindcss.com/) 和 [Lucide](https://lucide.dev/) 构建，设备连接使用 Google 官方 [Android SDK Platform-Tools](https://developer.android.com/tools/releases/platform-tools)。ADB 的 NOTICE 随分发包保留，前端第三方许可随静态资源嵌入应用。
+ADM 基于 [Tauri](https://tauri.app/)、[Vue](https://vuejs.org/)、[shadcn-vue](https://www.shadcn-vue.com/)、[Tailwind CSS](https://tailwindcss.com/) 和 [Lucide](https://lucide.dev/) 构建，设备连接使用 Google 官方 [Android SDK Platform-Tools](https://developer.android.com/tools/releases/platform-tools)。第三方声明随应用保留。
