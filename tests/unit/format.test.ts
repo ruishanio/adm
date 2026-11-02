@@ -1,11 +1,5 @@
 import { expect, it } from 'vitest';
-import {
-  sizeLabel,
-  deviceBytes,
-  performanceBytes,
-  rateLabel,
-  percentLabel,
-} from '../../src/renderer/lib/format';
+import { sizeLabel, deviceBytes, performanceBytes, rateLabel, percentLabel } from '@/shared/utils/format';
 it('二进制边界使用准确单位，零值和缺失值严格区分', () => {
   expect(sizeLabel(0)).toBe('0 B');
   expect(sizeLabel(1023)).toBe('1023 B');

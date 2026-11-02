@@ -2,11 +2,11 @@
 import { defineComponent, effectScope, nextTick } from 'vue';
 import { mount, flushPromises } from '@vue/test-utils';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { createWorkbench, workbenchKey } from '../../src/renderer/composables/workbench';
-import ApplicationsPage from '../../src/renderer/features/apps/ApplicationsPage.vue';
-import InstallDialog from '../../src/renderer/features/install/InstallDialog.vue';
-import type { Api, AppDetails, InstalledApp, Snapshot } from '../../src/shared/contracts';
-import { setLanguage } from '../../src/shared/i18n';
+import { createWorkbench } from '@/app/workbench';
+import ApplicationsPage from '@/features/apps/ApplicationsPage.vue';
+import InstallDialog from '@/features/apps/install/InstallDialog.vue';
+import type { Api, AppDetails, InstalledApp, Snapshot } from '@/shared/api/types';
+import { setLanguage } from '@/shared/i18n/index';
 
 const first = { serial: 'one', transportId: '1', state: 'device', model: '第一台' };
 const second = { serial: 'two', transportId: '2', state: 'device', model: '第二台' };
@@ -117,19 +117,19 @@ async function setup() {
   const scope = effectScope();
   cleanup.push(() => scope.stop());
   const w = scope.run(() => createWorkbench(api))!;
-  await w.refresh();
+  await w.devices.refresh();
   await flushPromises();
-  w.state.tab = 'apps';
+  w.workspace.state.tab = 'apps';
   await flushPromises();
   const view = mount(
     defineComponent({
       components: { ApplicationsPage, InstallDialog },
-      setup: () => ({ s: w.state }),
+      setup: () => ({ s: w.workspace.state }),
       template: '<ApplicationsPage /><InstallDialog v-if="s.modal === \'install\'" />',
     }),
     {
       attachTo: document.body,
-      global: { provide: { [workbenchKey as symbol]: w } },
+      global: { provide: w.providers },
     },
   );
   cleanup.push(() => view.unmount());
@@ -156,7 +156,7 @@ it('名称优先显示，支持中文名称及包名搜索，系统应用可选�
   await view.get('#show-system-apps').trigger('click');
   expect(view.findAll('tbody tr')).toHaveLength(1);
   expect(view.get('tbody').text()).toContain('已禁用');
-  w.state.appQuery = '';
+  w.apps.state.appQuery = '';
   await nextTick();
   expect(view.findAll('tbody tr')).toHaveLength(2);
 });
@@ -176,19 +176,19 @@ it('信息页和卸载确认分开，取消不执行卸载，确认携带原设�
   expect(document.querySelector('.app-details-body')?.textContent).toContain(app.packageName);
   expect(api.uninstallApp).not.toHaveBeenCalled();
   await click('取消');
-  expect(w.state.modal).toBe('app-details');
+  expect(w.workspace.state.modal).toBe('app-details');
   await click('卸载应用');
   vi.mocked(api.listApps).mockResolvedValue([system]);
   await click('确认卸载');
   expect(api.uninstallApp).toHaveBeenCalledExactlyOnceWith(first, app.packageName, '42', true);
-  expect(w.state.modal).toBeNull();
-  expect(w.state.apps).toEqual([system]);
-  expect(w.state.notice?.error).toBeUndefined();
+  expect(w.workspace.state.modal).toBeNull();
+  expect(w.apps.state.apps).toEqual([system]);
+  expect(w.workspace.state.notice?.error).toBeUndefined();
 });
 it('同名应用仍按包名区分，名称缺失时保留可搜索的包名', async () => {
   const { view, w, api } = await setup();
   const other = { ...app, packageName: 'com.example.other' };
-  w.state.apps = [app, other, { ...app, packageName: 'com.example.unnamed', label: null }];
+  w.apps.state.apps = [app, other, { ...app, packageName: 'com.example.unnamed', label: null }];
   await nextTick();
   expect(view.findAll('.app-name').map((n) => n.text())).toEqual([
     '随手笔记 Notes',
@@ -198,34 +198,34 @@ it('同名应用仍按包名区分，名称缺失时保留可搜索的包名', a
   await view.findAll('tbody tr')[1].trigger('dblclick');
   await flushPromises();
   expect(api.appDetails).toHaveBeenCalledWith(first, other.packageName);
-  w.state.modal = null;
+  w.workspace.state.modal = null;
   await view.get('input[type="search"]').setValue('unnamed');
   expect(view.findAll('tbody tr')).toHaveLength(1);
   expect(view.get('.app-name').text()).toBe('com.example.unnamed');
 });
 it('卸载失败保留详情、错误和列表，不误报成功', async () => {
   const { api, w } = await setup();
-  await w.openApp(app);
-  w.state.modal = 'app-uninstall';
+  await w.apps.openApp(app);
+  w.workspace.state.modal = 'app-uninstall';
   vi.mocked(api.uninstallApp).mockRejectedValue(new Error('设备策略拒绝卸载'));
-  await w.uninstallApp();
-  expect(w.state.application?.error).toBe('设备策略拒绝卸载');
-  expect(w.state.apps).toHaveLength(2);
-  expect(w.state.modal).toBe('app-uninstall');
-  expect(w.state.busy).toBe('');
+  await w.apps.uninstallApp();
+  expect(w.apps.state.application?.error).toBe('设备策略拒绝卸载');
+  expect(w.apps.state.apps).toHaveLength(2);
+  expect(w.workspace.state.modal).toBe('app-uninstall');
+  expect(w.workspace.state.busy).toBe('');
 });
 it('断连关闭旧确认，重新连接不能复用原设备的数据或卸载目标', async () => {
   const { api, w, snapshot } = await setup();
-  await w.openApp(app);
-  w.state.modal = 'app-uninstall';
+  await w.apps.openApp(app);
+  w.workspace.state.modal = 'app-uninstall';
   snapshot.devices = [{ ...first, transportId: '99' }, second];
-  await w.refresh();
+  await w.devices.refresh();
   await flushPromises();
-  expect(w.state.apps).toEqual([]);
-  expect(w.state.application).toBeUndefined();
-  await w.uninstallApp();
+  expect(w.apps.state.apps).toEqual([]);
+  expect(w.apps.state.application).toBeUndefined();
+  await w.apps.uninstallApp();
   expect(api.uninstallApp).not.toHaveBeenCalled();
-  w.select(second);
+  w.devices.select(second);
   await flushPromises();
   expect(api.listApps).toHaveBeenLastCalledWith(second);
 });
@@ -238,31 +238,31 @@ it('迟到的应用列表不会污染其他设备，读取失败可手动重试�
         finish = resolve;
       }),
   );
-  const pending = w.loadApps();
+  const pending = w.apps.loadApps();
   snapshot.devices = [second];
-  await w.refresh();
+  await w.devices.refresh();
   finish([app]);
   await pending;
-  expect(w.state.apps).toEqual([]);
+  expect(w.apps.state.apps).toEqual([]);
   vi.mocked(api.listApps).mockRejectedValue(new Error('offline'));
-  w.select(second);
+  w.devices.select(second);
   await flushPromises();
   const count = vi.mocked(api.listApps).mock.calls.length;
   await flushPromises();
   expect(api.listApps).toHaveBeenCalledTimes(count);
-  expect(w.state.appsLoaded).toBe(false);
+  expect(w.apps.state.appsLoaded).toBe(false);
   vi.mocked(api.listApps).mockResolvedValue([system]);
-  await w.loadApps();
-  expect(w.state.appsLoaded).toBe(true);
+  await w.apps.loadApps();
+  expect(w.apps.state.appsLoaded).toBe(true);
 });
 it('安装入口打开弹窗，取消不安装且保留列表搜索，关闭后恢复按钮焦点', async () => {
   const { w, view, api } = await setup();
-  w.state.appQuery = '笔记';
+  w.apps.state.appQuery = '笔记';
   const button = view.findAll('button').find((b) => b.text() === '安装应用')!;
   (button.element as HTMLButtonElement).focus();
   await button.trigger('click');
   await flushPromises();
-  expect(w.state.modal).toBe('install');
+  expect(w.workspace.state.modal).toBe('install');
   expect(document.querySelector('.install-dialog')).not.toBeNull();
   expect(view.find('[role="tablist"]').exists()).toBe(false);
   expect(document.querySelector('.install-dialog')?.textContent).toContain('目标：第一台');
@@ -273,37 +273,37 @@ it('安装入口打开弹窗，取消不安装且保留列表搜索，关闭后�
   ).toBe(true);
   document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
   await flushPromises();
-  expect(w.state.modal).toBeNull();
+  expect(w.workspace.state.modal).toBeNull();
   expect(api.install).not.toHaveBeenCalled();
-  expect(w.state.appQuery).toBe('笔记');
+  expect(w.apps.state.appQuery).toBe('笔记');
   await vi.waitFor(() => expect(document.activeElement).toBe(button.element));
 });
 it('选择或拖入 APK 打开安装弹窗，弹窗内可更换，其他弹窗阻止拖入', async () => {
   const { w, api } = await setup();
-  await w.chooseApk();
-  expect(w.state.modal).toBe('install');
-  w.dragEnter();
-  expect(w.state.dragging).toBe(true);
-  await w.drop(['/tmp/drop.apk']);
-  expect(w.state.apk?.fileName).toBe('drop.apk');
-  expect(w.state.dragging).toBe(false);
-  w.closeInstall();
-  w.state.tab = 'info';
-  w.dragEnter();
-  expect(w.state.tab).toBe('info');
-  expect(w.state.modal).toBeNull();
-  await w.drop(['/tmp/drop.apk']);
-  expect(w.state.tab).toBe('apps');
-  expect(w.state.modal).toBe('install');
-  w.closeInstall();
-  w.state.modal = 'settings';
-  await w.drop(['/tmp/blocked.apk']);
+  await w.install.chooseApk();
+  expect(w.workspace.state.modal).toBe('install');
+  w.install.dragEnter();
+  expect(w.install.state.dragging).toBe(true);
+  await w.install.drop(['/tmp/drop.apk']);
+  expect(w.install.state.apk?.fileName).toBe('drop.apk');
+  expect(w.install.state.dragging).toBe(false);
+  w.install.closeInstall();
+  w.workspace.state.tab = 'info';
+  w.install.dragEnter();
+  expect(w.workspace.state.tab).toBe('info');
+  expect(w.workspace.state.modal).toBeNull();
+  await w.install.drop(['/tmp/drop.apk']);
+  expect(w.workspace.state.tab).toBe('apps');
+  expect(w.workspace.state.modal).toBe('install');
+  w.install.closeInstall();
+  w.workspace.state.modal = 'settings';
+  await w.install.drop(['/tmp/blocked.apk']);
   expect(api.dropApk).toHaveBeenCalledTimes(2);
-  expect(w.state.modal).toBe('settings');
+  expect(w.workspace.state.modal).toBe('settings');
 });
 it('安装时不能关闭弹窗，可停止等待；失败保留安装包，重试成功关闭并刷新列表', async () => {
   const { w, api } = await setup();
-  await w.chooseApk();
+  await w.install.chooseApk();
   let fail!: (error: Error) => void;
   vi.mocked(api.install).mockImplementationOnce(
     () =>
@@ -314,11 +314,11 @@ it('安装时不能关闭弹窗，可停止等待；失败保留安装包，重�
   vi.mocked(api.cancel).mockImplementation(async () => {
     fail(new Error('已停止等待，请刷新核对结果。'));
   });
-  const pending = w.install();
+  const pending = w.install.install();
   await flushPromises();
   document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-  w.closeInstall();
-  expect(w.state.modal).toBe('install');
+  w.install.closeInstall();
+  expect(w.workspace.state.modal).toBe('install');
   expect(document.querySelector<HTMLButtonElement>('[aria-label="关闭对话框"]')?.disabled).toBe(true);
   [...document.querySelectorAll<HTMLButtonElement>('.install-dialog button')]
     .find((b) => b.textContent?.trim() === '停止等待')!
@@ -326,32 +326,32 @@ it('安装时不能关闭弹窗，可停止等待；失败保留安装包，重�
   await pending;
   await flushPromises();
   expect(document.querySelector('.install-feedback[role="alert"]')?.textContent).toContain('已停止等待');
-  expect(w.state.modal).toBe('install');
-  expect(w.state.apk?.fileName).toBe('test.apk');
+  expect(w.workspace.state.modal).toBe('install');
+  expect(w.install.state.apk?.fileName).toBe('test.apk');
   const before = vi.mocked(api.listApps).mock.calls.length;
-  await w.install();
+  await w.install.install();
   await flushPromises();
-  expect(w.state.modal).toBeNull();
+  expect(w.workspace.state.modal).toBeNull();
   expect(api.install).toHaveBeenLastCalledWith(first, 'apk', false);
   expect(api.listApps).toHaveBeenCalledTimes(before + 1);
-  expect(w.state.appsLoaded).toBe(true);
-  expect(w.state.notice?.text).toContain('安装成功');
+  expect(w.apps.state.appsLoaded).toBe(true);
+  expect(w.workspace.state.notice?.text).toContain('安装成功');
 });
 it('安装已成功但列表读取失败时不误报安装失败或重复安装', async () => {
   const { w, api } = await setup();
-  await w.chooseApk();
+  await w.install.chooseApk();
   vi.mocked(api.listApps).mockRejectedValue(new Error('offline'));
-  await w.install();
+  await w.install.install();
   await flushPromises();
-  expect(w.state.modal).toBeNull();
-  expect(w.state.appsLoaded).toBe(false);
-  expect(w.state.notice?.text).toContain('应用已安装，但列表刷新失败');
+  expect(w.workspace.state.modal).toBeNull();
+  expect(w.apps.state.appsLoaded).toBe(false);
+  expect(w.workspace.state.notice?.text).toContain('应用已安装，但列表刷新失败');
   expect(api.install).toHaveBeenCalledTimes(1);
 });
 it('安装过程中断线关闭旧弹窗，迟到结果不进入另一会话的所有者配置', async () => {
   const { w, api, snapshot } = await setup();
-  await w.chooseApk();
-  w.state.ownerAfter = true;
+  await w.install.chooseApk();
+  w.owner.state.ownerAfter = true;
   let finish!: () => void;
   vi.mocked(api.install).mockImplementationOnce(
     () =>
@@ -359,16 +359,16 @@ it('安装过程中断线关闭旧弹窗，迟到结果不进入另一会话的�
         finish = resolve;
       }),
   );
-  const pending = w.install();
+  const pending = w.install.install();
   snapshot.devices = [{ ...first, transportId: '99' }, second];
-  await w.refresh();
-  expect(w.state.modal).toBeNull();
+  await w.devices.refresh();
+  expect(w.workspace.state.modal).toBeNull();
   finish();
   await pending;
-  expect(w.state.tab).toBe('apps');
-  expect(w.state.ownerExpanded).toBe(false);
-  expect(w.state.consent).toBe(false);
-  expect(w.state.apps).toEqual([]);
+  expect(w.workspace.state.tab).toBe('apps');
+  expect(w.owner.state.ownerExpanded).toBe(false);
+  expect(w.owner.state.consent).toBe(false);
+  expect(w.apps.state.apps).toEqual([]);
 });
 
 it('应用列宽可拖动、复位并持久保存，表头独立滚动且详情入口可用', async () => {
@@ -416,13 +416,13 @@ it('应用列宽可拖动、复位并持久保存，表头独立滚动且详情�
 
 it('单击整行选择不打开弹窗，方向键切换选中，回车查看详情', async () => {
   const { view, w, api } = await setup();
-  w.state.apps = [app, { ...app, packageName: 'com.example.second', label: null }];
+  w.apps.state.apps = [app, { ...app, packageName: 'com.example.second', label: null }];
   await nextTick();
   const rows = view.findAll('tbody tr');
   await rows[0].get('td:nth-child(3)').trigger('click');
   expect(rows[0].attributes('aria-selected')).toBe('true');
   expect(rows[0].classes()).toContain('selected');
-  expect(w.state.modal).toBeNull();
+  expect(w.workspace.state.modal).toBeNull();
   expect(api.appDetails).not.toHaveBeenCalled();
   await rows[0].trigger('keydown', { key: 'ArrowDown' });
   expect(rows[1].attributes('aria-selected')).toBe('true');
@@ -446,35 +446,35 @@ it('更多菜单与右键提供相同操作，清除数据需确认且取消不�
   ]);
   items.find((n) => n.textContent?.includes('清除应用数据'))!.click();
   await flushPromises();
-  expect(w.state.modal).toBe('app-confirm');
+  expect(w.workspace.state.modal).toBe('app-confirm');
   expect(document.querySelector('[role="dialog"]')?.textContent).toContain('无法撤销');
   expect(api.appAction).not.toHaveBeenCalled();
   [...document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')]
     .find((n) => n.textContent === '取消')!
     .click();
   await flushPromises();
-  expect(w.state.modal).toBeNull();
+  expect(w.workspace.state.modal).toBeNull();
   expect(api.appAction).not.toHaveBeenCalled();
   await vi.waitFor(() => expect(document.activeElement).toBe(view.get('tbody tr').element));
-  await w.openApp(app, 'clear-data');
-  await w.confirmAppAction();
+  await w.apps.openApp(app, 'clear-data');
+  await w.apps.confirmAppAction();
   expect(api.appAction).toHaveBeenCalledExactlyOnceWith(first, app.packageName, '42', 'clear-data', true);
-  expect(w.state.notice?.text).toBe('应用数据已清除。');
+  expect(w.workspace.state.notice?.text).toBe('应用数据已清除。');
 });
 it('操作失败保留确认和错误，断连撤销确认，打开应用后触发运行状态刷新', async () => {
   const { w, api, snapshot } = await setup();
-  await w.launchApp(app);
+  await w.apps.launchApp(app);
   expect(api.appAction).toHaveBeenCalledWith(first, app.packageName, '42', 'launch', false);
-  expect(w.state.appStateEpoch).toBe(1);
-  await w.openApp(app, 'force-stop');
+  expect(w.apps.state.appStateEpoch).toBe(1);
+  await w.apps.openApp(app, 'force-stop');
   vi.mocked(api.appAction).mockRejectedValueOnce(new Error('设备策略拒绝操作'));
-  await w.confirmAppAction();
-  expect(w.state.modal).toBe('app-confirm');
-  expect(w.state.application?.error).toContain('设备策略');
+  await w.apps.confirmAppAction();
+  expect(w.workspace.state.modal).toBe('app-confirm');
+  expect(w.apps.state.application?.error).toContain('设备策略');
   snapshot.devices = [{ ...first, transportId: '99' }, second];
-  await w.refresh();
-  expect(w.state.modal).toBeNull();
+  await w.devices.refresh();
+  expect(w.workspace.state.modal).toBeNull();
   const calls = vi.mocked(api.appAction).mock.calls.length;
-  await w.confirmAppAction();
+  await w.apps.confirmAppAction();
   expect(api.appAction).toHaveBeenCalledTimes(calls);
 });

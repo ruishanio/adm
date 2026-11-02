@@ -1,7 +1,7 @@
 import { afterEach, expect, it } from 'vitest';
-import { deviceInfoGroups, buildProperties, overviewMetrics } from '../../src/renderer/lib/device-info';
-import { setLanguage } from '../../src/shared/i18n';
-import type { Details } from '../../src/shared/contracts';
+import { deviceInfoGroups, buildProperties, overviewMetrics } from '@/features/devices/format';
+import { setLanguage } from '@/shared/i18n/index';
+import type { Details } from '@/shared/api/types';
 
 const details: Details = {
   manufacturer: 'Google',

@@ -15,15 +15,8 @@
     "isolatedModules": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/renderer/*"]
+      "@/*": ["src/*"]
     }
   },
-  "include": [
-    "src/renderer/**/*.ts",
-    "src/renderer/**/*.vue",
-    "src/shared",
-    "tests/unit/**/*.ts",
-    "vite.config.ts",
-    "vitest.config.ts"
-  ]
+  "include": ["src/**/*.ts", "src/**/*.vue", "tests/unit/**/*.ts", "vite.config.ts", "vitest.config.ts"]
 }

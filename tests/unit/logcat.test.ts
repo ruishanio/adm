@@ -2,11 +2,11 @@
 import { computed, effectScope, nextTick } from 'vue';
 import { mount, flushPromises } from '@vue/test-utils';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { createLogcat, matchesLog } from '../../src/renderer/features/logs/session';
-import { workbenchKey } from '../../src/renderer/composables/workbench';
-import DeviceLogsPage from '../../src/renderer/features/logs/DeviceLogsPage.vue';
-import type { Api, LogBatch, LogEntry } from '../../src/shared/contracts';
-import { setLanguage } from '../../src/shared/i18n';
+import { createLogcat, matchesLog } from '@/features/logs/session';
+import { workspaceKey } from '@/shared/composables/workspace';
+import DeviceLogsPage from '@/features/logs/DeviceLogsPage.vue';
+import type { Api, LogBatch, LogEntry } from '@/shared/api/types';
+import { setLanguage } from '@/shared/i18n/index';
 const target = { serial: 'emulator-5570', transportId: '42' };
 const entry = (id: number, extra: Partial<LogEntry> = {}): LogEntry => ({
   id,
@@ -64,7 +64,7 @@ async function mountLogPage() {
     attachTo: document.body,
     global: {
       provide: {
-        [workbenchKey as symbol]: {
+        [workspaceKey as symbol]: {
           api,
           state: { selected: 'device' },
           online: computed(() => true),
@@ -292,7 +292,7 @@ it('日志页只渲染可见行，显示应用名称，崩溃详情保留完整�
   };
   const view = mount(DeviceLogsPage, {
     attachTo: document.body,
-    global: { provide: { [workbenchKey as symbol]: w } },
+    global: { provide: { [workspaceKey as symbol]: w } },
   });
   cleanup.push(() => view.unmount());
   await flushPromises();

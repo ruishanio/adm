@@ -2,9 +2,9 @@
 import { computed, defineComponent, nextTick, reactive } from 'vue';
 import { mount, flushPromises } from '@vue/test-utils';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { useAppResources } from '../../src/renderer/features/apps/resources';
-import type { Workbench } from '../../src/renderer/composables/workbench';
-import type { InstalledApp } from '../../src/shared/contracts';
+import { useAppResources } from '@/features/apps/resources';
+import type { FeatureContext } from '@/shared/composables/workspace';
+import type { InstalledApp } from '@/shared/api/types';
 const cleanup: (() => void)[] = [];
 let hidden = false;
 beforeEach(() => {
@@ -31,6 +31,9 @@ function setup() {
     tab: 'apps',
     busy: '',
     appsLoaded: true,
+    appQuery: '',
+    showSystemApps: false,
+    application: undefined,
     appStateEpoch: 0,
     apps: [app()],
   });
@@ -48,12 +51,12 @@ function setup() {
       serial: state.selected.split('@')[0],
       transportId: state.selected.split('@')[1],
     })),
-  } as unknown as Workbench;
+  } as unknown as FeatureContext;
   let resources!: ReturnType<typeof useAppResources>;
   const view = mount(
     defineComponent({
       setup() {
-        resources = useAppResources(w);
+        resources = useAppResources(w, state);
         return () => null;
       },
     }),

@@ -1,7 +1,7 @@
 /** 检查前端入口与测试可达的源码；命名再导出按实际导入解析，避免空闲组件被 index.ts 掩盖。 */
 import ts from 'typescript';
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
-import { resolve, dirname, relative, extname } from 'node:path';
+import { resolve, dirname, relative, extname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const source = resolve(root, 'src');
@@ -18,12 +18,22 @@ const parsed = new Map(),
 function target(from, specifier) {
   if (!specifier.startsWith('.') && !specifier.startsWith('@/')) return;
   const base = specifier.startsWith('@/')
-    ? resolve(source, 'renderer', specifier.slice(2))
+    ? resolve(source, specifier.slice(2))
     : resolve(dirname(from), specifier);
   const path = [base, `${base}.ts`, `${base}.vue`, resolve(base, 'index.ts')].find(
     (p) => existsSync(p) && extname(p),
   );
   if (!path) failures.add(`${relative(root, from)} 引用不存在的 ${specifier}`);
+  if (path) {
+    const fromLayer = relative(source, from).split(sep)[0];
+    const toLayer = relative(source, path).split(sep)[0];
+    // 共享层不得反向读取业务，业务不得依赖应用组装层；类型导入也遵守同一边界。
+    if (
+      (fromLayer === 'shared' && ['app', 'features'].includes(toLayer)) ||
+      (fromLayer === 'features' && toLayer === 'app')
+    )
+      failures.add(`${relative(root, from)} 不允许反向依赖 ${relative(root, path)}`);
+  }
   return path;
 }
 function parse(path) {
@@ -82,11 +92,11 @@ function visit(path, requested = ['*']) {
   }
 }
 // 生产入口与现有测试入口均为有效用途，不把测试工具或类型文件误当作无用文件。
-for (const entry of [resolve(source, 'renderer/main.ts'), ...files(resolve(root, 'tests/unit'))])
-  visit(entry);
+for (const entry of [resolve(source, 'main.ts'), ...files(resolve(root, 'tests/unit'))]) visit(entry);
 for (const path of files(source))
   if (!reached.has(path)) failures.add(`${relative(root, path)} 没有入口或测试引用`);
 if (failures.size) {
   console.error([...failures].join('\n'));
   process.exitCode = 1;
-} else console.log(`源码引用检查通过：${files(source).length} 个 Vue / TypeScript 文件均可达。`);
+} else
+  console.log(`源码引用检查通过：${files(source).length} 个 Vue / TypeScript 文件均可达，分层依赖正确。`);

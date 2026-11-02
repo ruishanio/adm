@@ -2,16 +2,12 @@
 import { computed } from 'vue';
 import { mount, flushPromises } from '@vue/test-utils';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import {
-  cpuUsage,
-  performancePoint,
-  createPerformance,
-} from '../../src/renderer/features/performance/session';
-import PerformancePage from '../../src/renderer/features/performance/PerformancePage.vue';
-import PerformanceChart from '../../src/renderer/features/performance/PerformanceChart.vue';
-import { workbenchKey } from '../../src/renderer/composables/workbench';
-import type { Api, PerformanceSample, CpuCounter } from '../../src/shared/contracts';
-import { setLanguage } from '../../src/shared/i18n';
+import { cpuUsage, performancePoint, createPerformance } from '@/features/performance/session';
+import PerformancePage from '@/features/performance/PerformancePage.vue';
+import PerformanceChart from '@/features/performance/PerformanceChart.vue';
+import { workspaceKey } from '@/shared/composables/workspace';
+import type { Api, PerformanceSample, CpuCounter } from '@/shared/api/types';
+import { setLanguage } from '@/shared/i18n/index';
 const target = { serial: 'emulator-5570', transportId: '42' };
 const cpu = (total: number | null, idle: number | null): CpuCounter => ({
   name: 'cpu',
@@ -183,7 +179,7 @@ it('曲线保留缺值断点，设备页显示合法零温度及电量，离开�
   const page = mount(PerformancePage, {
     global: {
       provide: {
-        [workbenchKey as symbol]: {
+        [workspaceKey as symbol]: {
           api,
           online: computed(() => true),
           device: computed(() => target),

@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 import { effectScope, nextTick } from 'vue';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { createWorkbench } from '../../src/renderer/composables/workbench';
-import { targetKey, type Api, type Snapshot } from '../../src/shared/contracts';
-import { language, setLanguage } from '../../src/shared/i18n';
+import { createWorkbench } from '@/app/workbench';
+import { type Api, type Snapshot } from '@/shared/api/types';
+import { targetKey } from '@/shared/utils/device';
+import { language, setLanguage } from '@/shared/i18n/index';
 const first = { serial: 'one', transportId: '1', model: '第一台', state: 'device' };
 const second = { serial: 'two', transportId: '2', model: '第二台', state: 'device' };
 let snapshot: Snapshot, api: Api;
@@ -50,27 +51,27 @@ async function ready() {
   const scope = effectScope();
   scopes.push(scope);
   const w = scope.run(() => createWorkbench(api))!;
-  await w.refresh();
+  await w.devices.refresh();
   await vi.waitFor(() => {
-    expect(w.state.details?.serial).toBe('one');
-    expect(w.state.busy).toBe('');
+    expect(w.devices.state.details?.serial).toBe('one');
+    expect(w.workspace.state.busy).toBe('');
   });
   return w;
 }
 it('文件页切换设备等待信息读取后再读取新目录', async () => {
   const w = await ready();
-  w.state.tab = 'files';
-  await vi.waitFor(() => expect(w.state.files[0]?.name).toBe('one.txt'));
-  w.select(second);
-  await vi.waitFor(() => expect(w.state.files[0]?.name).toBe('two.txt'));
-  w.select(first);
-  await vi.waitFor(() => expect(w.state.files[0]?.name).toBe('one.txt'));
+  w.workspace.state.tab = 'files';
+  await vi.waitFor(() => expect(w.files.state.files[0]?.name).toBe('one.txt'));
+  w.devices.select(second);
+  await vi.waitFor(() => expect(w.files.state.files[0]?.name).toBe('two.txt'));
+  w.devices.select(first);
+  await vi.waitFor(() => expect(w.files.state.files[0]?.name).toBe('one.txt'));
 });
 it('首次保存确定的语言，后续刷新不重新识别或覆盖手动选择', async () => {
   const w = await ready();
   expect(api.language).toHaveBeenCalledExactlyOnceWith('en');
   setLanguage('zh-CN');
-  await w.refresh();
+  await w.devices.refresh();
   expect(api.language).toHaveBeenCalledTimes(1);
   expect(language.value).toBe('zh-CN');
 });
@@ -91,64 +92,64 @@ it('首次语言持久化完成前不启动设备详情请求，避免原生任�
   const scope = effectScope();
   scopes.push(scope);
   const w = scope.run(() => createWorkbench(api))!;
-  const refresh = w.refresh();
+  const refresh = w.devices.refresh();
   await vi.waitFor(() => expect(api.language).toHaveBeenCalledTimes(1));
   expect(api.details).not.toHaveBeenCalled();
   saved();
   await refresh;
-  await vi.waitFor(() => expect(w.state.details?.serial).toBe('one'));
-  expect(w.state.notice).toBeNull();
+  await vi.waitFor(() => expect(w.devices.state.details?.serial).toBe('one'));
+  expect(w.workspace.state.notice).toBeNull();
 });
 it('切回曾访问的设备不会把空缓存误当作已加载', async () => {
   const w = await ready();
-  w.state.tab = 'files';
-  await vi.waitFor(() => expect(w.state.files).toHaveLength(1));
-  w.state.tab = 'info';
-  w.select(second);
-  await vi.waitFor(() => expect(w.state.details?.serial).toBe('two'));
-  w.select(first);
-  await vi.waitFor(() => expect(w.state.details?.serial).toBe('one'));
-  w.state.tab = 'files';
-  await vi.waitFor(() => expect(w.state.files[0]?.name).toBe('one.txt'));
+  w.workspace.state.tab = 'files';
+  await vi.waitFor(() => expect(w.files.state.files).toHaveLength(1));
+  w.workspace.state.tab = 'info';
+  w.devices.select(second);
+  await vi.waitFor(() => expect(w.devices.state.details?.serial).toBe('two'));
+  w.devices.select(first);
+  await vi.waitFor(() => expect(w.devices.state.details?.serial).toBe('one'));
+  w.workspace.state.tab = 'files';
+  await vi.waitFor(() => expect(w.files.state.files[0]?.name).toBe('one.txt'));
 });
 it('断连撤销所有者授权，重连要求重新选择传输会话', async () => {
   const w = await ready();
-  w.state.ownerCheck = { canSet: true, alreadySet: false, summary: 'ok' };
-  w.state.consent = true;
+  w.owner.state.ownerCheck = { canSet: true, alreadySet: false, summary: 'ok' };
+  w.owner.state.consent = true;
   snapshot.devices = [{ ...first, transportId: '99' }];
-  await w.refresh();
-  expect(w.device.value).toBeUndefined();
-  expect(w.state.consent).toBe(false);
-  expect(w.state.ownerCheck).toBeUndefined();
-  expect(w.state.selected).toBe(targetKey(first));
+  await w.devices.refresh();
+  expect(w.workspace.device.value).toBeUndefined();
+  expect(w.owner.state.consent).toBe(false);
+  expect(w.owner.state.ownerCheck).toBeUndefined();
+  expect(w.workspace.state.selected).toBe(targetKey(first));
 });
 it('跨页和换设备保留已选安装包', async () => {
   const w = await ready();
-  await w.chooseApk();
-  expect(w.state.tab).toBe('apps');
-  w.state.tab = 'info';
-  w.select(second);
-  await vi.waitFor(() => expect(w.state.details?.serial).toBe('two'));
-  expect(w.state.apk?.fileName).toBe('test.apk');
+  await w.install.chooseApk();
+  expect(w.workspace.state.tab).toBe('apps');
+  w.workspace.state.tab = 'info';
+  w.devices.select(second);
+  await vi.waitFor(() => expect(w.devices.state.details?.serial).toBe('two'));
+  expect(w.install.state.apk?.fileName).toBe('test.apk');
 });
 it('安装后没有组件也展开手动填写入口且不自动授权', async () => {
   const w = await ready();
-  await w.chooseApk();
-  w.state.ownerAfter = true;
-  await w.install();
-  expect(w.state.modal).toBeNull();
-  expect(w.state.tab).toBe('info');
-  expect(w.state.ownerExpanded).toBe(true);
-  expect(w.state.consent).toBe(false);
+  await w.install.chooseApk();
+  w.owner.state.ownerAfter = true;
+  await w.install.install();
+  expect(w.workspace.state.modal).toBeNull();
+  expect(w.workspace.state.tab).toBe('info');
+  expect(w.owner.state.ownerExpanded).toBe(true);
+  expect(w.owner.state.consent).toBe(false);
 });
 it('变更组件撤销旧检查和授权', async () => {
   const w = await ready();
-  w.state.ownerCheck = { canSet: true, alreadySet: false, summary: 'ok' };
-  w.state.consent = true;
-  w.state.component = 'com.test/.Other';
+  w.owner.state.ownerCheck = { canSet: true, alreadySet: false, summary: 'ok' };
+  w.owner.state.consent = true;
+  w.owner.state.component = 'com.test/.Other';
   await nextTick();
-  expect(w.state.ownerCheck).toBeUndefined();
-  expect(w.state.consent).toBe(false);
+  expect(w.owner.state.ownerCheck).toBeUndefined();
+  expect(w.owner.state.consent).toBe(false);
 });
 
 it('销毁工作台后移除领域监听，重复销毁不会再触发设备或目录读取', async () => {
@@ -156,8 +157,8 @@ it('销毁工作台后移除领域监听，重复销毁不会再触发设备或�
   w.dispose();
   w.dispose();
   vi.mocked(api.details).mockClear();
-  w.state.selected = targetKey(second);
-  w.state.tab = 'files';
+  w.workspace.state.selected = targetKey(second);
+  w.workspace.state.tab = 'files';
   await nextTick();
   expect(api.details).not.toHaveBeenCalled();
   expect(api.listFiles).not.toHaveBeenCalled();
@@ -171,11 +172,50 @@ it('所有者检查期间断线，迟到结果不能恢复已撤销的授权', a
         finish = resolve;
       }),
   );
-  const checking = w.checkOwner();
+  const checking = w.owner.checkOwner();
   snapshot.devices = [{ ...first, state: 'offline' }];
-  await w.refresh();
+  await w.devices.refresh();
   finish({ canSet: true, alreadySet: false, summary: 'old' });
   await checking;
-  expect(w.state.ownerCheck).toBeUndefined();
-  expect(w.state.consent).toBe(false);
+  expect(w.owner.state.ownerCheck).toBeUndefined();
+  expect(w.owner.state.consent).toBe(false);
+});
+
+it('工作台实例各自拥有业务状态，销毁一份不会停止另一份的设备切换', async () => {
+  const a = await ready();
+  const b = await ready();
+  a.apps.state.appQuery = '只属于第一个工作台';
+  a.files.state.path = '/sdcard/Download';
+  a.owner.state.ownerExpanded = true;
+  expect(b.apps.state.appQuery).toBe('');
+  expect(b.files.state.path).toBe('/sdcard');
+  expect(b.owner.state.ownerExpanded).toBe(false);
+  a.dispose();
+  b.devices.select(second);
+  await vi.waitFor(() => expect(b.devices.state.details?.serial).toBe('two'));
+  expect(a.devices.state.details?.serial).toBe('one');
+  b.dispose();
+});
+it('功能状态独立后，安装任务仍会阻止文件写入，完成后才允许创建目录', async () => {
+  const w = await ready();
+  await w.install.chooseApk();
+  let complete!: () => void;
+  vi.mocked(api.install).mockImplementation(
+    () =>
+      new Promise<void>((resolve) => {
+        complete = resolve;
+      }),
+  );
+  api.mkdir = vi.fn(async () => {});
+  api.listApps = vi.fn(async () => []);
+  const installing = w.install.install();
+  expect(api.install).toHaveBeenCalledTimes(1);
+  w.workspace.state.name = 'new-folder';
+  await w.files.createFolder();
+  expect(api.mkdir).not.toHaveBeenCalled();
+  complete();
+  await installing;
+  await w.files.createFolder();
+  expect(api.mkdir).toHaveBeenCalledExactlyOnceWith(first, '/sdcard', 'new-folder');
+  w.dispose();
 });

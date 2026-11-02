@@ -2,16 +2,16 @@
 import { effectScope, nextTick } from 'vue';
 import { mount, flushPromises } from '@vue/test-utils';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { language, locale, setLanguage } from '../../src/shared/i18n';
-import DeviceInfoPage from '../../src/renderer/features/devices/DeviceInfoPage.vue';
-import ConnectionDialog from '../../src/renderer/components/ConnectionDialog.vue';
-import SidebarDivider from '../../src/renderer/components/SidebarDivider.vue';
-import Sidebar from '../../src/renderer/components/Sidebar.vue';
-import SettingsDialog from '../../src/renderer/components/SettingsDialog.vue';
-import FilesPage from '../../src/renderer/features/files/FilesPage.vue';
-import { createWorkbench, workbenchKey } from '../../src/renderer/composables/workbench';
-import { useFocusMode } from '../../src/renderer/composables/focus-mode';
-import type { Api } from '../../src/shared/contracts';
+import { language, locale, setLanguage } from '@/shared/i18n/index';
+import DeviceInfoPage from '@/features/devices/DeviceInfoPage.vue';
+import ConnectionDialog from '@/features/devices/ConnectionDialog.vue';
+import SidebarDivider from '@/app/layout/SidebarDivider.vue';
+import Sidebar from '@/features/devices/Sidebar.vue';
+import SettingsDialog from '@/features/settings/SettingsDialog.vue';
+import FilesPage from '@/features/files/FilesPage.vue';
+import { createWorkbench } from '@/app/workbench';
+import { useFocusMode } from '@/shared/composables/focus-mode';
+import type { Api } from '@/shared/api/types';
 const cleanups: (() => void)[] = [];
 beforeEach(() => {
   setLanguage('zh-CN');
@@ -57,42 +57,42 @@ function setup() {
     useFocusMode();
     return createWorkbench(api);
   })!;
-  w.state.snapshot = {
+  w.devices.state.snapshot = {
     devices: [{ serial: 'test', transportId: '1', state: 'device', model: 'Test' }],
     settings: { adbPath: '', endpoint: 'host:5555', deviceNames: {}, hiddenDevices: [], sidebarWidth: 248 },
     adbPath: '/adb',
     platform: 'darwin',
     version: '0.1.0',
   };
-  w.state.selected = 'test@1';
+  w.workspace.state.selected = 'test@1';
   return w;
 }
 it('组件到达后展开配置，检查通过并勾选后才可设置', async () => {
   const w = setup();
   const view = mount(DeviceInfoPage, {
-    global: { provide: { [workbenchKey as symbol]: w } },
+    global: { provide: w.providers },
     attachTo: document.body,
   });
   cleanups.push(() => view.unmount());
   await flushPromises();
   expect(view.get('#owner-configuration').attributes('hidden')).toBeDefined();
-  w.state.component = 'com.test/.Admin';
+  w.owner.state.component = 'com.test/.Admin';
   await nextTick();
   expect(view.get('#owner-configuration').attributes('hidden')).toBeUndefined();
   const action = () => view.findAll('button').find((b) => b.text() === '设置设备所有者')!;
   expect(action().attributes('disabled')).toBeDefined();
-  w.state.ownerCheck = { canSet: true, alreadySet: false, summary: '检查通过' };
+  w.owner.state.ownerCheck = { canSet: true, alreadySet: false, summary: '检查通过' };
   await nextTick();
   expect(action().attributes('disabled')).toBeDefined();
   await view.get('[role="checkbox"]').trigger('click');
-  expect(w.state.consent).toBe(true);
+  expect(w.owner.state.consent).toBe(true);
   expect(action().attributes('disabled')).toBeUndefined();
 });
 
 it('鼠标选择设备保留焦点但隐藏焦点框，键盘操作恢复提示，F2 不打开备注编辑', async () => {
   const w = setup();
   const view = mount(Sidebar, {
-    global: { provide: { [workbenchKey as symbol]: w } },
+    global: { provide: w.providers },
     attachTo: document.body,
   });
   cleanups.push(() => view.unmount());
@@ -105,15 +105,15 @@ it('鼠标选择设备保留焦点但隐藏焦点框，键盘操作恢复提示�
   await row.trigger('keydown', { key: 'ArrowDown' });
   expect(document.documentElement.dataset.focusMode).toBe('keyboard');
   await row.trigger('keydown', { key: 'F2' });
-  expect(w.state.modal).toBeNull();
+  expect(w.workspace.state.modal).toBeNull();
   expect(view.text()).not.toContain('F2');
 });
 
 it('分栏按拖动位移调整，保持两侧最小宽度，释放后保存并停止追踪', async () => {
   const w = setup();
-  w.state.viewport = 1100;
+  w.workspace.state.viewport = 1100;
   const view = mount(SidebarDivider, {
-    global: { provide: { [workbenchKey as symbol]: w } },
+    global: { provide: w.providers },
     attachTo: document.body,
   });
   cleanups.push(() => view.unmount());
@@ -124,28 +124,28 @@ it('分栏按拖动位移调整，保持两侧最小宽度，释放后保存并�
   expect(document.activeElement).toBe(divider.element);
   expect(document.documentElement.dataset.focusMode).toBe('pointer');
   window.dispatchEvent(new MouseEvent('mousemove', { clientX: 252 }));
-  expect(w.sidebar.value).toBe(248);
+  expect(w.workspace.sidebar.value).toBe(248);
   window.dispatchEvent(new MouseEvent('mousemove', { clientX: 304 }));
-  expect(w.sidebar.value).toBe(300);
+  expect(w.workspace.sidebar.value).toBe(300);
   window.dispatchEvent(new MouseEvent('mousemove', { clientX: 0 }));
-  expect(w.sidebar.value).toBe(220);
+  expect(w.workspace.sidebar.value).toBe(220);
   window.dispatchEvent(new MouseEvent('mousemove', { clientX: 900 }));
-  expect(w.sidebar.value).toBe(459);
+  expect(w.workspace.sidebar.value).toBe(459);
   window.dispatchEvent(new MouseEvent('mouseup'));
-  expect(w.api.sidebarWidth).toHaveBeenLastCalledWith(459);
+  expect(w.workspace.api.sidebarWidth).toHaveBeenLastCalledWith(459);
   expect(document.body.style.cursor).toBe('');
   window.dispatchEvent(new MouseEvent('mousemove', { clientX: 300 }));
-  expect(w.sidebar.value).toBe(459);
+  expect(w.workspace.sidebar.value).toBe(459);
   await divider.trigger('keydown', { key: 'ArrowLeft' });
   expect(document.documentElement.dataset.focusMode).toBe('keyboard');
-  expect(w.api.sidebarWidth).toHaveBeenLastCalledWith(449);
+  expect(w.workspace.api.sidebarWidth).toHaveBeenLastCalledWith(449);
   await divider.trigger('keydown', { key: 'Home' });
-  expect(w.api.sidebarWidth).toHaveBeenLastCalledWith(248);
+  expect(w.workspace.api.sidebarWidth).toHaveBeenLastCalledWith(248);
 });
 it('连接方式方向键切换，配对与连接地址分开保存', async () => {
   const w = setup();
   const view = mount(ConnectionDialog, {
-    global: { provide: { [workbenchKey as symbol]: w } },
+    global: { provide: w.providers },
     attachTo: document.body,
   });
   cleanups.push(() => view.unmount());
@@ -169,24 +169,24 @@ it('连接方式方向键切换，配对与连接地址分开保存', async () =
   await nextTick();
   document.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
   await flushPromises();
-  expect(w.api.pair).toHaveBeenCalledWith('host:37000', '123456');
+  expect(w.workspace.api.pair).toHaveBeenCalledWith('host:37000', '123456');
   expect(document.querySelector<HTMLInputElement>('input')?.value).toBe('host:5555');
   expect(document.body.textContent).toContain('配对成功');
 });
 it('忙碌时 Escape 不能关闭连接对话框', async () => {
   const w = setup();
-  w.state.modal = 'connect';
+  w.workspace.state.modal = 'connect';
   const view = mount(ConnectionDialog, {
-    global: { provide: { [workbenchKey as symbol]: w } },
+    global: { provide: w.providers },
     attachTo: document.body,
   });
   cleanups.push(() => view.unmount());
   await flushPromises();
-  w.state.busy = '正在连接设备';
+  w.workspace.state.busy = '正在连接设备';
   await nextTick();
   document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
   await flushPromises();
-  expect(w.state.modal).toBe('connect');
+  expect(w.workspace.state.modal).toBe('connect');
 });
 
 it('关闭弹窗后焦点返回触发按钮', async () => {
@@ -195,7 +195,7 @@ it('关闭弹窗后焦点返回触发按钮', async () => {
   trigger.focus();
   const w = setup();
   const view = mount(ConnectionDialog, {
-    global: { provide: { [workbenchKey as symbol]: w } },
+    global: { provide: w.providers },
     attachTo: document.body,
   });
   await flushPromises();
@@ -208,7 +208,7 @@ it('关闭弹窗后焦点返回触发按钮', async () => {
 it('设置语言先保存再即时切换，保存失败保持原偏好', async () => {
   const w = setup();
   const view = mount(SettingsDialog, {
-    global: { provide: { [workbenchKey as symbol]: w } },
+    global: { provide: w.providers },
     attachTo: document.body,
   });
   cleanups.push(() => view.unmount());
@@ -226,23 +226,23 @@ it('设置语言先保存再即时切换，保存失败保持原偏好', async (
   }
   await chooseLanguage('English');
   await flushPromises();
-  expect(w.api.language).toHaveBeenCalledWith('en');
+  expect(w.workspace.api.language).toHaveBeenCalledWith('en');
   expect(language.value).toBe('en');
   expect(document.querySelector('[role="dialog"]')?.textContent).toContain('General');
   expect(document.querySelector('[role="dialog"]')?.textContent).not.toContain('通用');
-  vi.mocked(w.api.language).mockRejectedValueOnce(new Error('disk full'));
+  vi.mocked(w.workspace.api.language).mockRejectedValueOnce(new Error('disk full'));
   await chooseLanguage('简体中文');
   expect(locale.value).toBe('en');
   expect(select.textContent).toBe('English');
-  expect(w.state.notice?.text).toBe('disk full');
+  expect(w.workspace.state.notice?.text).toBe('disk full');
 });
 
 it('路径导航可点击返回父级，直接编辑失败保留输入以便修正', async () => {
   const w = setup();
   await flushPromises();
-  w.state.path = '/sdcard/Download';
+  w.files.state.path = '/sdcard/Download';
   const view = mount(FilesPage, {
-    global: { provide: { [workbenchKey as symbol]: w } },
+    global: { provide: w.providers },
     attachTo: document.body,
   });
   cleanups.push(() => view.unmount());
@@ -250,13 +250,13 @@ it('路径导航可点击返回父级，直接编辑失败保留输入以便修�
   const shared = view.findAll('.file-breadcrumbs button').find((b) => b.text() === '共享存储')!;
   await shared.trigger('click');
   await flushPromises();
-  expect(w.state.path).toBe('/sdcard');
+  expect(w.files.state.path).toBe('/sdcard');
   await view.get('[aria-label="编辑路径"]').trigger('click');
   await view.get('input').setValue('/missing');
-  vi.mocked(w.api.listFiles).mockRejectedValueOnce(new Error('not found'));
+  vi.mocked(w.workspace.api.listFiles).mockRejectedValueOnce(new Error('not found'));
   await view.get('form').trigger('submit');
   await flushPromises();
-  expect(w.state.path).toBe('/sdcard');
+  expect(w.files.state.path).toBe('/sdcard');
   expect(view.get('input').element.value).toBe('/missing');
   await view.get('input').trigger('keydown', { key: 'Escape' });
   expect(view.find('input').exists()).toBe(false);
@@ -266,12 +266,12 @@ it('路径导航可点击返回父级，直接编辑失败保留输入以便修�
 async function fileSetup() {
   const w = setup();
   await flushPromises();
-  w.api.renameFile = vi.fn(async () => {});
-  w.api.deleteFile = vi.fn(async () => {});
-  w.api.upload = vi.fn(async () => true);
-  w.state.files = [{ name: 'folder', path: '/sdcard/folder', type: 'directory', size: 0, modified: 1 }];
+  w.workspace.api.renameFile = vi.fn(async () => {});
+  w.workspace.api.deleteFile = vi.fn(async () => {});
+  w.workspace.api.upload = vi.fn(async () => true);
+  w.files.state.files = [{ name: 'folder', path: '/sdcard/folder', type: 'directory', size: 0, modified: 1 }];
   const view = mount(FilesPage, {
-    global: { provide: { [workbenchKey as symbol]: w } },
+    global: { provide: w.providers },
     attachTo: document.body,
   });
   cleanups.push(() => view.unmount());
@@ -290,8 +290,8 @@ async function selectFileMenu(view: ReturnType<typeof mount>, text: string) {
 it('文件右键重命名保留原会话，冲突在弹窗中显示并允许修正', async () => {
   const { w, view } = await fileSetup();
   await selectFileMenu(view, '重命名');
-  expect(w.state.modal).toBe('file-rename');
-  vi.mocked(w.api.renameFile).mockRejectedValueOnce(new Error('同名文件已存在'));
+  expect(w.workspace.state.modal).toBe('file-rename');
+  vi.mocked(w.workspace.api.renameFile).mockRejectedValueOnce(new Error('同名文件已存在'));
   const input = document.querySelector<HTMLInputElement>('[role="dialog"] input')!;
   input.value = 'renamed';
   input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -299,46 +299,46 @@ it('文件右键重命名保留原会话，冲突在弹窗中显示并允许修�
   const form = document.querySelector('[role="dialog"] form')!;
   form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
   await flushPromises();
-  expect(w.api.renameFile).toHaveBeenCalledWith(
+  expect(w.workspace.api.renameFile).toHaveBeenCalledWith(
     expect.objectContaining({ serial: 'test', transportId: '1' }),
     '/sdcard',
     'folder',
     'renamed',
   );
-  expect(w.state.modal).toBe('file-rename');
+  expect(w.workspace.state.modal).toBe('file-rename');
   expect(document.querySelector('[role="alert"]')?.textContent).toContain('同名');
   form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
   await flushPromises();
-  expect(w.state.modal).toBeNull();
+  expect(w.workspace.state.modal).toBeNull();
 });
 it('文件删除必须确认，取消不调用后端，确认后刷新目录', async () => {
   const { w, view } = await fileSetup();
   await selectFileMenu(view, '删除');
-  expect(w.api.deleteFile).not.toHaveBeenCalled();
+  expect(w.workspace.api.deleteFile).not.toHaveBeenCalled();
   const cancel = [...document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')].find(
     (e) => e.textContent === '取消',
   )!;
   cancel.click();
   await flushPromises();
-  expect(w.state.modal).toBeNull();
-  expect(w.api.deleteFile).not.toHaveBeenCalled();
+  expect(w.workspace.state.modal).toBeNull();
+  expect(w.workspace.api.deleteFile).not.toHaveBeenCalled();
   await selectFileMenu(view, '删除');
   document
     .querySelector('[role="dialog"] form')!
     .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
   await flushPromises();
-  expect(w.api.deleteFile).toHaveBeenCalledExactlyOnceWith(
+  expect(w.workspace.api.deleteFile).toHaveBeenCalledExactlyOnceWith(
     expect.objectContaining({ serial: 'test', transportId: '1' }),
     '/sdcard',
     'folder',
     true,
   );
-  expect(w.api.listFiles).toHaveBeenCalled();
-  expect(w.state.modal).toBeNull();
+  expect(w.workspace.api.listFiles).toHaveBeenCalled();
+  expect(w.workspace.state.modal).toBeNull();
 });
 it('上传菜单区分文件和文件夹，部分失败仍刷新列表并保留错误', async () => {
   const { w, view } = await fileSetup();
-  vi.mocked(w.api.upload).mockRejectedValueOnce(new Error('已上传 1 项；同名冲突'));
+  vi.mocked(w.workspace.api.upload).mockRejectedValueOnce(new Error('已上传 1 项；同名冲突'));
   const trigger = view.findAll('button').find((b) => b.text() === '上传')!;
   await trigger.trigger('keydown', { key: 'Enter' });
   await flushPromises();
@@ -347,20 +347,20 @@ it('上传菜单区分文件和文件夹，部分失败仍刷新列表并保留�
   )!;
   folder.click();
   await flushPromises();
-  expect(w.api.upload).toHaveBeenCalledWith(
+  expect(w.workspace.api.upload).toHaveBeenCalledWith(
     expect.objectContaining({ serial: 'test', transportId: '1' }),
     '/sdcard',
     'folders',
   );
-  expect(w.api.listFiles).toHaveBeenCalled();
-  expect(w.state.notice?.text).toContain('已上传 1 项');
+  expect(w.workspace.api.listFiles).toHaveBeenCalled();
+  expect(w.workspace.state.notice?.text).toContain('已上传 1 项');
 });
 
 it('概览显示常用状态，明细默认收起，刷新仍重新读取详情', async () => {
   const w = setup();
-  const refresh = vi.spyOn(w, 'refresh').mockResolvedValue();
+  const refresh = vi.spyOn(w.devices, 'refresh').mockResolvedValue();
   const view = mount(DeviceInfoPage, {
-    global: { provide: { [workbenchKey as symbol]: w } },
+    global: { provide: w.providers },
   });
   cleanups.push(() => view.unmount());
   await flushPromises();
@@ -408,10 +408,10 @@ it('文件列宽与应用独立保存，表头避开滚动条，切换目录仍�
   expect(header.element.scrollLeft).toBe(180);
   expect(header.element.scrollTop).toBe(0);
   await view.get('tbody tr').trigger('click');
-  expect(w.state.file?.name).toBe('folder');
+  expect(w.files.state.file?.name).toBe('folder');
   await view.get('tbody tr').trigger('dblclick');
   await flushPromises();
-  expect(w.state.path).toBe('/sdcard/folder');
+  expect(w.files.state.path).toBe('/sdcard/folder');
   expect(body.element.scrollTop).toBe(0);
   expect(handles[0].attributes('aria-valuenow')).toBe('720');
   const restored = (await fileSetup()).view;

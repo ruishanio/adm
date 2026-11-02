@@ -1,5 +1,5 @@
 import { afterEach, expect, it } from 'vitest';
-import { english, resolveLocale, setLanguage, t } from '../../src/shared/i18n';
+import { english, resolveLocale, setLanguage, t } from '@/shared/i18n/index';
 afterEach(() => setLanguage('zh-CN'));
 it('首次按系统首选语言初始化，不支持时回退英语，已保存偏好优先', () => {
   expect(resolveLocale(undefined, ['zh-Hans-CN', 'en-US'])).toBe('zh-CN');

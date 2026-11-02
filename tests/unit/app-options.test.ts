@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { readAppOptions, invalidateAppOptions, toAppOptions } from '../../src/renderer/lib/app-options';
-import type { Api, LogApp } from '../../src/shared/contracts';
+import { readAppOptions, invalidateAppOptions, toAppOptions } from '@/shared/api/app-options';
+import type { Api, LogApp } from '@/shared/api/types';
 const target = { serial: 'one', transportId: '1' };
 const list: LogApp[] = [{ packageName: 'com.example.a', label: '应用 A', uid: '10101' }];
 afterEach(() => vi.useRealTimers());

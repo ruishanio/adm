@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 import { computed, effectScope, reactive } from 'vue';
 import { afterEach, expect, it, vi } from 'vitest';
-import { useFileActions } from '../../src/renderer/features/files/actions';
-import { filesState } from '../../src/renderer/features/files/state';
-import { workspaceState } from '../../src/renderer/lib/workspace';
-import { targetKey, type Api, type DeviceFile } from '../../src/shared/contracts';
+import { useFileActions } from '@/features/files/actions';
+import { filesState } from '@/features/files/state';
+import { workspaceState } from '@/shared/composables/workspace';
+import { type Api, type DeviceFile } from '@/shared/api/types';
+import { targetKey } from '@/shared/utils/device';
 
 const devices = [
   { serial: 'one', transportId: '1', state: 'device', model: 'One' },
@@ -26,13 +27,16 @@ function setup() {
   const scope = effectScope();
   scopes.push(scope);
   const actions = scope.run(() =>
-    useFileActions({
+    useFileActions(
+      {
+        state,
+        api,
+        device,
+        online: computed(() => device.value?.state === 'device'),
+        run: async <T>(_label: string, work: () => Promise<T>) => work(),
+      },
       state,
-      api,
-      device,
-      online: computed(() => device.value?.state === 'device'),
-      run: async <T>(_label: string, work: () => Promise<T>) => work(),
-    }),
+    ),
   )!;
   return { state, api, ...actions };
 }

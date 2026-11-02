@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { mount, flushPromises, DOMWrapper } from '@vue/test-utils';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import AppSearchSelect from '../../src/renderer/components/AppSearchSelect.vue';
+import AppSearchSelect from '@/shared/ui/AppSearchSelect.vue';
 
 let view: ReturnType<typeof mount>;
 beforeEach(() => {

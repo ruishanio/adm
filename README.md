@@ -121,6 +121,27 @@ npm run package:mac
 npm run package:win
 ```
 
+目录按业务归属组织，前端保持单应用，Rust 保持单 crate：
+
+```text
+src/
+  app/                 # 根布局、依赖注入、跨功能协调
+  features/            # devices、apps、files、logs、performance、settings
+  shared/              # 公共 UI、样式、工具、通信类型与调用入口
+  main.ts
+src-tauri/src/
+  commands/            # IPC 参数校验与任务分流
+  adb/                 # ADB 定位、执行、取消和进程管理
+  devices/ apps/ files/ logs/ performance/
+  settings/ platform/  # 配置持久化、平台原生菜单
+  state.rs             # 共享会话与任务生命周期
+scripts/               # 开发、构建和发布工具
+tests/                 # 前端测试、发布流程测试及 APK 样例
+resources/             # 打包资源和 README 图片
+```
+
+`npm run build` 包含源码引用、模块依赖和 TypeScript 检查；公共模块不能反向依赖业务或应用组装层。功能状态由各功能独立创建，设备写入仍共用一个任务入口。
+
 构建产物输出到 `release/`。设计、开发与验证文档在本地 `docs/` 中维护，不随仓库分发。
 
 欢迎通过 [Issues](https://github.com/ruishanio/adm/issues) 反馈问题或提出建议。报告问题时，请附上 ADM 版本、电脑系统与架构、Android 版本、连接方式和复现步骤；日志与截图中请隐去设备标识、地址和个人文件信息。

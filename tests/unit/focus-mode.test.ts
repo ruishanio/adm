@@ -2,8 +2,8 @@
 import { effectScope, defineComponent, h, ref } from 'vue';
 import { mount, flushPromises } from '@vue/test-utils';
 import { afterEach, expect, it, vi } from 'vitest';
-import { useFocusMode } from '../../src/renderer/composables/focus-mode';
-import AppDialog from '../../src/renderer/components/AppDialog.vue';
+import { useFocusMode } from '@/shared/composables/focus-mode';
+import AppDialog from '@/shared/ui/AppDialog.vue';
 
 const cleanups: (() => void)[] = [];
 afterEach(() => {
