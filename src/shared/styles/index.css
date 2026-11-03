@@ -13,6 +13,7 @@
 @import './settings-select.css';
 @import './file-actions.css';
 @import './performance.css';
+@import './control.css';
 /* 仅扫描包含界面类名的源码，避免把翻译文本当作 Tailwind 工具类。 */
 @source "../../app";
 @source "../../features";

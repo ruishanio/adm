@@ -22,6 +22,8 @@ uuid = { version = "1", features = ["v4"] }
 zip = { version = "6", default-features = false, features = ["deflate"] }
 tempfile = "3"
 dirs = "6"
+mp4 = "0.14.0"
+bytes = "1"
 
 [profile.release]
 codegen-units = 1

@@ -48,7 +48,8 @@
       "icons/icon.ico"
     ],
     "resources": {
-      "resources/platform-tools/": "platform-tools/"
+      "resources/platform-tools/": "platform-tools/",
+      "resources/scrcpy/": "scrcpy/"
     },
     "macOS": {
       "minimumSystemVersion": "13.3",

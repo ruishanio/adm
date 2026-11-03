@@ -18,6 +18,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parent.parent
 METADATA = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
 SDK_VERSION = "37.0.1"
+SCRCPY = json.loads((ROOT / "src-tauri/resources/scrcpy/version.json").read_text(encoding="utf-8"))
 # 下载来源为 Google 官方仓库，摘要已与官方 SDK 索引对应的文件核对。
 SDK = {
     "mac": ("darwin", "ee39ad5967e95c2a07f04dbcbde96b1a0c916ba376096db5d2f498b7727a5d1d"),
@@ -36,6 +37,9 @@ def prepare(platform):
     pattern = rf"v{re.escape(METADATA['version'])}(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?"
     if os.environ.get("GITHUB_REF_TYPE") == "tag" and not re.fullmatch(pattern, tag):
         raise ValueError(f"tag {tag!r} 必须为 v{METADATA['version']} 或其测试版本后缀")
+    server = ROOT / "src-tauri/resources/scrcpy/scrcpy-server"
+    if hashlib.sha256(server.read_bytes()).hexdigest() != SCRCPY["sha256"]:
+        raise ValueError("scrcpy 服务端的 SHA-256 校验失败")
     suffix, expected = SDK[platform]
     directory = ROOT / "artifacts" / "ci-sdk"
     directory.mkdir(parents=True, exist_ok=True)
@@ -81,6 +85,8 @@ def verify(platform, arch):
         unpacked = ROOT / "release" / "win-unpacked"
         adb_name = "adb.exe"
     required = [executable]
+    required += [str(Path(resources) / "scrcpy" / part).replace("\\", "/")
+                 for part in ["scrcpy-server", "version.json", "LICENSE"]]
     required += [
         str(Path(resources) / "platform-tools" / part).replace("\\", "/")
         for part in [adb_name, "NOTICE.txt", "source.properties"]
@@ -96,6 +102,9 @@ def verify(platform, arch):
         for entry in required:
             if archive.getinfo(entry).file_size == 0:
                 raise ValueError(f"产物文件为空：{entry}")
+        server = archive.read(str(Path(resources) / "scrcpy/scrcpy-server").replace("\\", "/"))
+        if hashlib.sha256(server).hexdigest() != SCRCPY["sha256"]:
+            raise ValueError("包内 scrcpy 服务端与固定版本不一致")
         properties = archive.read(str(Path(resources) / "platform-tools/source.properties").replace("\\", "/")).decode("utf-8")
         if f"Pkg.Revision={SDK_VERSION}" not in properties:
             raise ValueError("包内 ADB 版本与固定版本不一致")

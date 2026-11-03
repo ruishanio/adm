@@ -27,6 +27,7 @@ ADM 将常用的 ADB 操作放进一个桌面工作台。通过 USB 或网络连
 | ------------------ | ----------------------------------------------------------------------------------------------------------------- |
 | **设备工作台**     | 自动发现 USB、网络与模拟器设备；分组查看系统构建、CPU、内存、存储、屏幕与电池；右键备注名称、复制标识或隐藏设备。 |
 | **性能监控**       | 实时查看 CPU、各核心占用与频率、内存和网络曲线；查看电池温度，并按应用查看 HWUI 渲染 FPS、卡顿比例与 PSS 内存。 |
+| **控制设备**       | 低延迟查看与操作设备画面，横竖屏等比适配；截图、MP4 录像、文本粘贴，以及确认后的重启和关机。 |
 | **USB 与网络连接** | 提供 USB 调试指引、网络地址连接和 Android 11+ 无线调试配对。                                                      |
 | **拖拽安装 APK**   | 读取包名、版本与管理组件，覆盖安装到主用户，完成后回读安装结果；支持显式允许测试包。                              |
 | **已安装应用**     | 显示应用图标、名称、版本、安装包大小和运行状态；按名称或包名搜索，查看详情，并支持打开、强制停止、清除数据和卸载，系统应用仅供查看。              |
@@ -159,3 +160,9 @@ The Android robot is reproduced or modified from work created and shared by Goog
 ## 致谢
 
 ADM 基于 [Tauri](https://tauri.app/)、[Vue](https://vuejs.org/)、[shadcn-vue](https://www.shadcn-vue.com/)、[Tailwind CSS](https://tailwindcss.com/) 和 [Lucide](https://lucide.dev/) 构建，设备连接使用 Google 官方 [Android SDK Platform-Tools](https://developer.android.com/tools/releases/platform-tools)。
+
+### 设备控制实现
+
+桌面端由 Rust 管理 ADB 隧道、scrcpy 协议、输入和 MP4 录制，前端使用 WebCodecs 解码 H.264。Android 端复用固定版本的 [scrcpy 5.0.1 服务端](https://github.com/Genymobile/scrcpy/tree/v5.0.1)，不需要在电脑安装 scrcpy、FFmpeg 或 Java。服务端原文件、来源和 Apache-2.0 许可位于 `src-tauri/resources/scrcpy/`，启动和打包时验证 SHA-256。
+
+视频控制需要系统 WebView 支持 H.264 WebCodecs，以及设备可用的视频编码器；部分旧模拟器的系统编码器可能不可用。当前录制仅包含画面；设备旋转导致尺寸变化时自动结束并保存当前录像，再次点击录像可继续。切换设备或离开控制页会关闭本次连接并保存录像。电脑与设备剪贴板不会自动同步，仅在“输入文本”操作时写入设备剪贴板。

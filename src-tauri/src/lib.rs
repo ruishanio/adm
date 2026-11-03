@@ -1,6 +1,7 @@
 mod adb;
 mod apps;
 mod commands;
+mod control;
 mod devices;
 mod files;
 mod logs;
@@ -68,7 +69,10 @@ pub fn run() {
                 _ => {}
             }
         })
-        .invoke_handler(tauri::generate_handler![commands::adm_call])
+        .invoke_handler(tauri::generate_handler![
+            commands::adm_call,
+            commands::control::adm_control_start
+        ])
         .build(tauri::generate_context!())
         .expect("ADM 启动失败")
         .run(|app, event| {
@@ -97,6 +101,14 @@ pub fn self_check() -> Result<Value> {
         .join(if cfg!(windows) { "adb.exe" } else { "adb" });
     if !adb.is_file() {
         return Err("安装目录缺少 ADB".into());
+    }
+    use sha2::{Digest, Sha256};
+    let control_server = std::fs::read(resources.join("scrcpy/scrcpy-server"))
+        .map_err(|_| "安装目录缺少设备控制服务端")?;
+    if format!("{:x}", Sha256::digest(control_server))
+        != "764eb6f79811d5211fe9df341120882ba9994c7a61b897d7bf3fb662e53bc536"
+    {
+        return Err("设备控制服务端校验失败".into());
     }
     let version = adb::Adb::new(adb, cancellation()).simple(&["version"])?;
     if !version.contains("Android Debug Bridge version") {

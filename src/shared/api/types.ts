@@ -147,7 +147,40 @@ export interface Snapshot {
   version: string;
   error?: string;
 }
+export interface ControlStatus {
+  running: boolean;
+  width: number;
+  height: number;
+  error: string;
+  recording: boolean;
+  recordingNotice: string;
+}
+export type ControlInput =
+  | { kind: 'key'; action: number; keyCode: number; meta: number }
+  | { kind: 'touch'; action: number; x: number; y: number; width: number; height: number }
+  | {
+      kind: 'scroll';
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      horizontal: number;
+      vertical: number;
+    }
+  | { kind: 'text'; text: string }
+  | { kind: 'rotate' }
+  | { kind: 'screen'; on: boolean };
 export interface Api {
+  startControl(target: Target, maxSize: number, video: (packet: ArrayBuffer) => void): Promise<string>;
+  stopControl(id: string): Promise<void>;
+  controlStatus(id: string): Promise<ControlStatus>;
+  controlAck(id: string, sequence: number): Promise<void>;
+  controlInput(id: string, input: ControlInput): Promise<void>;
+  controlScreenshot(id: string): Promise<boolean>;
+  controlRecord(id: string): Promise<boolean>;
+  controlStopRecording(id: string): Promise<ControlStatus>;
+  controlPower(id: string, action: 'reboot' | 'shutdown', consent: boolean): Promise<void>;
+
   startPerformance(target: Target): Promise<string>;
   samplePerformance(id: string, packageName: string): Promise<PerformanceSample>;
   stopPerformance(id: string): Promise<void>;

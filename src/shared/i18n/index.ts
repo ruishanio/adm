@@ -4,6 +4,44 @@ export type Locale = 'zh-CN' | 'en';
 export type LanguagePreference = Locale;
 // 中文键即默认文案；新增语言必须覆盖整份字典，不能在组件中分支硬编码。
 export const english = {
+  '未收到可解码画面，请重新连接或降低清晰度。':
+    'No decodable video received. Reconnect or lower video quality.',
+  控制设备: 'Device control',
+  截图: 'Screenshot',
+  录像: 'Record',
+  结束录像: 'Stop recording',
+  旋转: 'Rotate',
+  输入文本: 'Enter text',
+  画面清晰度: 'Video quality',
+  重新连接: 'Reconnect',
+  电源: 'Power',
+  锁屏或唤醒: 'Lock or wake',
+  重启设备: 'Restart device',
+  关闭设备: 'Shut down device',
+  流畅: 'Smooth',
+  清晰: 'Balanced',
+  高清: 'High quality',
+  '设备画面，点击控制，拖动滑动': 'Device screen. Click to control; drag to swipe.',
+  '正在连接设备画面…': 'Connecting to device\u2026',
+  设备画面未连接: 'Device screen disconnected',
+  返回: 'Back',
+  主页: 'Home',
+  最近任务: 'Recent apps',
+  降低音量: 'Volume down',
+  提高音量: 'Volume up',
+  '点击操作，拖动滑动，右键返回': 'Click to control, drag to swipe, right-click to go back',
+  '将文本粘贴到设备当前输入框，会替换设备剪贴板。':
+    'Paste into the current input field. This replaces the device clipboard.',
+  '将重启此设备，当前连接和未保存的操作会中断。':
+    'Restart this device? Current connections and unsaved operations will be interrupted.',
+  '将关闭此设备，之后需要手动开机才能重新连接。':
+    'Shut down this device? You will need to turn it on manually to reconnect.',
+  确认: 'Confirm',
+  截图已保存: 'Screenshot saved',
+  电源操作已发送: 'Power command sent',
+  '设备控制连接已结束。': 'Device control connection ended.',
+  '当前系统不支持视频解码，请更新 macOS 或 Windows WebView2 后重试。':
+    'Video decoding is unavailable. Update macOS or Windows WebView2 and retry.',
   安装包大小: 'APK size',
   操作: 'Actions',
   详情: 'Details',

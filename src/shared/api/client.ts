@@ -1,10 +1,10 @@
 import { t } from '@/shared/i18n/index';
-import { invoke } from '@tauri-apps/api/core';
+import { invoke, Channel } from '@tauri-apps/api/core';
 import type { Api, Target } from '@/shared/api/types';
 // 只传递后端允许的会话字段，不把 Vue 代理或设备展示属性发送到 IPC。
 const target = (t: Target): Target => ({ serial: t.serial, transportId: t.transportId });
 // 命令名、参数顺序和返回值统一由业务协议约束，拒绝字符串拼写错误或错传参数。
-type Commands = Omit<Api, 'dropApk'> & { inspectApk: Api['dropApk'] };
+type Commands = Omit<Api, 'dropApk' | 'startControl'> & { inspectApk: Api['dropApk'] };
 async function call<K extends keyof Commands>(
   method: K,
   ...args: Parameters<Commands[K]>
@@ -19,6 +19,19 @@ async function call<K extends keyof Commands>(
 }
 // 前端仅暴露业务调用；本地路径、ADB 进程与文件读写均由 Rust 校验并执行。
 export const api: Api = {
+  startControl: (t, maxSize, onPacket) => {
+    const video = new Channel<ArrayBuffer>();
+    video.onmessage = onPacket;
+    return invoke<string>('adm_control_start', { target: target(t), maxSize, video });
+  },
+  stopControl: (id) => call('stopControl', id),
+  controlStatus: (id) => call('controlStatus', id),
+  controlAck: (id, seq) => call('controlAck', id, seq),
+  controlInput: (id, input) => call('controlInput', id, input),
+  controlScreenshot: (id) => call('controlScreenshot', id),
+  controlRecord: (id) => call('controlRecord', id),
+  controlStopRecording: (id) => call('controlStopRecording', id),
+  controlPower: (id, action, consent) => call('controlPower', id, action, consent),
   startPerformance: (t) => call('startPerformance', target(t)),
   samplePerformance: (id, packageName) => call('samplePerformance', id, packageName),
   stopPerformance: (id) => call('stopPerformance', id),

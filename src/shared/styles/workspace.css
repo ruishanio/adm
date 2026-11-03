@@ -281,6 +281,8 @@
   background: var(--focus);
 }
 .workspace {
+  container-type: inline-size;
+  container-name: device-workspace;
   grid-column: 3;
   grid-row: 1;
   min-width: 0;
@@ -385,6 +387,18 @@
   position: relative;
   color: var(--muted);
   font-size: 13px;
+}
+/* 六个功能页在窄工作区收紧间距，英文标签也保持完整可见。 */
+@container device-workspace (max-width: 760px) {
+  .tabs {
+    gap: 2px;
+    padding-inline: 12px;
+  }
+  .tabs button {
+    padding-inline: 8px;
+    gap: 6px;
+    font-size: 12px;
+  }
 }
 .tabs button:hover:not(:disabled) {
   background: var(--surface-subtle);

@@ -1,5 +1,6 @@
 //! IPC 边界保持固定业务协议；只读会话与串行写操作在这里统一分流。
 mod apps;
+pub(crate) mod control;
 mod devices;
 mod files;
 mod logs;
@@ -25,7 +26,12 @@ impl AppState {
         // 连续只读会话不抢占安装/文件任务；其他命令沿用同一个互斥与取消生命周期。
         let operation = if matches!(
             method.as_str(),
-            "refresh"
+            "controlStatus"
+                | "controlAck"
+                | "controlInput"
+                | "stopControl"
+                | "controlStopRecording"
+                | "refresh"
                 | "appIcons"
                 | "appRunning"
                 | "startPerformance"
@@ -46,6 +52,14 @@ impl AppState {
             .map(|value| value.1.clone())
             .unwrap_or_else(cancellation);
         match method.as_str() {
+            "controlStatus"
+            | "controlAck"
+            | "controlInput"
+            | "stopControl"
+            | "controlStopRecording"
+            | "controlRecord"
+            | "controlScreenshot"
+            | "controlPower" => self.control_command(&app, &method, args),
             "refresh" | "details" | "connect" | "pair" | "checkOwner" | "setOwner" => {
                 self.devices_command(&app, &method, args, cancel)
             }

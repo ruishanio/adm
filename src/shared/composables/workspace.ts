@@ -1,7 +1,7 @@
 import { reactive, computed, type ComputedRef } from 'vue';
 import { createContext } from './context';
 import type { Api, Device } from '@/shared/api/types';
-export type Tab = 'performance' | 'info' | 'apps' | 'files' | 'logs';
+export type Tab = 'performance' | 'control' | 'info' | 'apps' | 'files' | 'logs';
 export function workspaceState() {
   return {
     selected: '',

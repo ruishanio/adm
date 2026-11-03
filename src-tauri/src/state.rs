@@ -3,7 +3,7 @@ use crate::{
     adb,
     adb::process::{cancellation, Cancel},
     apps::apk,
-    logs,
+    control, logs,
     models::*,
     performance, settings,
 };
@@ -19,6 +19,7 @@ pub(crate) struct AppState {
     pub(crate) active: Mutex<Option<Cancel>>,
     pub(crate) drops: Mutex<HashSet<PathBuf>>,
     pub(crate) resources: PathBuf,
+    pub(crate) control: control::Control,
     pub(crate) logs: logs::Logcat,
     pub(crate) performance: performance::Performance,
 }
@@ -69,18 +70,21 @@ impl AppState {
             active: Mutex::new(None),
             drops: Mutex::new(HashSet::new()),
             resources,
+            control: control::Control::default(),
             logs: logs::Logcat::default(),
             performance: performance::Performance::default(),
         }
     }
     pub(crate) fn stop_sessions(&self) {
         self.cancel();
+        self.control.stop_all();
         self.logs.stop_all();
         self.performance.stop_all();
     }
     /// 最终退出时阻止新客户端，并确认已有客户端退出；窗口关闭和菜单退出共用入口。
     pub(crate) fn shutdown(&self) {
         self.cancel();
+        self.control.stop_all();
         self.performance.stop_all();
         crate::adb::child_process::shutdown();
         self.logs.stop_all();
