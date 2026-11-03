@@ -123,6 +123,7 @@
   padding: 0 0 64px;
 }
 .brand-scene {
+  --shadow-bleed: clamp(32px, 6svh, 72px);
   position: relative;
   flex: none;
   width: min(1000px, 100%);
@@ -132,7 +133,8 @@
 }
 .scene-canvas {
   position: absolute;
-  inset: 0;
+  /* 底部留出阴影渐隐区域；相机补偿扩展高度，模型与正文仍保持原位置。 */
+  inset: 0 0 calc(-1 * var(--shadow-bleed));
   opacity: 0;
   border-radius: 20px;
   touch-action: pan-y;

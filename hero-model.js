@@ -71,18 +71,35 @@ export function createDeviceModel(model) {
   }
   assembly.position.y = -1.45;
 
-  // 中性背景上只留一层柔和的接地阴影，不生成绿色底板。
-  const size = 64, pixels = new Uint8Array(size * size * 4);
+  // 按底座轮廓生成接触阴影与外围柔光，避免椭圆阴影的浓处全被底座遮住。
+  group.updateMatrixWorld(true);
+  const dockBounds = new THREE.Box3().setFromObject(dock);
+  const dockSize = dockBounds.getSize(new THREE.Vector3());
+  const dockCenter = dockBounds.getCenter(new THREE.Vector3());
+  const shadowWidth = dockSize.x + 2.8, shadowDepth = dockSize.z + 2.8;
+  const size = 128, pixels = new Uint8Array(size * size * 4);
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
-    const distance = Math.hypot((x + 0.5 - size / 2) / (size / 2), (y + 0.5 - size / 2) / (size / 2));
-    pixels[(y * size + x) * 4 + 3] = Math.round(255 * Math.pow(Math.max(0, 1 - distance), 2));
+    const px = ((x + 0.5) / size - 0.5) * shadowWidth;
+    const pz = ((y + 0.5) / size - 0.5) * shadowDepth;
+    const radius = 0.24;
+    const dx = Math.abs(px) - (dockSize.x / 2 - radius);
+    const dz = Math.abs(pz) - (dockSize.z / 2 - radius);
+    // 圆角矩形的有符号距离让贴地边缘稍实，向外自然衰减；外围只保留很淡的环境阴影。
+    const distance = Math.hypot(Math.max(dx, 0), Math.max(dz, 0)) + Math.min(Math.max(dx, dz), 0) - radius;
+    const contact = 0.19 * Math.exp(-0.5 * (Math.max(distance, 0) / 0.22) ** 2);
+    const ambient = 0.10 * Math.exp(-2.5 * ((px / (dockSize.x / 2 + 0.6)) ** 2 + (pz / (dockSize.z / 2 + 0.6)) ** 2));
+    const offset = (y * size + x) * 4;
+    pixels.set([255, 255, 255, Math.round(255 * (contact + ambient))], offset);
   }
   const texture = new THREE.DataTexture(pixels, size, size);
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
   texture.needsUpdate = true;
-  const shadow = new THREE.Mesh(new THREE.PlaneGeometry(5, 7.6),
-    new THREE.MeshBasicMaterial({ map: texture, transparent: true, opacity: 0.32, depthWrite: false }));
+  const shadow = new THREE.Mesh(new THREE.PlaneGeometry(shadowWidth, shadowDepth),
+    new THREE.MeshBasicMaterial({ map: texture, color: '#35465e', transparent: true, depthWrite: false, toneMapped: false }));
+  shadow.name = 'dock-contact-shadow';
   shadow.rotation.x = -Math.PI / 2;
-  shadow.position.y = -1.44;
+  shadow.position.set(dockCenter.x, dockBounds.min.y - 0.02, dockCenter.z);
   group.add(shadow);
   let activeIndex = null, moving = false, swayPhase = Math.asin(-SWAY_CENTER / SWAY_ANGLE);
 

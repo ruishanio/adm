@@ -236,11 +236,14 @@ export async function createHeroScene(stage, translate) {
     width = host.clientWidth;
     height = host.clientHeight;
     if (!width || !height) return;
-    const aspect = width / height, extent = Math.max(6, 7 / aspect);
+    // 阴影可绘制到容器下方；以原容器高度确定缩放，仅向下延伸视锥，避免挤小或上移模型。
+    const contentHeight = stage.clientHeight;
+    if (!contentHeight) return;
+    const aspect = width / contentHeight, extent = Math.max(6, 7 / aspect);
     camera.left = -extent * aspect / 2;
     camera.right = -camera.left;
     camera.top = extent / 2 + 0.5;
-    camera.bottom = -extent / 2 + 0.5;
+    camera.bottom = -extent / 2 + 0.5 - (height - contentHeight) * extent / contentHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(width, height, false);
     draw();
