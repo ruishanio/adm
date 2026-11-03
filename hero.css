@@ -1,0 +1,274 @@
+/* 官网使用完整视口作为三维舞台；文字在组装完成后进入，桌面应用不受影响。 */
+.hero-section {
+  position: relative;
+  isolation: isolate;
+  height: 100svh;
+  min-height: 640px;
+  overflow: hidden;
+  color: #f0f8f4;
+  background: #0b1e1a;
+  background-image: radial-gradient(ellipse at 58% 47%, #1b493b65, transparent 64%);
+  --focus: #86eccb;
+}
+.hero-section .site-header {
+  position: absolute;
+  z-index: 3;
+  inset: 0 0 auto;
+  border: 0;
+  background: transparent;
+}
+.hero-section .language-control select {
+  color: #d3e5db;
+}
+.hero-section .language-control option {
+  color: #182c27;
+  background: #f8faf9;
+}
+.hero-section .primary-nav {
+  color: #b6cfc3;
+}
+.hero-section .primary-nav a:hover {
+  color: #fff;
+}
+.hero-section .header-actions .button {
+  color: #c9e4d7;
+  background: #bedfc414;
+  border-color: #bedfc429;
+}
+.hero-section .header-actions .button:hover {
+  background: #bedfc429;
+}
+.hero-section .brand {
+  font-weight: 650;
+}
+.hero {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+.hero-copy {
+  width: 47%;
+  max-width: 540px;
+  pointer-events: auto;
+}
+.hero h1,
+html:not([lang='en']) .hero h1 {
+  font-size: clamp(44px, 4.8vw, 72px);
+  font-weight: 600;
+  letter-spacing: -2.8px;
+  line-height: 1.1;
+}
+.hero .accent-text {
+  color: #70e6bd;
+}
+.hero-summary {
+  max-width: 405px;
+  margin-top: 24px;
+}
+.hero-summary > p {
+  color: #afc7bc;
+  font-size: 15px;
+  line-height: 1.8;
+}
+.hero-actions {
+  margin-top: 28px;
+}
+.hero-actions .button {
+  color: #133b2d;
+  background: #7eeac3;
+  padding-inline: 26px;
+}
+.hero-actions .button:hover {
+  background: #b0ffdf;
+}
+.hero-summary .platform-note {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  color: #93b1a2;
+  font-size: 11px;
+  margin-top: 21px;
+}
+.platform-note > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.platform-note .icon {
+  width: 12px;
+  height: 12px;
+}
+.brand-scene {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.scene-canvas {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.scene-canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.brand-scene[data-scene-state='ready'] .scene-canvas {
+  opacity: 1;
+}
+.scene-fallback {
+  position: absolute;
+  width: min(40vw, 62svh, 760px);
+  left: 73.5%;
+  top: 48.5%;
+  transform: translate(-50%, -50%);
+}
+.brand-scene[data-scene-state='ready'] .scene-fallback {
+  display: none;
+}
+html[data-intro='loading'] .scene-fallback {
+  left: 50%;
+  top: 50%;
+  width: min(42vw, 44svh, 500px);
+  opacity: 0.5;
+}
+.scroll-cue {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-left: -22px;
+  color: #99bca9;
+}
+.scroll-cue:hover {
+  color: #e3fff0;
+}
+.scroll-cue .icon {
+  width: 23px;
+  height: 23px;
+}
+/* 仅开场期间隐藏交互元素，不锁住页面滚动；无 JavaScript 时仍能使用完整页面。 */
+.hero-copy,
+.hero-section .site-header,
+.scroll-cue {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition:
+    opacity 0.9s ease,
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s;
+}
+.hero-copy {
+  transition-delay: 0.1s;
+}
+.scroll-cue {
+  transition-delay: 0.25s;
+}
+html[data-intro='loading'] .hero-copy,
+html[data-intro='playing'] .hero-copy,
+html[data-intro='loading'] .hero-section .site-header,
+html[data-intro='playing'] .hero-section .site-header,
+html[data-intro='loading'] .scroll-cue,
+html[data-intro='playing'] .scroll-cue {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(18px);
+  transition: none;
+  pointer-events: none;
+}
+@media (max-width: 1050px) {
+  .hero h1,
+  html:not([lang='en']) .hero h1 {
+    font-size: 48px;
+    letter-spacing: -2px;
+  }
+  .hero-summary {
+    max-width: 340px;
+  }
+}
+@media (max-width: 760px) {
+  .hero-section {
+    min-height: 720px;
+  }
+  .hero {
+    align-items: flex-start;
+    justify-content: center;
+  }
+  .hero-copy {
+    position: absolute;
+    top: 49%;
+    width: 100%;
+    max-width: 510px;
+    text-align: center;
+  }
+  .hero h1,
+  html:not([lang='en']) .hero h1 {
+    font-size: clamp(32px, 8.6vw, 44px);
+    letter-spacing: -1.3px;
+    line-height: 1.12;
+  }
+  .hero-summary {
+    margin: 18px auto 0;
+    max-width: 400px;
+  }
+  .hero-summary > p {
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .hero-actions {
+    margin-top: 21px;
+  }
+  .hero-actions .button {
+    min-height: 44px;
+    padding-block: 10px;
+  }
+  .hero-summary .platform-note {
+    justify-content: center;
+    margin-top: 16px;
+  }
+  .scene-fallback {
+    width: min(78vw, 33svh);
+    left: 50%;
+    top: 31%;
+  }
+  html[data-intro='loading'] .scene-fallback {
+    width: min(65vw, 40svh);
+  }
+  .scroll-cue {
+    bottom: 12px;
+  }
+}
+@media (max-height: 600px) and (min-width: 761px) {
+  .hero-section {
+    min-height: 560px;
+  }
+  .hero h1,
+  html:not([lang='en']) .hero h1 {
+    font-size: 44px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-copy,
+  .hero-section .site-header,
+  .scroll-cue,
+  .scene-canvas {
+    transition: none;
+  }
+}
+
+@media (max-width: 520px) {
+  /* 窄屏沿用首屏下载主按钮，导航不重复放置下载按钮，避免挤成三行。 */
+  .hero-section .header-actions .button {
+    display: none;
+  }
+}
