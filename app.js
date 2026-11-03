@@ -1,5 +1,6 @@
 import { messages } from './i18n.js';
 import { createLanguagePicker } from './language-picker.js';
+import { localeFromUrl, localizedUrl, seoHead } from './seo.js';
 
 const languagePicker = createLanguagePicker(document.querySelector('.language-control'), changeLanguage);
 const previewImage = document.querySelector('#preview-image');
@@ -17,22 +18,9 @@ function textAt(locale, key) {
   return key.split('.').reduce((value, part) => value?.[part], messages[locale]);
 }
 
-// 只读取明确支持的语言。存储不可用时仍可通过 URL 分享与切换语言。
-function initialLanguage() {
-  const query = new URL(location.href).searchParams.get('lang');
-  if (Object.hasOwn(messages, query)) return query;
-  try {
-    const saved = localStorage.getItem('adm-website-language');
-    if (Object.hasOwn(messages, saved)) return saved;
-  } catch {
-    /* 隐私模式或存储限制不影响页面使用。 */
-  }
-  return 'en';
-}
-
 function updatePreview() {
   const imageLocale = language.startsWith('zh') ? 'zh-CN' : 'en';
-  const imagePath = `./assets/${imageLocale}-${currentView}.jpg`;
+  const imagePath = `/assets/${imageLocale}-${currentView}.jpg`;
   const label = textAt(language, viewLabels[currentView]);
   previewImage.src = imagePath;
   previewImage.alt = `ADM — ${label}`;
@@ -51,7 +39,10 @@ function setLanguage(locale) {
   document.querySelectorAll('[data-i18n]').forEach((element) => {
     element.textContent = textAt(language, element.dataset.i18n) ?? textAt('en', element.dataset.i18n);
   });
-  document.querySelector('meta[name="description"]').content = messages[language].heroBody;
+  // 元信息与可见正文同步，分享当前语言时不残留上一种语言的标题或规范网址。
+  const version = document.querySelector('.download-version').textContent.trim().replace(/^v/, '');
+  document.head.querySelectorAll('[data-seo]').forEach(element => element.remove());
+  document.head.insertAdjacentHTML('beforeend', seoHead(language, version));
   document.querySelectorAll('[data-i18n-aria]').forEach((element) => {
     element.setAttribute('aria-label', textAt(language, element.dataset.i18nAria));
   });
@@ -61,14 +52,7 @@ function setLanguage(locale) {
 
 function changeLanguage(locale) {
   setLanguage(locale);
-  const url = new URL(location.href);
-  url.searchParams.set('lang', language);
-  history.replaceState(null, '', url);
-  try {
-    localStorage.setItem('adm-website-language', language);
-  } catch {
-    /* 保留本次选择即可。 */
-  }
+  history.pushState(null, '', localizedUrl(location.href, language));
 }
 
 previewTabs.forEach((tab, index) => {
@@ -95,7 +79,10 @@ previewTabs.forEach((tab, index) => {
   });
 });
 
-setLanguage(initialLanguage());
+setLanguage(localeFromUrl(new URL(location.href)));
+// 旧查询参数链接仍能访问，并保留锚点和推广参数；新链接直接使用可预渲染的语言路径。
+history.replaceState(null, '', localizedUrl(location.href, language));
+window.addEventListener('popstate', () => setLanguage(localeFromUrl(new URL(location.href))));
 
 // 模型独立异步加载，导航与正文始终可用；失败时保留透明背景的静态模型。
 import('./hero-scene.js')

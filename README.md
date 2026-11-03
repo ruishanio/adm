@@ -11,7 +11,7 @@ npm ci
 npm run dev
 ```
 
-打开 `http://127.0.0.1:5383/`。`npm run build` 检查八种语言并输出 `dist/`；`npm run preview` 在 5384 端口预览构建结果。资源使用相对路径，可部署到项目子路径。正式网站地址为 [adm.ruishanio.com](https://adm.ruishanio.com/)。
+打开 `http://127.0.0.1:5383/`。`npm run build` 检查八种语言、生成静态语言页面并验证 SEO 产物，输出到 `dist/`；`npm run preview` 在 5384 端口预览构建结果。资源从站点根路径加载，部署目标为自定义域名根目录 [adm.ruishanio.com](https://adm.ruishanio.com/)。
 
 ## 发布
 
@@ -22,6 +22,22 @@ npm run dev
 Settings → Environments → github-pages 的 Deployment branches and tags 需包含精确分支名 `website`，否则构建成功后仍会被环境规则阻止部署。
 
 自定义域名在 Settings → Pages 中设置为 `adm.ruishanio.com`，阿里云 DNS 的 `adm` CNAME 指向 `ruishanio.github.io`（不带协议或路径）。等待 DNS 校验和证书签发后启用 Enforce HTTPS；此 Actions 发布方式不依赖源码中的 CNAME 文件。
+
+## 搜索与 AI 搜索发现
+
+- 默认英文位于 `/`，其余语言位于 `/zh-CN/`、`/zh-TW/`、`/ja/`、`/fr/`、`/de/`、`/es/`、`/ru/`。每个页面的初始 HTML 已包含对应语言正文、FAQ、下载要求和元信息，抓取时不依赖 JavaScript。
+- 语言入口提供真实链接；每页有自身 canonical、全部语言的双向 hreflang 和 x-default。旧 `?lang=` 链接继续兼容，浏览器将其归一为语言路径并保留锚点与 UTM 参数。语言由网址决定，不再由本地存储自动覆盖。
+- 标题、简介、Open Graph、社交卡片与 WebSite / WebPage / SoftwareApplication JSON-LD 共用 `seo.js`。软件版本来自下载区；结构化信息与可见正文一致，不虚构评分、评价或下载量，不承诺 Google 软件富结果。
+- 构建生成 `/sitemap.xml` 和 `/robots.txt`，允许普通搜索与 AI 搜索抓取公开内容。`OAI-SearchBot` 负责 ChatGPT 搜索，与用于训练的 `GPTBot` 不同；当前通配规则延续公开网站默认允许抓取的行为，不单独更改训练策略。
+- `npm run check:seo` 可单独复查已有产物，正式构建也自动运行：检查八种语言的无脚本正文、规范链接、语言互链、结构化信息、静态资源和站点地图。
+
+上线后的运营步骤（需要站长账号，代码构建不等于已完成收录）：
+
+1. 在 Google Search Console 与 Bing Webmaster Tools 验证站点所有权，提交 `https://adm.ruishanio.com/sitemap.xml`，检查首页及中文页能否抓取、是否收录。
+2. 优先补充经过实际验证的中英文教程，例如「在 Mac 上安装 APK」「Android 文件传输」「Android 投屏与键鼠控制」；说明前提、步骤、限制和版本，提供稳定链接，避免堆砌关键词或生成大量重复页面。
+3. 观察搜索展现、有效点击、下载转化与 AI 引荐来源；保留 `utm_source=chatgpt.com` 便于未来接入统计。本站尚未接入流量统计，也不能据此宣称排名或 AI 引用已提升。
+
+依据：[Google AI 搜索说明](https://developers.google.com/search/docs/appearance/ai-features)、[Google 多语言页面说明](https://developers.google.com/search/docs/specialty/international/localized-versions)、[OpenAI 搜索爬虫说明](https://developers.openai.com/api/docs/bots)。Google 的 AI 搜索不要求特殊 AI 文件；不把 `llms.txt` 当作收录条件或排名保证。
 
 ## 首屏交互
 
@@ -48,8 +64,10 @@ Settings → Environments → github-pages 的 Deployment branches and tags 需�
 - `hero-model.js`：设备分组、独立屏幕材质、悬停选取、拔起与回插状态。
 - `hero-scene.js`：渲染、鼠标/触屏/键盘输入、可见性与资源释放。
 - `i18n.js`、`app.js`：八种语言、四项功能与截图联动切换；中文使用中文截图，其余语言使用英文截图。
-- `language-picker.js`：紧凑的语言入口与单选浮层，支持方向键、Home/End、输入定位、确认选择和 Esc 收起；选择后同步 URL 与本地偏好。
-- `scripts/build.mjs`：文案检查与静态构建。
+- `language-picker.js`：紧凑的语言入口与单选浮层，支持方向键、Home/End、输入定位、确认选择和 Esc 收起；选择后同步语言路径，支持浏览器前进与后退。
+- `seo.js`：语言网址、产品标题、社交分享信息与结构化数据。
+- `scripts/build.mjs`：文案检查、八种语言预渲染、站点地图与抓取规则生成。
+- `scripts/check-seo.mjs`：构建后的搜索抓取检查。
 - `scripts/check-hero-model.mjs`：独立悬停、命中稳定、轻摇、落座闪亮、双侧摆动、快速改选、未离座取消不断电与减少动态效果检查，通过 `npm run check:model` 运行。
 - `public/assets/`：本分支的模型、图标、中英文截图及 Three.js 许可。
 

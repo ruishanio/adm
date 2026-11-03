@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#f8fafc" />
     <meta
-      name="description"
-      content="ADM is an open-source desktop workspace for Android. Manage devices, apps, files and logs on macOS and Windows."
+      data-seo name="description"
+      content="ADM is an Android device manager for macOS and Windows. Install APKs, transfer files, and mirror and control your screen from one desktop workspace."
     />
-    <title>ADM — Device manager for Android</title>
-    <link rel="icon" type="image/png" href="./assets/icon.png" />
-    <link rel="stylesheet" href="./style.css" />
-    <script type="module" src="./app.js"></script>
-    <link rel="stylesheet" href="./hero.css" />
+    <title data-seo>ADM — Android Device Manager for macOS &amp; Windows</title>
+    <link rel="icon" type="image/png" href="/assets/icon.png" />
+    <link rel="stylesheet" href="/style.css" />
+    <script type="module" src="/app.js"></script>
+    <link rel="stylesheet" href="/hero.css" />
   </head>
   <body>
     <a class="skip-link" href="#main" data-i18n="skip">Skip to content</a>
@@ -78,7 +78,7 @@
         <header class="site-header">
           <div class="shell header-inner">
             <a class="brand" href="#" aria-label="ADM home"
-              ><img src="./assets/icon.png" alt="" width="40" height="40" /><span class="brand-wordmark">ADM</span></a
+              ><img src="/assets/icon.png" alt="" width="40" height="40" /><span class="brand-wordmark">ADM</span></a
             >
             <div class="header-actions">
               <div class="language-control">
@@ -89,14 +89,14 @@
                   <svg class="icon language-chevron" aria-hidden="true"><use href="#icon-chevron"></use></svg>
                 </button>
                 <div id="language-menu" class="language-menu" role="listbox" aria-labelledby="language-label" hidden>
-                  <button type="button" role="option" data-locale="en" aria-selected="true" tabindex="-1"><span lang="en">English</span><svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg></button>
-                  <button type="button" role="option" data-locale="zh-CN" aria-selected="false" tabindex="-1"><span lang="zh-CN">简体中文</span><svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg></button>
-                  <button type="button" role="option" data-locale="zh-TW" aria-selected="false" tabindex="-1"><span lang="zh-TW">繁體中文</span><svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg></button>
-                  <button type="button" role="option" data-locale="ja" aria-selected="false" tabindex="-1"><span lang="ja">日本語</span><svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg></button>
-                  <button type="button" role="option" data-locale="fr" aria-selected="false" tabindex="-1"><span lang="fr">Français</span><svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg></button>
-                  <button type="button" role="option" data-locale="de" aria-selected="false" tabindex="-1"><span lang="de">Deutsch</span><svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg></button>
-                  <button type="button" role="option" data-locale="es" aria-selected="false" tabindex="-1"><span lang="es">Español</span><svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg></button>
-                  <button type="button" role="option" data-locale="ru" aria-selected="false" tabindex="-1"><span lang="ru">Русский</span><svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg></button>
+                  <a href="/" hreflang="en" role="option" data-locale="en" aria-selected="true" tabindex="-1"><span lang="en">English</span><svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg></a>
+                  <a href="/zh-CN/" hreflang="zh-CN" role="option" data-locale="zh-CN" aria-selected="false" tabindex="-1"><span lang="zh-CN">简体中文</span><svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg></a>
+                  <a href="/zh-TW/" hreflang="zh-TW" role="option" data-locale="zh-TW" aria-selected="false" tabindex="-1"><span lang="zh-TW">繁體中文</span><svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg></a>
+                  <a href="/ja/" hreflang="ja" role="option" data-locale="ja" aria-selected="false" tabindex="-1"><span lang="ja">日本語</span><svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg></a>
+                  <a href="/fr/" hreflang="fr" role="option" data-locale="fr" aria-selected="false" tabindex="-1"><span lang="fr">Français</span><svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg></a>
+                  <a href="/de/" hreflang="de" role="option" data-locale="de" aria-selected="false" tabindex="-1"><span lang="de">Deutsch</span><svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg></a>
+                  <a href="/es/" hreflang="es" role="option" data-locale="es" aria-selected="false" tabindex="-1"><span lang="es">Español</span><svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg></a>
+                  <a href="/ru/" hreflang="ru" role="option" data-locale="ru" aria-selected="false" tabindex="-1"><span lang="ru">Русский</span><svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg></a>
                 </div>
               </div>
               <a class="header-github" href="https://github.com/ruishanio/adm" aria-label="GitHub" title="GitHub"><svg class="icon" aria-hidden="true"><use href="#icon-github"></use></svg></a>
@@ -116,7 +116,7 @@
             ></div>
             <span id="scene-help" class="sr-only" data-i18n="sceneHint">Move away to dock the device. On touchscreens, tap to toggle. Use the arrow keys to select a device, Escape to reset and pause, and Space to toggle the side-to-side motion.</span>
             <span class="scene-status sr-only" aria-live="polite"></span>
-            <img class="scene-fallback" src="./assets/model-fallback.png" alt="ADM" width="800" height="400" />
+            <img class="scene-fallback" src="/assets/model-fallback.png" alt="ADM" width="800" height="400" />
           </div>
           <div class="hero shell">
             <div class="hero-copy">
@@ -131,8 +131,8 @@
               </div>
               <div class="hero-summary">
                 <p data-i18n="heroBody">
-                  Devices, apps, files, and logs. One clear workspace to make everyday Android tasks feel a
-                  little easier.
+                  ADM is an Android device manager for macOS and Windows. Install APKs, transfer files,
+                  and mirror and control your screen from one desktop workspace.
                 </p>
                 <div class="hero-actions">
                   <a class="button" href="#download"
@@ -187,7 +187,7 @@
             <div id="preview-panel" role="tabpanel" aria-labelledby="feature-workbench" tabindex="0">
               <img
                 id="preview-image"
-                src="./assets/en-workbench.jpg"
+                src="/assets/en-workbench.jpg"
                 alt="ADM device information with the device list and six feature tabs"
                 width="1280"
                 height="720"
@@ -201,7 +201,7 @@
       <section class="shell section-space" id="download" aria-labelledby="download-title">
         <div class="download-section" id="start">
           <div class="download-heading">
-            <img src="./assets/icon.png" alt="" width="40" height="40" loading="lazy" />
+            <img src="/assets/icon.png" alt="" width="40" height="40" loading="lazy" />
             <h2 id="download-title">
               <span data-i18n="downloadHeading">Get ADM.</span>
               <span class="download-version">v0.1.4</span>
@@ -300,7 +300,7 @@
     <footer class="site-footer shell">
       <div class="footer-main">
         <a class="brand" href="#"
-          ><img src="./assets/icon.png" alt="" width="30" height="30" /><span class="brand-wordmark">ADM</span></a
+          ><img src="/assets/icon.png" alt="" width="30" height="30" /><span class="brand-wordmark">ADM</span></a
         >
         <p>Device manager for Android</p>
         <nav aria-label="Project links">

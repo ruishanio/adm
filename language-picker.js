@@ -45,6 +45,9 @@ export function createLanguagePicker(root, onChange) {
   menu.addEventListener('click', event => {
     const option = event.target.closest('[data-locale]');
     if (!option || !menu.contains(option)) return;
+    // 保留链接在新标签页打开的原生行为，普通切换仍在原位置完成。
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
     onChange(option.dataset.locale);
     close(true);
   });
@@ -59,6 +62,10 @@ export function createLanguagePicker(root, onChange) {
     if (Object.hasOwn(destinations, event.key)) {
       event.preventDefault();
       focusOption(options[destinations[event.key]]);
+    } else if (event.key === ' ') {
+      event.preventDefault();
+      onChange(options[index].dataset.locale);
+      close(true);
     } else if (event.key === 'Escape') {
       event.preventDefault();
       close(true);
@@ -75,7 +82,7 @@ export function createLanguagePicker(root, onChange) {
       const match = find(search) ?? find(event.key.toLocaleLowerCase());
       if (match) focusOption(match);
     }
-    // Enter 和空格沿用 button 的原生 click 行为；浏览选项时不提前切换语言。
+    // Enter 沿用链接的原生 click 行为；浏览选项时不提前切换语言。
   });
   document.addEventListener('pointerdown', event => {
     if (!root.contains(event.target)) close();

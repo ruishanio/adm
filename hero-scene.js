@@ -51,7 +51,7 @@ export async function createHeroScene(stage, translate) {
   scene.add(rim);
   let gltf;
   try {
-    gltf = await new GLTFLoader().loadAsync('./assets/adm-icon.glb');
+    gltf = await new GLTFLoader().loadAsync('/assets/adm-icon.glb');
   } catch {
     envTarget.dispose();
     renderer.dispose();

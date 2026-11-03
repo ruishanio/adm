@@ -156,7 +156,7 @@ html:not([lang='en']) .hero h1 {
 .hero-heading h1 > span { display: block; white-space: nowrap; }
 .hero .accent-text { color: inherit; }
 .hero-summary { max-width: 660px; margin: 18px auto 0; }
-.hero-summary > p { color: #647187; font-size: 15px; line-height: 1.8; text-wrap: pretty; }
+.hero-summary > p { color: #647187; font-size: 15px; line-height: 1.8; text-wrap: balance; }
 .hero-summary > [data-i18n='heroBody'] {
   display: flex;
   align-items: center;
@@ -211,7 +211,8 @@ html:not([lang='en']) .hero h1 {
   html:not([lang='en']) .hero h1 { font-size: clamp(26px, 7.2vw, 36px); letter-spacing: -0.8px; }
   .hero-summary { max-width: 400px; margin-top: 18px; }
   .hero-summary > p { font-size: 13px; }
-  .hero-summary > [data-i18n='heroBody'] { min-height: 5.4em; }
+  /* 窄屏为完整产品简介预留四行，语言切换时保持下载入口的位置。 */
+  .hero-summary > [data-i18n='heroBody'] { min-height: 7.2em; }
   .hero-actions { margin-top: 22px; }
   .hero-summary .platform-note { margin-top: 14px; font-size: 11px; }
 }
