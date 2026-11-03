@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5383 --strictPort",
     "build": "node scripts/build.mjs",
+    "check:model": "node scripts/check-hero-model.mjs",
     "preview": "vite preview --host 127.0.0.1 --port 5384 --strictPort"
   },
   "dependencies": {

@@ -1,12 +1,14 @@
 import { messages } from './i18n.js';
+import { createLanguagePicker } from './language-picker.js';
 
-const languageSelect = document.querySelector('#language');
+const languagePicker = createLanguagePicker(document.querySelector('.language-control'), changeLanguage);
 const previewImage = document.querySelector('#preview-image');
 const previewPanel = document.querySelector('#preview-panel');
 const previewTabs = [...document.querySelectorAll('[data-view]')];
-const lightbox = document.querySelector('#lightbox');
-const lightboxImage = document.querySelector('#lightbox-image');
-const viewLabels = { workbench: 'tabDevice', apps: 'tabApps', files: 'tabFiles' };
+const viewLabels = {
+  workbench: 'features.0.title', control: 'features.1.title',
+  apps: 'features.2.title', files: 'features.3.title',
+};
 let currentView = 'workbench';
 let language = 'en';
 let heroController;
@@ -34,9 +36,6 @@ function updatePreview() {
   const label = textAt(language, viewLabels[currentView]);
   previewImage.src = imagePath;
   previewImage.alt = `ADM — ${label}`;
-  lightboxImage.src = imagePath;
-  lightboxImage.alt = previewImage.alt;
-  document.querySelector('#lightbox-title').textContent = label;
   previewTabs.forEach((tab) => {
     const selected = tab.dataset.view === currentView;
     tab.setAttribute('aria-selected', String(selected));
@@ -48,7 +47,7 @@ function updatePreview() {
 function setLanguage(locale) {
   language = Object.hasOwn(messages, locale) ? locale : 'en';
   document.documentElement.lang = language;
-  languageSelect.value = language;
+  languagePicker.setValue(language);
   document.querySelectorAll('[data-i18n]').forEach((element) => {
     element.textContent = textAt(language, element.dataset.i18n) ?? textAt('en', element.dataset.i18n);
   });
@@ -60,8 +59,8 @@ function setLanguage(locale) {
   heroController?.refreshLabels();
 }
 
-languageSelect.addEventListener('change', () => {
-  setLanguage(languageSelect.value);
+function changeLanguage(locale) {
+  setLanguage(locale);
   const url = new URL(location.href);
   url.searchParams.set('lang', language);
   history.replaceState(null, '', url);
@@ -70,16 +69,18 @@ languageSelect.addEventListener('change', () => {
   } catch {
     /* 保留本次选择即可。 */
   }
-});
+}
 
 previewTabs.forEach((tab, index) => {
   tab.addEventListener('click', () => {
     currentView = tab.dataset.view;
     updatePreview();
   });
-  // 标签页采用单一 Tab 停靠点，方向键循环切换，Home/End 跳到两端。
+  // 左侧功能列表是唯一切换入口；上下方向键循环选择，横向键兼容窄屏排列。
   tab.addEventListener('keydown', (event) => {
     const targets = {
+      ArrowDown: (index + 1) % previewTabs.length,
+      ArrowUp: (index - 1 + previewTabs.length) % previewTabs.length,
       ArrowRight: (index + 1) % previewTabs.length,
       ArrowLeft: (index - 1 + previewTabs.length) % previewTabs.length,
       Home: 0,
@@ -94,24 +95,9 @@ previewTabs.forEach((tab, index) => {
   });
 });
 
-document.querySelector('#zoom').addEventListener('click', () => lightbox.showModal());
-document.querySelector('#close-lightbox').addEventListener('click', () => lightbox.close());
-// 原生 dialog 提供 Esc 与焦点返回；仅点击遮罩时关闭，避免点图片误退出。
-lightbox.addEventListener('click', (event) => {
-  const rect = lightbox.getBoundingClientRect();
-  if (
-    event.target === lightbox &&
-    (event.clientX < rect.left ||
-      event.clientX > rect.right ||
-      event.clientY < rect.top ||
-      event.clientY > rect.bottom)
-  )
-    lightbox.close();
-});
-
 setLanguage(initialLanguage());
 
-// 先显示正文与静态图标，3D 模块异步加载；失败时保留可用页面及静态品牌图。
+// 模型独立异步加载，导航与正文始终可用；失败时保留透明背景的静态模型。
 import('./hero-scene.js')
   .then(({ createHeroScene }) =>
     createHeroScene(document.querySelector('#brand-scene'), (key) => textAt(language, key)),
@@ -122,5 +108,4 @@ import('./hero-scene.js')
   })
   .catch(() => {
     document.querySelector('#brand-scene').dataset.sceneState = 'fallback';
-    document.documentElement.dataset.intro = 'complete';
   });

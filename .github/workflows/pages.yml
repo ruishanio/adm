@@ -1,0 +1,57 @@
+name: 发布 ADM 官网
+
+on:
+  push:
+    branches: [website]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# 发布串行执行，避免新提交中断正在部署的网站。
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/website'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: 检出官网分支
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: 配置 Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+      - name: 配置 GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: 安装依赖
+        run: npm ci
+      - name: 检查模型交互
+        run: npm run check:model
+      - name: 检查多语言并构建官网
+        run: npm run build
+      - name: 上传静态网站
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 部署 GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

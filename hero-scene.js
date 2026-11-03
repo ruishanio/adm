@@ -1,138 +1,86 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { createStory, STORY_DURATION as DURATION, ease } from './hero-story.js';
+import { createDeviceModel } from './hero-model.js';
 
-const mix = THREE.MathUtils.lerp;
+const HOVER_DELAY = 220;
 
 /**
- * 创建全屏品牌开场，stage 为画布容器，translate 返回当前语言的替代文本。
- * 模型故事由独立模块编排；本模块负责镜头构图、资源加载与播放生命周期。
+ * 创建居中的交互模型。stage 为容器，translate 提供当前语言文案。
+ * 返回标签更新与销毁方法；模型加载不会延迟导航、正文和下载入口。
  */
 export async function createHeroScene(stage, translate) {
   const host = stage.querySelector('.scene-canvas');
-  const root = document.documentElement;
+  const status = stage.querySelector('.scene-status');
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-  const reveal = () => {
-    root.dataset.intro = 'complete';
-  };
   const refreshLabels = () => host.setAttribute('aria-label', translate('sceneDescription'));
+  const fallback = () => {
+    stage.dataset.sceneState = 'fallback';
+    host.tabIndex = -1;
+  };
   let renderer;
   try {
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' });
   } catch {
-    stage.dataset.sceneState = 'fallback';
-    reveal();
+    fallback();
     return { refreshLabels, dispose() {} };
   }
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.NeutralToneMapping;
-  renderer.toneMappingExposure = 1;
   host.append(renderer.domElement);
+  renderer.domElement.setAttribute('aria-hidden', 'true');
   const scene = new THREE.Scene();
-  const camera = new THREE.OrthographicCamera(-5, 5, 5, -5, 0.1, 100);
+  const camera = new THREE.OrthographicCamera(-5, 5, 3.5, -2.5, 0.1, 100);
+  camera.position.set(Math.sin(0.69) * 18, 7, Math.cos(0.69) * 18);
+  camera.lookAt(0, 0, 0);
+  camera.updateMatrixWorld(true);
   const environment = new RoomEnvironment();
   const pmrem = new THREE.PMREMGenerator(renderer);
   const envTarget = pmrem.fromScene(environment, 0.04);
   scene.environment = envTarget.texture;
-  scene.environmentIntensity = 0.45;
+  scene.environmentIntensity = 0.6;
   environment.dispose();
   pmrem.dispose();
-  scene.add(new THREE.HemisphereLight('#d7f4ff', '#14221c', 0.7));
+  scene.add(new THREE.HemisphereLight('#ffffff', '#697586', 1));
   const key = new THREE.DirectionalLight('#ffffff', 1.7);
   key.position.set(4, 7, 6);
   scene.add(key);
-  const rim = new THREE.DirectionalLight('#71e8ce', 0.85);
-  rim.position.set(-4, 2, -4);
+  const rim = new THREE.DirectionalLight('#d9e4ff', 0.7);
+  rim.position.set(-4, 3, -4);
   scene.add(rim);
-
-  let model;
-  const loader = new GLTFLoader();
-  // 慢网超时后先显示可用官网；晚到的模型直接展示终态，不让正文再次消失。
+  let gltf;
   try {
-    model = await loader.loadAsync('./assets/adm-icon.glb');
+    gltf = await new GLTFLoader().loadAsync('./assets/adm-icon.glb');
   } catch {
     envTarget.dispose();
     renderer.dispose();
     renderer.domElement.remove();
-    stage.dataset.sceneState = 'fallback';
-    reveal();
+    fallback();
     return { refreshLabels, dispose() {} };
   }
-  const story = createStory(model.scene);
-  const rig = story.group;
-  scene.add(rig);
-  const right = new THREE.Vector3(),
-    up = new THREE.Vector3();
-  let time = reducedMotion.matches || root.dataset.intro !== 'loading' ? DURATION : 0;
-  let visible = true,
-    disposed = false,
-    frameId = 0,
-    previous = 0;
-  let width = host.clientWidth,
-    height = host.clientHeight;
-  let contextLost = false;
-  let lastPose = '';
-  if (time < DURATION) root.dataset.intro = 'playing';
+  const model = createDeviceModel(gltf.scene);
+  scene.add(model.group);
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+  const keyboardOrder = [2, 1, 0];
+  let pointerInside = false, mode = null, paused = false;
+  let visible = true, disposed = false, lost = false;
+  let width = host.clientWidth, height = host.clientHeight;
+  let frameId = 0, previous = 0, touchStart = null;
+  let hoverTimer = 0, hoverCandidate = null;
+  const events = new AbortController();
+  const listen = (target, type, callback, options = {}) =>
+    target.addEventListener(type, callback, { ...options, signal: events.signal });
 
-  function render() {
-    if (contextLost || !width || !height) return;
-    const mobile = width <= 760;
-    const framing = ease(5.0, DURATION, time);
-    const aspect = width / height;
-    const finalSize = mobile
-      ? Math.min(width * 0.78, height * 0.33)
-      : Math.min(width * 0.4, height * 0.62, 760);
-    const openingExtent = mobile ? Math.max(10, 6.3 / aspect) : 8.8 * Math.max(1, 1.2 / aspect);
-    const extent = mix(openingExtent, (5.8 * height) / finalSize, framing);
-    camera.left = (-extent * aspect) / 2;
-    camera.right = -camera.left;
-    camera.top = extent / 2;
-    camera.bottom = -camera.top;
-    // 前两幕保持镜头稳定，让连接与收纳动作可读；设备归位时才转向图标角度。
-    const turn = ease(3.1, 4.9, time),
-      azimuth = mix(0.28, 0.69, turn);
-    camera.position.set(Math.sin(azimuth) * 18, 7, Math.cos(azimuth) * 18);
-    camera.lookAt(0, 0, 0);
-    camera.updateProjectionMatrix();
-    right.set(1, 0, 0).applyQuaternion(camera.quaternion);
-    up.set(0, 1, 0).applyQuaternion(camera.quaternion);
-    const targetX = mobile ? 0 : extent * aspect * 0.235;
-    const targetY = mobile ? extent * 0.19 : extent * 0.015;
-    rig.position
-      .copy(right)
-      .multiplyScalar(targetX * framing)
-      .addScaledVector(up, targetY * framing);
-
-    story.update(time, { camera, mobile });
-    renderer.render(scene, camera);
-    const pose =
-      time < 1.35
-        ? 'separate'
-        : time < 3.1
-          ? 'connecting'
-          : time < 5
-            ? 'together'
-            : time < DURATION
-              ? 'settling'
-              : 'complete';
-    if (pose !== lastPose) {
-      stage.dataset.pose = pose;
-      lastPose = pose;
-    }
-    if (time >= DURATION) reveal();
+  function draw() {
+    if (!lost && width && height) renderer.render(scene, camera);
   }
-  // 以真实经过时间推进，不再限制每帧步长导致低帧率设备整段动画拖慢。
-  function tick(now) {
-    frameId = 0;
-    time = Math.min(DURATION, time + (previous ? (now - previous) / 1000 : 0));
-    previous = now;
-    render();
-    schedule();
+  function needsFrame() {
+    return model.moving || (!reducedMotion.matches && !paused && model.activeIndex === null);
   }
   function schedule() {
-    if (!frameId && !disposed && !contextLost && visible && !document.hidden && time < DURATION)
+    if (!frameId && !disposed && !lost && visible && !document.hidden && needsFrame())
       frameId = requestAnimationFrame(tick);
   }
   function stop() {
@@ -140,87 +88,205 @@ export async function createHeroScene(stage, translate) {
     frameId = 0;
     previous = 0;
   }
-  function finish() {
-    if (time >= DURATION) return;
-    stop();
-    time = DURATION;
-    render();
+  function cancelHover() {
+    clearTimeout(hoverTimer);
+    hoverTimer = 0;
+    hoverCandidate = null;
   }
+  function select(index, inputMode) {
+    if (inputMode !== 'pointer') cancelHover();
+    if (index === model.activeIndex && mode === inputMode) return;
+    mode = inputMode;
+    model.setActive(index);
+    // 先推进一小步以启动按需动画；减少动态效果时直接切换到选中姿态。
+    model.update(1 / 60, { rotate: false, instant: reducedMotion.matches });
+    stage.dataset.activeDevice = index === null ? '' : String(index);
+    host.style.cursor = index === null ? '' : 'pointer';
+    draw();
+    schedule();
+  }
+  function hit() {
+    raycaster.setFromCamera(pointer, camera);
+    return model.pick(raycaster);
+  }
+  /** 连续停留在同一台设备上才触发；移开、改选或暂停页面时取消候选。 */
+  function updateHover(index) {
+    mode = 'pointer';
+    if (index === null || index === model.activeIndex) {
+      cancelHover();
+      select(index, 'pointer');
+      host.style.cursor = index === null ? '' : 'pointer';
+      return;
+    }
+    if (model.activeIndex !== null) select(null, 'pointer');
+    host.style.cursor = 'pointer';
+    if (hoverCandidate === index) return;
+    cancelHover();
+    hoverCandidate = index;
+    hoverTimer = setTimeout(() => {
+      cancelHover();
+      if (disposed || lost || !visible || document.hidden || !pointerInside || mode !== 'pointer') return;
+      // 等待期间模型仍会摆动，提交前重新射线检查，不能选中已从鼠标下移走的设备。
+      const current = hit();
+      if (current === index) select(index, 'pointer');
+      else updateHover(current);
+    }, HOVER_DELAY);
+  }
+  function tick(now) {
+    frameId = 0;
+    const dt = previous ? (now - previous) / 1000 : 1 / 60;
+    previous = now;
+    model.update(dt, { rotate: !paused && !reducedMotion.matches, instant: reducedMotion.matches });
+    if (pointerInside && mode === 'pointer') updateHover(hit());
+    draw();
+    if (needsFrame()) schedule();
+    else previous = 0;
+  }
+  function updatePointer(event) {
+    const rect = host.getBoundingClientRect();
+    pointer.set((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
+  }
+  listen(host, 'pointermove', event => {
+    if (event.pointerType === 'touch') return;
+    pointerInside = true;
+    updatePointer(event);
+    updateHover(hit());
+  });
+  listen(host, 'pointerleave', event => {
+    if (event.pointerType === 'touch') return;
+    pointerInside = false;
+    cancelHover();
+    if (mode === 'pointer') select(null, null);
+  });
+  // 触屏轻点切换，保留纵向滚动；滑动手势不能误触拔出设备。
+  listen(host, 'pointerdown', event => {
+    if (event.pointerType === 'touch') {
+      cancelHover();
+      pointerInside = false;
+      touchStart = { x: event.clientX, y: event.clientY };
+    }
+  });
+  listen(host, 'pointerup', event => {
+    if (event.pointerType !== 'touch' || !touchStart) return;
+    const distance = Math.hypot(event.clientX - touchStart.x, event.clientY - touchStart.y);
+    touchStart = null;
+    if (distance > 10) return;
+    updatePointer(event);
+    const index = hit();
+    select(index === model.activeIndex ? null : index, 'touch');
+  });
+  listen(host, 'pointercancel', () => {
+    touchStart = null;
+    pointerInside = false;
+    cancelHover();
+    if (mode === 'pointer') select(null, null);
+  });
+  listen(document, 'pointerdown', event => {
+    if (!host.contains(event.target)) { pointerInside = false; select(null, null); }
+  });
+  listen(host, 'keydown', event => {
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      event.preventDefault();
+      pointerInside = false;
+      const current = keyboardOrder.indexOf(model.activeIndex);
+      const next = current < 0 ? 0 : (current + (event.key === 'ArrowRight' ? 1 : 2)) % 3;
+      const index = keyboardOrder[next];
+      select(index, 'keyboard');
+      status.textContent = `${translate(`sceneDevices.${index}`)} · ${translate('sceneLifted')}`;
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      pointerInside = false;
+      paused = true;
+      select(null, null);
+      status.textContent = translate('sceneRestored');
+    } else if (event.key === ' ') {
+      event.preventDefault();
+      paused = !paused;
+      status.textContent = translate(paused || reducedMotion.matches ? 'scenePaused' : 'sceneRotating');
+      schedule();
+    }
+  });
+  listen(host, 'blur', () => {
+    if (mode === 'keyboard') select(null, null);
+  });
+  listen(window, 'scroll', () => {
+    pointerInside = false;
+    touchStart = null;
+    cancelHover();
+    if (model.activeIndex !== null) select(null, null);
+  }, { passive: true });
+  listen(document, 'visibilitychange', () => {
+    if (document.hidden) { cancelHover(); stop(); }
+    else schedule();
+  });
+  listen(reducedMotion, 'change', () => {
+    stop();
+    model.update(0, { rotate: false, instant: reducedMotion.matches });
+    draw();
+    schedule();
+  });
+  listen(renderer.domElement, 'webglcontextlost', event => {
+    event.preventDefault();
+    lost = true;
+    cancelHover();
+    stop();
+    fallback();
+  });
   const resize = new ResizeObserver(() => {
     width = host.clientWidth;
     height = host.clientHeight;
+    if (!width || !height) return;
+    const aspect = width / height, extent = Math.max(6, 7 / aspect);
+    camera.left = -extent * aspect / 2;
+    camera.right = -camera.left;
+    camera.top = extent / 2 + 0.5;
+    camera.bottom = -extent / 2 + 0.5;
+    camera.updateProjectionMatrix();
     renderer.setSize(width, height, false);
-    render();
+    draw();
   });
   resize.observe(host);
   const intersection = new IntersectionObserver(([entry]) => {
     visible = entry.isIntersecting;
-    if (visible) schedule();
-    else if (time < DURATION) finish();
+    if (visible) { draw(); schedule(); }
+    else {
+      cancelHover();
+      stop();
+      pointerInside = false;
+      mode = null;
+      model.setActive(null);
+      model.update(0, { rotate: false, instant: true });
+      stage.dataset.activeDevice = '';
+    }
   });
   intersection.observe(stage);
-  const onVisibility = () => {
-    if (document.hidden) stop();
-    else schedule();
-  };
-  const onMotion = () => {
-    if (reducedMotion.matches) finish();
-  };
-  // 不锁滚动、不强迫观看；Esc、跳到正文或直接滚过首屏即可结束开场。
-  const onKey = (event) => {
-    if (event.key === 'Escape' || event.key === 'Tab') finish();
-  };
-  const onHash = () => {
-    if (location.hash) finish();
-  };
-  document.addEventListener('visibilitychange', onVisibility);
-  document.addEventListener('keydown', onKey);
-  window.addEventListener('hashchange', onHash);
-  reducedMotion.addEventListener('change', onMotion);
-  const onContextLost = (event) => {
-    event.preventDefault();
-    contextLost = true;
-    time = DURATION;
-    stop();
-    stage.dataset.sceneState = 'fallback';
-    reveal();
-  };
-  renderer.domElement.addEventListener('webglcontextlost', onContextLost);
   function dispose() {
     if (disposed) return;
     disposed = true;
+    cancelHover();
     stop();
+    events.abort();
     resize.disconnect();
     intersection.disconnect();
-    document.removeEventListener('visibilitychange', onVisibility);
-    document.removeEventListener('keydown', onKey);
-    window.removeEventListener('hashchange', onHash);
-    window.removeEventListener('pagehide', onHide);
-    reducedMotion.removeEventListener('change', onMotion);
-    renderer.domElement.removeEventListener('webglcontextlost', onContextLost);
-    const geometries = new Set(),
-      materials = new Set();
-    scene.traverse((object) => {
+    const geometries = new Set(), materials = new Set(), textures = new Set();
+    scene.traverse(object => {
       if (object.geometry) geometries.add(object.geometry);
-      if (object.material)
-        (Array.isArray(object.material) ? object.material : [object.material]).forEach((material) =>
-          materials.add(material),
-        );
+      if (object.material) (Array.isArray(object.material) ? object.material : [object.material])
+        .forEach(material => materials.add(material));
     });
-    geometries.forEach((geometry) => geometry.dispose());
-    materials.forEach((material) => material.dispose());
+    geometries.forEach(geometry => geometry.dispose());
+    materials.forEach(material => {
+      if (material.map) textures.add(material.map);
+      material.dispose();
+    });
+    textures.forEach(texture => texture.dispose());
     envTarget.dispose();
     renderer.dispose();
     renderer.domElement.remove();
   }
-  function onHide(event) {
-    if (!event.persisted) dispose();
-  }
-  window.addEventListener('pagehide', onHide);
+  listen(window, 'pagehide', event => { if (!event.persisted) dispose(); });
   stage.dataset.sceneState = 'ready';
-  renderer.setSize(width, height, false);
   refreshLabels();
-  render();
   schedule();
   return { refreshLabels, dispose };
 }

@@ -6,6 +6,7 @@ import { build } from 'vite';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 const keys = [...html.matchAll(/data-i18n(?:-aria)?="([^"]+)"/g)].map((match) => match[1]);
+keys.push('sceneDevices.0', 'sceneDevices.1', 'sceneDevices.2', 'sceneLifted', 'sceneRestored', 'scenePaused', 'sceneRotating');
 // 独立构建仍检查全部语言，避免迁移后漏译或静默混用英文。
 for (const [locale, translations] of Object.entries(messages)) {
   for (const key of keys) {
