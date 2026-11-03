@@ -180,8 +180,15 @@ onBeforeUnmount(() => {
           ><TabsContent value="files"><FilesPage /></TabsContent
           ><TabsContent value="logs"><DeviceLogsPage v-if="s.tab === 'logs'" /></TabsContent></div
       ></Tabs>
+      <!-- 在弹窗或所有者扫描区反馈的任务不重复插入底部进度栏，避免挤压工作区。 -->
       <div
-        v-if="s.modal !== 'install' && (s.busy || s.notice)"
+        v-if="
+          s.modal !== 'install' &&
+          s.modal !== 'owner-remove' &&
+          s.modal !== 'owner-set' &&
+          !(s.tab === 'info' && w.owner.state.ownerExpanded && w.owner.state.scan?.loading) &&
+          (s.busy || s.notice)
+        "
         :class="['task-notice', { error: s.notice?.error }]"
         :role="s.notice?.error ? 'alert' : 'status'"
       >

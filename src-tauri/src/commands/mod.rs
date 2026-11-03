@@ -60,7 +60,8 @@ impl AppState {
             | "controlRecord"
             | "controlScreenshot"
             | "controlPower" => self.control_command(&app, &method, args),
-            "refresh" | "details" | "connect" | "pair" | "checkOwner" | "setOwner" => {
+            "refresh" | "details" | "connect" | "pair" | "checkOwner" | "setOwner"
+            | "checkOwnerRemoval" | "removeOwner" | "scanDeviceAdmins" => {
                 self.devices_command(&app, &method, args, cancel)
             }
             "chooseApk" | "inspectApk" | "install" | "listApps" | "appDetails" | "appIcons"

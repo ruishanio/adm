@@ -69,6 +69,10 @@ impl AppState {
                 self.adb(cancel)?.pair(&endpoint, &code)?;
                 Ok(Value::Null)
             }
+            "scanDeviceAdmins" => {
+                let (target,): (Target,) = decoded(args)?;
+                encoded(self.adb(cancel)?.scan_device_admins(&target)?)
+            }
             "checkOwner" => {
                 let (target, name): (Target, String) = decoded(args)?;
                 encoded(self.adb(cancel)?.check_owner(&target, &name)?)
@@ -79,6 +83,15 @@ impl AppState {
                     return Err("请明确确认设备所有者授权。".into());
                 }
                 self.adb(cancel)?.set_owner(&target, &name)?;
+                Ok(Value::Null)
+            }
+            "checkOwnerRemoval" => {
+                let (target, name): (Target, String) = decoded(args)?;
+                encoded(self.adb(cancel)?.check_owner_removal(&target, &name)?)
+            }
+            "removeOwner" => {
+                let (target, name, consent): (Target, String, bool) = decoded(args)?;
+                self.adb(cancel)?.remove_owner(&target, &name, consent)?;
                 Ok(Value::Null)
             }
             _ => Err("不支持的操作。".into()),

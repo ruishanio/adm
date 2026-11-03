@@ -19,7 +19,9 @@ const props = defineProps<{
   options: { value: string; label: string; description?: string }[];
   searchPlaceholder: string;
   emptyLabel: string;
+  placeholder?: string;
   disabled?: boolean;
+  contentClass?: string;
 }>();
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>();
 const open = ref(false);
@@ -58,7 +60,7 @@ watch(
         class="app-select-trigger"
         @keydown.enter.space.down.prevent="open = true"
       >
-        <span>{{ selected?.label }}</span>
+        <span>{{ selected?.label || placeholder }}</span>
         <ChevronDown aria-hidden="true" />
       </ComboboxTrigger>
     </ComboboxAnchor>
@@ -68,6 +70,7 @@ watch(
         align="start"
         :side-offset="4"
         class="app-select-menu app-search-menu"
+        :class="contentClass"
       >
         <label class="app-select-search">
           <Search aria-hidden="true" />

@@ -24,9 +24,13 @@ export function createWorkbench(api: Api) {
     };
     const apps = createApps(workspace);
     const files = createFiles(workspace);
-    const owner = createOwner(workspace, (details) => {
-      devices.state.details = details;
-    });
+    const owner = createOwner(
+      workspace,
+      (details) => {
+        devices.state.details = details;
+      },
+      () => devices.state.details?.owner,
+    );
     const install = createInstall(workspace, {
       installed: async (target, adminComponent) => {
         apps.invalidate();

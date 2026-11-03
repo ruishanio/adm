@@ -186,6 +186,20 @@
   color: var(--muted);
   font-size: 12px;
 }
+/* 管理应用候选保持两行身份信息，长技术标识不折成密集段落，完整字段留在表单。 */
+.owner-app-menu .app-select-option {
+  padding-block: 8px;
+  gap: 12px;
+}
+.owner-app-menu .app-search-option-text {
+  flex: 1;
+  gap: 4px;
+}
+.owner-app-menu .app-search-option-text > span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 .app-select-empty {
   margin: 0;
   padding: 16px 8px;

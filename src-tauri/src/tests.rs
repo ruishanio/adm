@@ -39,6 +39,10 @@ fn apk() -> Apk {
 struct FakeState {
     calls: Vec<Vec<String>>,
     owner: String,
+    owner_user: u32,
+    owner_test_only: bool,
+    owner_remove_noop: bool,
+    owner_remove_error: bool,
     users: String,
     accounts: String,
     transport: String,
@@ -51,6 +55,10 @@ impl Default for FakeState {
         Self {
             calls: vec![],
             owner: String::new(),
+            owner_user: 0,
+            owner_test_only: true,
+            owner_remove_noop: false,
+            owner_remove_error: false,
             users: "UserInfo{0:Owner:13}".into(),
             accounts: "Accounts: 0".into(),
             transport: "42".into(),
@@ -85,7 +93,7 @@ impl Runner for Fake {
                 if s.owner.is_empty() {
                     String::new()
                 } else {
-                    format!(" Device Owner:\n admin=ComponentInfo{{{}}}", s.owner)
+                    format!("  Device Owner:\n    admin=ComponentInfo{{{}}}\n    User ID: {}\n\n  Enabled Device Admins (User {}, provisioningState: 3):\n    {}:\n      testOnlyAdmin={}\n", s.owner, s.owner_user, s.owner_user, s.owner, s.owner_test_only)
                 }
             )
         } else if has("path") {
@@ -99,6 +107,14 @@ impl Runner for Fake {
         } else if has("set-device-owner") {
             s.owner = args.last().unwrap().clone();
             "Success: Device owner set".into()
+        } else if has("remove-active-admin") {
+            if s.owner_remove_error {
+                return Err("Attempt to remove non-test admin".into());
+            }
+            if !s.owner_remove_noop {
+                s.owner.clear();
+            }
+            "Success: Admin removed".into()
         } else if has("install") {
             "Success\n".into()
         } else if has("package") {
@@ -346,6 +362,104 @@ fn owner_rechecks_after_preflight() {
         .set_owner(&target(), ADMIN)
         .unwrap_err()
         .contains("账号"));
+}
+
+#[test]
+fn owner_removal_uses_verified_user_and_confirms_result() {
+    let (adb, runner) = fake();
+    {
+        let mut s = runner.0.lock().unwrap();
+        s.owner = ADMIN.into();
+        s.owner_user = 10;
+    }
+    assert!(
+        adb.check_owner_removal(&target(), ADMIN)
+            .unwrap()
+            .can_remove
+    );
+    assert!(adb.remove_owner(&target(), ADMIN, false).is_err());
+    assert!(!runner
+        .0
+        .lock()
+        .unwrap()
+        .calls
+        .iter()
+        .any(|args| args.iter().any(|a| a == "remove-active-admin")));
+    adb.remove_owner(&target(), ADMIN, true).unwrap();
+    let s = runner.0.lock().unwrap();
+    assert!(s.owner.is_empty());
+    let removal = s
+        .calls
+        .iter()
+        .find(|args| args.iter().any(|a| a == "remove-active-admin"))
+        .unwrap();
+    assert!(removal.windows(3).any(|w| w == ["--user", "10", ADMIN]));
+    assert!(s
+        .calls
+        .last()
+        .unwrap()
+        .iter()
+        .any(|arg| arg == "device_policy"));
+}
+
+#[test]
+fn owner_removal_rejects_changed_owner_permission_or_transport() {
+    for scenario in 0..3 {
+        let (adb, runner) = fake();
+        runner.0.lock().unwrap().owner = ADMIN.into();
+        assert!(
+            adb.check_owner_removal(&target(), ADMIN)
+                .unwrap()
+                .can_remove
+        );
+        {
+            let mut s = runner.0.lock().unwrap();
+            match scenario {
+                0 => s.owner = "com.other.app/com.other.app.Admin".into(),
+                1 => s.owner_test_only = false,
+                _ => s.transport = "new-session".into(),
+            }
+        }
+        assert!(adb.remove_owner(&target(), ADMIN, true).is_err());
+        assert!(!runner
+            .0
+            .lock()
+            .unwrap()
+            .calls
+            .iter()
+            .any(|args| args.iter().any(|a| a == "remove-active-admin")));
+    }
+}
+
+#[test]
+fn owner_removal_reports_system_refusal_and_failed_readback() {
+    for fail_command in [true, false] {
+        let (adb, runner) = fake();
+        {
+            let mut s = runner.0.lock().unwrap();
+            s.owner = ADMIN.into();
+            s.owner_remove_error = fail_command;
+            s.owner_remove_noop = !fail_command;
+        }
+        let error = adb.remove_owner(&target(), ADMIN, true).unwrap_err();
+        assert!(error.contains(if fail_command {
+            "测试模式"
+        } else {
+            "尚未确认"
+        }));
+        assert_eq!(runner.0.lock().unwrap().owner, ADMIN);
+    }
+    let (adb, runner) = fake();
+    {
+        let mut s = runner.0.lock().unwrap();
+        s.owner = ADMIN.into();
+        s.owner_test_only = false;
+    }
+    assert!(
+        !adb.check_owner_removal(&target(), ADMIN)
+            .unwrap()
+            .can_remove
+    );
 }
 #[test]
 fn download_failure_preserves_existing_file() {

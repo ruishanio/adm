@@ -95,6 +95,19 @@ pub struct OwnerCheck {
     pub already_set: bool,
     pub summary: String,
 }
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct DeviceAdmin {
+    pub component: String,
+    pub label: Option<String>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OwnerRemovalCheck {
+    pub can_remove: bool,
+    pub summary: String,
+}
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct AppVersion {
     pub name: String,

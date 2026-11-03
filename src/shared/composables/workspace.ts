@@ -18,6 +18,8 @@ export function workspaceState() {
       | 'app-details'
       | 'app-uninstall'
       | 'app-confirm'
+      | 'owner-remove'
+      | 'owner-set'
       | 'install'
       | null,
     name: '',

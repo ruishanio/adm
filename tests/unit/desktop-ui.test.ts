@@ -47,6 +47,7 @@ function setup() {
       serial: 'test',
       owner: null,
     })),
+    scanDeviceAdmins: vi.fn(async () => []),
     pair: vi.fn(async () => {}),
     connect: vi.fn(async () => {}),
     sidebarWidth: vi.fn(async () => {}),
@@ -67,7 +68,7 @@ function setup() {
   w.workspace.state.selected = 'test@1';
   return w;
 }
-it('组件到达后展开配置，检查通过并勾选后才可设置', async () => {
+it('组件到达后展开并自动扫描，检查通过后在弹窗内确认授权', async () => {
   const w = setup();
   const view = mount(DeviceInfoPage, {
     global: { provide: w.providers },
@@ -77,16 +78,24 @@ it('组件到达后展开配置，检查通过并勾选后才可设置', async (
   await flushPromises();
   expect(view.get('#owner-configuration').attributes('hidden')).toBeDefined();
   w.owner.state.component = 'com.test/.Admin';
-  await nextTick();
+  await flushPromises();
   expect(view.get('#owner-configuration').attributes('hidden')).toBeUndefined();
   const action = () => view.findAll('button').find((b) => b.text() === '设置设备所有者')!;
   expect(action().attributes('disabled')).toBeDefined();
+  expect(view.find('[role="checkbox"]').exists()).toBe(false);
   w.owner.state.ownerCheck = { canSet: true, alreadySet: false, summary: '检查通过' };
   await nextTick();
-  expect(action().attributes('disabled')).toBeDefined();
-  await view.get('[role="checkbox"]').trigger('click');
-  expect(w.owner.state.consent).toBe(true);
   expect(action().attributes('disabled')).toBeUndefined();
+  expect(view.find('[role="checkbox"]').exists()).toBe(false);
+  await action().trigger('click');
+  await flushPromises();
+  const dialog = document.querySelector('[role="dialog"]')!;
+  const confirm = [...dialog.querySelectorAll('button')].find((button) => button.textContent === '确认设置')!;
+  expect(confirm.disabled).toBe(true);
+  (dialog.querySelector('[role="checkbox"]') as HTMLElement).click();
+  await nextTick();
+  expect(w.owner.state.consent).toBe(true);
+  expect(confirm.disabled).toBe(false);
 });
 
 it('鼠标选择设备保留焦点但隐藏焦点框，键盘操作恢复提示，F2 不打开备注编辑', async () => {

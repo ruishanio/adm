@@ -21,30 +21,11 @@
   box-shadow: none;
   color: var(--foreground);
 }
-.owner-config-toggle .disclosure-chevron {
-  margin-left: auto;
-}
 .owner-form {
   padding: 8px 4px 16px 28px;
 }
 .owner-form[hidden] {
   display: none;
-}
-.form-row {
-  display: grid;
-  grid-template-columns: 88px minmax(0, 1fr);
-  gap: 12px;
-  align-items: start;
-  margin-bottom: 12px;
-}
-.form-row > label {
-  padding-top: 4px;
-  color: var(--muted);
-}
-.owner-form .field-hint,
-.owner-form > .inline-result,
-.owner-form .owner-actions {
-  margin-left: 100px;
 }
 .section-heading h2 {
   display: flex;
@@ -63,12 +44,6 @@
   .device-properties > div {
     grid-template-columns: 80px minmax(0, 1fr);
     gap: 8px;
-  }
-  .owner-actions .checkbox {
-    align-items: flex-start;
-  }
-  .owner-actions .checkbox input {
-    margin-top: 2px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

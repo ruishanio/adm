@@ -39,7 +39,7 @@ fn parse_labels(text: &str) -> Result<BTreeMap<String, String>> {
 }
 
 /// 只接受版本化、大小受限的辅助数据；缺失字段保持未知，不把失败伪装成零字节。
-fn reader_json<T: serde::de::DeserializeOwned>(text: &str, marker: &str) -> Result<T> {
+pub(crate) fn reader_json<T: serde::de::DeserializeOwned>(text: &str, marker: &str) -> Result<T> {
     if text.len() > 4 * 1024 * 1024 {
         return Err("应用资源数据过大。".into());
     }
@@ -179,7 +179,7 @@ fn parse_details(text: &str, app: InstalledApp) -> Result<AppDetails> {
 
 impl Adb {
     /// 临时运行自有 DEX；输入为固定传输会话和读取模式，返回带版本标记的资源 JSON。
-    fn app_reader(&self, target: &Target, mode: &[&str]) -> Result<String> {
+    pub(crate) fn app_reader(&self, target: &Target, mode: &[&str]) -> Result<String> {
         let mut local = tempfile::NamedTempFile::new().map_err(|e| e.to_string())?;
         local.write_all(LABEL_READER).map_err(|e| e.to_string())?;
         let remote = format!("/data/local/tmp/adm-app-labels-{}.jar", Uuid::new_v4());
@@ -491,7 +491,10 @@ mod tests {
                 if s.stale_after_labels {
                     s.stale = true;
                 }
-                if has("running") {
+                if has("admins") {
+                    r#"ADM_ADMINS_V1:[{"component":"com.example.app/.Admin","label":"中文应用"}]"#
+                        .into()
+                } else if has("running") {
                     "ADM_RUNNING_V1:[\"com.example.app\"]".into()
                 } else if has("icons") {
                     "ADM_ICONS_V1:{\"com.example.app\":\"iVBORw0KGgoAAAA=\",\"com.other.app\":\"iVBORw0KGgoAAAA=\"}".into()
@@ -616,6 +619,43 @@ mod tests {
         let (adb, runner, target) = fake();
         runner.0.lock().unwrap().stale_after_labels = true;
         assert!(adb.list_apps(&target).unwrap_err().contains("重连"));
+    }
+    #[test]
+    fn admin_scan_binds_transport_cleans_reader_and_rejects_unavailable_results() {
+        let (adb, runner, target) = fake();
+        let admins = adb.scan_device_admins(&target).unwrap();
+        assert_eq!(admins[0].component, "com.example.app/com.example.app.Admin");
+        assert_eq!(admins[0].label.as_deref(), Some("中文应用"));
+        {
+            let s = runner.0.lock().unwrap();
+            let read = s
+                .calls
+                .iter()
+                .find(|c| c.contains(&"app_process".into()))
+                .unwrap();
+            assert_eq!(&read[..2], ["-t", "42"]);
+            assert_eq!(read.last().unwrap(), "admins");
+            let push = s.calls.iter().find(|c| c.contains(&"push".into())).unwrap();
+            let cleanup = s.calls.iter().find(|c| c.contains(&"rm".into())).unwrap();
+            assert_eq!(push.last(), cleanup.last());
+        }
+        runner.0.lock().unwrap().labels_fail = true;
+        assert!(adb
+            .scan_device_admins(&target)
+            .unwrap_err()
+            .contains("无法扫描"));
+        runner.0.lock().unwrap().cancel_labels = true;
+        assert!(adb
+            .scan_device_admins(&target)
+            .unwrap_err()
+            .contains("停止等待"));
+        assert!(!runner.0.lock().unwrap().cleanup_cancelled);
+        let (adb, runner, target) = fake();
+        runner.0.lock().unwrap().stale_after_labels = true;
+        assert!(adb
+            .scan_device_admins(&target)
+            .unwrap_err()
+            .contains("重连"));
     }
     #[test]
     fn label_parser_preserves_unicode_and_rejects_invalid_or_missing_names() {

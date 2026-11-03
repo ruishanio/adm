@@ -4,6 +4,63 @@ use crate::devices::DeviceOperations;
 use crate::files::FileOperations;
 use crate::{adb::process::cancellation, adb::Adb, apps::apk::read_apk, models::Target};
 use std::{fs, path::PathBuf};
+/// 核对已安装管理应用的读取结果、所有者和临时文件；不安装应用或修改设备策略。
+#[test]
+#[ignore = "需要 ADM_ADMIN_SERIAL、ADM_ADMIN_EXPECTED，显式选择只读扫描模拟器"]
+fn device_admin_scan() {
+    let serial = std::env::var("ADM_ADMIN_SERIAL").expect("缺少模拟器序列号");
+    assert!(serial.starts_with("emulator-"));
+    let expected = std::env::var("ADM_ADMIN_EXPECTED").expect("缺少预期管理组件");
+    let expected = crate::parsing::component(&expected).unwrap();
+    let adb = Adb::new(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("resources/platform-tools")
+            .join(if cfg!(windows) { "adb.exe" } else { "adb" }),
+        cancellation(),
+    );
+    let device = adb
+        .devices()
+        .unwrap()
+        .into_iter()
+        .find(|d| d.serial == serial && d.state == "device")
+        .unwrap();
+    let target = Target {
+        serial: device.serial,
+        transport_id: device.transport_id,
+    };
+    let owner = || {
+        crate::parsing::parse_owner(&adb.shell(&target, &["dumpsys", "device_policy"]).unwrap())
+            .unwrap()
+    };
+    let temporary_files = || {
+        let output = adb
+            .shell(
+                &target,
+                &[
+                    "find",
+                    "/data/local/tmp",
+                    "-maxdepth",
+                    "1",
+                    "-name",
+                    "adm-app-labels-*.jar",
+                ],
+            )
+            .unwrap();
+        let mut files: Vec<_> = output.lines().map(str::to_string).collect();
+        files.sort();
+        files
+    };
+    let before_owner = owner();
+    let before_files = temporary_files();
+    let admins = adb.scan_device_admins(&target).unwrap();
+    assert!(admins.iter().any(|entry| entry.component == expected));
+    assert_eq!(owner(), before_owner);
+    assert_eq!(temporary_files(), before_files);
+    println!(
+        "扫描通过：{serial} → {}；所有者未改变，临时读取器已清理",
+        serde_json::to_string(&admins).unwrap()
+    );
+}
 /// 只读取指定模拟器的应用名称，核对临时读取器已清理；不安装或卸载任何应用。
 #[test]
 #[ignore = "需要 ADM_LABEL_SERIAL、ADM_LABEL_PACKAGE、ADM_LABEL_EXPECTED，显式选择模拟器"]

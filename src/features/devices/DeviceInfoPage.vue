@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import { useDevices } from '@/features/devices/state';
 const devicesFeature = useDevices();
-import { useInstall } from '@/features/apps/install/state';
-const installFeature = useInstall();
-import { useOwner } from '@/features/devices/owner/state';
-const ownerFeature = useOwner();
+import OwnerSection from '@/features/devices/owner/OwnerSection.vue';
 
 import { t } from '@/shared/i18n/index';
 import { computed } from 'vue';
@@ -12,7 +9,6 @@ import {
   Smartphone,
   ArrowRight,
   Cpu,
-  ShieldCheck,
   ChevronRight,
   RefreshCw,
   MemoryStick,
@@ -22,8 +18,6 @@ import {
   FileCode,
 } from '@lucide/vue';
 import { Button } from '@/shared/ui/button/index';
-import { Input } from '@/shared/ui/input/index';
-import { Checkbox } from '@/shared/ui/checkbox/index';
 import { useWorkspace } from '@/shared/composables/workspace';
 import { deviceStatus } from '@/shared/utils/device';
 import { deviceInfoGroups, buildProperties, overviewMetrics } from '@/features/devices/format';
@@ -112,95 +106,7 @@ const disclosures = computed(() => [
           </div>
         </dl>
       </details>
-      <section class="info-disclosure owner-section">
-        <Button
-          variant="ghost"
-          class="owner-config-toggle"
-          :aria-expanded="ownerFeature.state.ownerExpanded"
-          aria-controls="owner-configuration"
-          @click="ownerFeature.state.ownerExpanded = !ownerFeature.state.ownerExpanded"
-        >
-          <ShieldCheck class="icon-owner" aria-hidden="true" />
-          <span class="disclosure-title">{{ t('设备所有者') }}</span>
-          <ChevronRight class="disclosure-chevron" aria-hidden="true" />
-        </Button>
-        <div id="owner-configuration" class="owner-form" :hidden="!ownerFeature.state.ownerExpanded">
-          <p class="owner-identity" :class="{ 'owner-unset': !devicesFeature.state.details?.owner }">
-            <span>{{ t('当前所有者') }}</span>
-            {{
-              devicesFeature.state.details
-                ? devicesFeature.state.details.owner || t('尚未设置')
-                : t('读取中…')
-            }}
-          </p>
-          <div v-if="installFeature.state.apk?.admins.length" class="form-row">
-            <label for="apk-admin">{{ t('安装包组件') }}</label
-            ><select id="apk-admin" v-model="ownerFeature.state.component" :disabled="!!s.busy">
-              <option
-                v-for="component in installFeature.state.apk.admins"
-                :key="component"
-                :value="component"
-              >
-                {{ component }}
-              </option>
-              <option
-                v-if="!installFeature.state.apk.admins.includes(ownerFeature.state.component)"
-                :value="ownerFeature.state.component"
-              >
-                {{ t('自定义组件') }}
-              </option>
-            </select>
-          </div>
-          <div class="form-row">
-            <label for="owner-component">{{ t('管理组件') }}</label>
-            <div class="component-input">
-              <Input
-                id="owner-component"
-                v-model="ownerFeature.state.component"
-                :aria-describedby="ownerFeature.state.ownerCheck ? 'owner-result' : 'owner-help'"
-                placeholder="com.example.app/.DeviceAdminReceiver"
-                :disabled="!!s.busy"
-                :spellcheck="false"
-              /><Button
-                variant="outline"
-                :disabled="!!s.busy || !ownerFeature.state.component.trim()"
-                @click="ownerFeature.checkOwner"
-                >{{ t('检查条件') }}</Button
-              >
-            </div>
-          </div>
-          <div
-            v-if="ownerFeature.state.ownerCheck"
-            id="owner-result"
-            role="status"
-            :class="[
-              'inline-result',
-              ownerFeature.state.ownerCheck.canSet || ownerFeature.state.ownerCheck.alreadySet
-                ? 'success'
-                : 'error',
-            ]"
-          >
-            {{ ownerFeature.state.ownerCheck.summary }}
-          </div>
-          <p v-else id="owner-help" class="field-hint">
-            {{ t('先安装管理应用，再检查组件、主用户和账号状态。') }}
-          </p>
-          <div class="owner-actions">
-            <label class="checkbox"
-              ><Checkbox
-                v-model="ownerFeature.state.consent"
-                :disabled="!!s.busy || !ownerFeature.state.ownerCheck?.canSet"
-                :aria-label="t('确认将此设备授权给上述管理应用')"
-              /><span>{{ t('确认将此设备授权给上述管理应用') }}</span></label
-            ><Button
-              class="primary"
-              :disabled="!!s.busy || !ownerFeature.state.consent || !ownerFeature.state.ownerCheck?.canSet"
-              @click="ownerFeature.setOwner"
-              >{{ t('设置设备所有者') }}</Button
-            >
-          </div>
-        </div>
-      </section>
+      <OwnerSection />
     </section>
   </div>
 </template>

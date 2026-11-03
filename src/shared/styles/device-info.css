@@ -27,6 +27,8 @@
 .properties dt {
   color: var(--muted);
   font-size: 13px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .properties dd {
   margin: 0;
@@ -66,6 +68,12 @@
   height: 15px;
   stroke-width: 1.5;
   color: var(--device);
+  flex-shrink: 0;
+}
+/* 长语言的指标名可占两行，四个读数仍对齐在同一基线上。 */
+.device-metrics:not(:lang(zh)):not(:lang(ja)) dt {
+  min-height: 36px;
+  line-height: 18px;
 }
 .device-metrics [data-metric='storage'] dt svg {
   color: var(--folder);
@@ -104,28 +112,14 @@
 .device-properties dd {
   white-space: pre-line;
 }
-.device-properties:lang(en) > div {
-  grid-template-columns: 96px minmax(0, 1fr);
+.device-properties:not(:lang(zh)) > div {
+  grid-template-columns: minmax(0, 40%) minmax(0, 1fr);
 }
 .device-properties > .property-wide {
   grid-column: 1 / -1;
 }
 .info-refresh {
   font-size: 12px;
-}
-.owner-identity {
-  margin: 0 0 16px;
-  font-size: 12px;
-  line-height: 1.6;
-  overflow-wrap: anywhere;
-  user-select: text;
-}
-.owner-identity > span {
-  color: var(--muted);
-  margin-right: 8px;
-}
-.owner-unset {
-  color: var(--muted);
 }
 .info-disclosure {
   border-bottom: 1px solid var(--line);
@@ -179,6 +173,121 @@
 .info-disclosure > .device-properties {
   padding: 0 4px 12px 28px;
 }
+/* 所有者按当前状态分流：已配置显示只读身份，待配置才呈现表单。 */
+.owner-current {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+.owner-current-identity {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: var(--owner-label-width, 88px) minmax(0, 1fr);
+  gap: 8px 12px;
+  margin: 0;
+  padding-block: 4px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.owner-current-identity dt,
+.owner-fields > label {
+  color: var(--muted);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.owner-form:not(:lang(zh)):not(:lang(ja)) {
+  --owner-label-width: 128px;
+}
+.owner-current-identity dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+/* 共用标签、字段和操作三列，让刷新与检查按钮不再改变各行字段宽度。 */
+.owner-fields {
+  display: grid;
+  grid-template-columns: var(--owner-label-width, 88px) minmax(0, 1fr) auto;
+  gap: 8px 12px;
+  align-items: center;
+}
+.owner-fields > label {
+  grid-column: 1;
+  font-size: 12px;
+}
+.owner-fields > input,
+.owner-fields > .app-search-select,
+.owner-fields > .app-select-trigger {
+  grid-column: 2;
+  min-width: 0;
+}
+.owner-field-action {
+  grid-column: 3;
+  justify-self: start;
+}
+/* 沿用工作区筛选控件的浅色表面，默认不描边；编辑时保留单层焦点边框。 */
+.owner-fields input,
+.owner-fields .app-select-trigger {
+  padding-inline: 8px;
+  box-shadow: none;
+  background: var(--sidebar);
+  border-color: transparent;
+}
+.owner-fields input {
+  --focus-outline-width: 0px;
+}
+.owner-fields input:hover:not(:disabled):not(:focus),
+.owner-fields .app-select-trigger:hover:not(:disabled),
+.owner-fields .app-select-trigger[data-state='open']:not(:disabled) {
+  background: var(--hover);
+  border-color: transparent;
+}
+.owner-fields input:focus:not(:disabled) {
+  background: var(--surface);
+  border-color: var(--focus);
+}
+.owner-fields input:disabled,
+.owner-fields .app-select-trigger:disabled {
+  background: var(--surface-subtle);
+}
+.owner-fields .app-select-trigger > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.owner-fields input,
+.owner-form button {
+  font-size: 12px;
+}
+.owner-setup-feedback {
+  margin: 8px 0 0 calc(var(--owner-label-width, 88px) + 12px);
+}
+.owner-setup-feedback > .field-hint {
+  margin: 0;
+}
+.owner-check-result {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--success);
+  overflow-wrap: anywhere;
+}
+.owner-check-result.error {
+  color: var(--error);
+}
+.owner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  margin-top: 12px;
+}
+.checkbox.owner-consent {
+  color: var(--foreground);
+  align-items: flex-start;
+}
 .field {
   display: flex;
   flex-direction: column;
@@ -189,36 +298,6 @@
 }
 .field + .field {
   margin-top: 16px;
-}
-.component-input {
-  display: flex;
-  gap: 8px;
-  min-width: 0;
-}
-.component-input input {
-  font-size: 12px;
-}
-.component-input button {
-  font-size: 12px;
-  padding: 0 10px;
-}
-.owner-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  align-items: flex-start;
-  margin-top: 16px;
-}
-.owner-actions .checkbox {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  user-select: none;
-  font-size: 13px;
-  color: var(--foreground);
-}
-.owner-actions button {
-  font-size: 12px;
 }
 .checkbox {
   display: flex;

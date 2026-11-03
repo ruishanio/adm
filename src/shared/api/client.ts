@@ -57,7 +57,10 @@ export const api: Api = {
   uninstallApp: (t, packageName, versionCode, consent) =>
     call('uninstallApp', target(t), packageName, versionCode, consent),
   checkOwner: (t, c) => call('checkOwner', target(t), c),
+  scanDeviceAdmins: (t) => call('scanDeviceAdmins', target(t)),
   setOwner: (t, c, consent) => call('setOwner', target(t), c, consent),
+  checkOwnerRemoval: (t, c) => call('checkOwnerRemoval', target(t), c),
+  removeOwner: (t, c, consent) => call('removeOwner', target(t), c, consent),
   listFiles: (t, path) => call('listFiles', target(t), path),
   upload: (t, path, kind) => call('upload', target(t), path, kind),
   renameFile: (t, directory, name, next) => call('renameFile', target(t), directory, name, next),

@@ -74,6 +74,14 @@ export interface OwnerCheck {
   alreadySet: boolean;
   summary: string;
 }
+export interface OwnerRemovalCheck {
+  canRemove: boolean;
+  summary: string;
+}
+export interface DeviceAdmin {
+  component: string;
+  label: string | null;
+}
 export type AppAction = 'launch' | 'force-stop' | 'clear-data';
 export interface InstalledApp {
   version?: { name: string; code: string } | null;
@@ -213,7 +221,10 @@ export interface Api {
   copyPackage(packageName: string): Promise<void>;
   uninstallApp(target: Target, packageName: string, versionCode: string, consent: boolean): Promise<void>;
   checkOwner(target: Target, component: string): Promise<OwnerCheck>;
+  scanDeviceAdmins(target: Target): Promise<DeviceAdmin[]>;
   setOwner(target: Target, component: string, consent: boolean): Promise<void>;
+  checkOwnerRemoval(target: Target, component: string): Promise<OwnerRemovalCheck>;
+  removeOwner(target: Target, component: string, consent: boolean): Promise<void>;
   listFiles(target: Target, path: string): Promise<DeviceFile[]>;
   upload(target: Target, path: string, kind: 'files' | 'folders'): Promise<boolean>;
   renameFile(target: Target, directory: string, name: string, next: string): Promise<void>;

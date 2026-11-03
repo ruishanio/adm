@@ -17,6 +17,7 @@ python3 scripts/build_app_labels.py --sdk /path/to/Android/sdk
 - 默认模式：`ADM_LABELS_V1` 输出名称，`ADM_APPS_V1` 输出版本、主 APK / split APK 文件总大小及启动组件。每个字段独立降级，失败不填零。
 - `icons <包名...>`：单次最多 24 个，`ADM_ICONS_V1` 输出 64×64 PNG；通过系统 Drawable 渲染，兼容位图、矢量和自适应图标。
 - `running`：`ADM_RUNNING_V1` 输出 `RunningAppProcessInfo.pkgList` 关联到主用户的包名，包含后台及缓存进程；无法读取有效进程时返回错误，桌面端显示未知。
+- `admins`：`ADM_ADMINS_V1` 输出主用户已启用的设备管理接收器及应用名称；通过 `DEVICE_ADMIN_ENABLED` 查询、`BIND_DEVICE_ADMIN` 权限和 `DeviceAdminInfo` 元数据解析筛选，不激活管理员或更改所有者。读取失败明确报错，不能当作没有候选应用。
 
 桌面端仅为可见行请求图标，并按设备会话、包路径和版本缓存；运行状态独立串行轮询，约每 5 秒读取一次，隐藏页面后停止新请求。
 

@@ -1,11 +1,15 @@
 package com.ruinext.adm;
 
 import android.app.ActivityManager;
+import android.app.admin.DeviceAdminInfo;
+import android.app.admin.DeviceAdminReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
@@ -72,6 +76,36 @@ public final class AppLabels {
         if (packages.isEmpty()) throw new IllegalStateException("Package association unavailable");
         System.out.println("ADM_RUNNING_V1:" + new JSONArray(packages).toString());
     }
+    /** 查询主用户已启用的管理接收器，校验权限和管理策略 XML，返回组件及可用的应用名称。 */
+    private static void admins(Context context) throws Exception {
+        PackageManager pm = context.getPackageManager();
+        List<ResolveInfo> receivers = pm.queryBroadcastReceivers(
+                new Intent(DeviceAdminReceiver.ACTION_DEVICE_ADMIN_ENABLED), PackageManager.GET_META_DATA);
+        JSONArray result = new JSONArray();
+        for (ResolveInfo resolve : receivers) {
+            ActivityInfo receiver = resolve.activityInfo;
+            if (receiver == null || receiver.applicationInfo == null
+                    || receiver.applicationInfo.uid / 100000 != 0
+                    || !"android.permission.BIND_DEVICE_ADMIN".equals(receiver.permission)) continue;
+            DeviceAdminInfo admin;
+            try {
+                // 普通广播接收器不能成为候选；交由 Android 自身校验 device-admin 元数据。
+                admin = new DeviceAdminInfo(context, resolve);
+            } catch (org.xmlpull.v1.XmlPullParserException | java.io.IOException invalid) {
+                continue;
+            }
+            JSONObject item = new JSONObject();
+            item.put("component", admin.getComponent().flattenToString());
+            try {
+                CharSequence label = pm.getApplicationLabel(receiver.applicationInfo);
+                if (label != null) item.put("label", label.toString());
+            } catch (Exception ignored) {
+                // 名称资源缺失不丢弃合法组件，桌面端会回退到包名。
+            }
+            result.put(item);
+        }
+        System.out.println("ADM_ADMINS_V1:" + result.toString());
+    }
     public static void main(String[] args) {
         try {
             Looper.prepareMainLooper();
@@ -82,6 +116,7 @@ public final class AppLabels {
             PackageManager pm = context.getPackageManager();
             if (args.length > 0 && "icons".equals(args[0])) icons(pm, args);
             else if (args.length > 0 && "running".equals(args[0])) running(context);
+            else if (args.length > 0 && "admins".equals(args[0])) admins(context);
             else {
                 JSONObject labels = new JSONObject();
                 JSONObject metadata = new JSONObject();

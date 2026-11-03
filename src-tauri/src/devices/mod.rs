@@ -3,7 +3,9 @@ use crate::{
     models::*,
     parsing::*,
 };
+mod admins;
 pub(crate) mod info;
+mod owner;
 
 /// 按业务提供 ADB 操作；调用方显式引入能力，底层客户端不反向依赖业务。
 pub(crate) trait DeviceOperations {
@@ -12,6 +14,8 @@ pub(crate) trait DeviceOperations {
     fn pair(&self, address: &str, code: &str) -> Result<()>;
     fn check_owner(&self, device: &Target, name: &str) -> Result<OwnerCheck>;
     fn set_owner(&self, device: &Target, name: &str) -> Result<()>;
+    fn check_owner_removal(&self, device: &Target, name: &str) -> Result<OwnerRemovalCheck>;
+    fn remove_owner(&self, device: &Target, name: &str, consent: bool) -> Result<()>;
 }
 impl DeviceOperations for Adb {
     fn details(&self, device: &Target) -> Result<Details> {
@@ -153,6 +157,68 @@ impl DeviceOperations for Adb {
             != Some(&name)
         {
             return Err("命令已提交，但未确认设备所有者，请刷新核对。".into());
+        }
+        Ok(())
+    }
+
+    fn check_owner_removal(&self, device: &Target, name: &str) -> Result<OwnerRemovalCheck> {
+        let name = component(name)?;
+        self.ensure_online(device)?;
+        let policy = self.shell(device, &["dumpsys", "device_policy"])?;
+        let target = owner::removal_target(&policy, &name)?;
+        Ok(OwnerRemovalCheck {
+            can_remove: target.is_some_and(|(_, test_only)| test_only),
+            summary: match target {
+                Some((_, true)) => "移除后，此应用将失去设备管理权限；应用及其数据会保留。",
+                Some((_, false)) => owner::REMOVE_UNSUPPORTED,
+                None => "设备已无所有者，请刷新设备信息。",
+            }
+            .into(),
+        })
+    }
+
+    /// 只移除用户确认的当前所有者；再次读取系统权限与用户，命令成功后回读状态。
+    fn remove_owner(&self, device: &Target, name: &str, consent: bool) -> Result<()> {
+        if !consent {
+            return Err("请明确确认移除设备所有者。".into());
+        }
+        let name = component(name)?;
+        self.ensure_online(device)?;
+        let policy = self.shell(device, &["dumpsys", "device_policy"])?;
+        let Some((user, test_only)) = owner::removal_target(&policy, &name)? else {
+            return Ok(());
+        };
+        if !test_only {
+            return Err(owner::REMOVE_UNSUPPORTED.into());
+        }
+        // 使用策略中的用户，而不是默认用户 0，防止同名组件被移除在错误的用户下。
+        let output = self
+            .shell(
+                device,
+                &[
+                    "dpm",
+                    "remove-active-admin",
+                    "--user",
+                    &user.to_string(),
+                    &name,
+                ],
+            )
+            .map_err(|error| {
+                if error.contains("non-test admin") {
+                    owner::REMOVE_UNSUPPORTED.into()
+                } else {
+                    error
+                }
+            })?;
+        if !re(r"(?m)^Success:").is_match(&output) {
+            return Err(if output.contains("non-test admin") {
+                owner::REMOVE_UNSUPPORTED.into()
+            } else {
+                friendly_error(&output)
+            });
+        }
+        if parse_owner(&self.shell(device, &["dumpsys", "device_policy"])?)?.is_some() {
+            return Err("命令已提交，但尚未确认所有者已移除，请刷新核对。".into());
         }
         Ok(())
     }
