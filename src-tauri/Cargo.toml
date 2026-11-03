@@ -1,6 +1,6 @@
 [package]
 name = "adm"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 description = "Device manager for Android"
 authors = ["RuiNext"]
