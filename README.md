@@ -11,13 +11,17 @@ npm ci
 npm run dev
 ```
 
-打开 `http://127.0.0.1:5383/`。`npm run build` 检查八种语言并输出 `dist/`；`npm run preview` 在 5384 端口预览构建结果。资源使用相对路径，可部署到项目子路径。正式网站地址为 [ruishanio.github.io/adm](https://ruishanio.github.io/adm/)。
+打开 `http://127.0.0.1:5383/`。`npm run build` 检查八种语言并输出 `dist/`；`npm run preview` 在 5384 端口预览构建结果。资源使用相对路径，可部署到项目子路径。正式网站地址为 [adm.ruishanio.com](https://adm.ruishanio.com/)。
 
 ## 发布
 
 官网源码在独立的 `website` 分支，桌面应用仍由 `master` 分支维护。推送 `website` 后，GitHub Actions 自动安装依赖、检查模型交互与八种语言、构建 `dist/`，再部署到 GitHub Pages。
 
-仓库 Settings → Pages 的 Source 使用 GitHub Actions。发布流程在 `.github/workflows/pages.yml`；构建产物不提交到源码分支。仓库 About 的 Website 指向 `https://ruishanio.github.io/adm/`。
+仓库 Settings → Pages 的 Source 使用 GitHub Actions。发布流程在 `.github/workflows/pages.yml`；构建产物不提交到源码分支。仓库 About 的 Website 指向 `https://adm.ruishanio.com/`。
+
+Settings → Environments → github-pages 的 Deployment branches and tags 需包含精确分支名 `website`，否则构建成功后仍会被环境规则阻止部署。
+
+自定义域名在 Settings → Pages 中设置为 `adm.ruishanio.com`，阿里云 DNS 的 `adm` CNAME 指向 `ruishanio.github.io`（不带协议或路径）。等待 DNS 校验和证书签发后启用 Enforce HTTPS；此 Actions 发布方式不依赖源码中的 CNAME 文件。
 
 ## 首屏交互
 
