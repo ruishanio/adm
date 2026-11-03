@@ -1,0 +1,41 @@
+name: Accessibility / 无障碍问题
+description: Report a keyboard, screen-reader, or visual accessibility barrier / 反馈键盘、屏幕阅读器或视觉使用障碍
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the interaction barrier; no disability or medical information is needed.
+        请描述操作障碍，无需提供残障或医疗信息。可使用中文或英文。
+        See [Accessibility / 无障碍说明](https://github.com/ruishanio/adm/blob/master/ACCESSIBILITY.md).
+  - type: input
+    id: version
+    attributes:
+      label: ADM version / ADM 版本
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: OS and assistive tools / 系统与辅助工具
+      description: Include OS version and relevant tool or display settings, if any. / 请提供系统版本，以及相关的辅助工具或显示设置（如有）。
+      placeholder: e.g. macOS 15 + VoiceOver; Windows 11 + NVDA; keyboard only / 仅键盘
+    validations:
+      required: true
+  - type: textarea
+    id: barrier
+    attributes:
+      label: Task and barrier / 操作目标与障碍
+      description: Which screen or control is affected, what steps did you take, and what happened? / 在哪个页面或控件上，做了什么操作，遇到了什么问题？
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior / 预期行为
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context / 补充信息
+      description: Optional. Screenshots and recordings are not required; remove private data from anything you share. / 可选，无需一定提供截图或录屏；分享前请移除私人信息。

@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security vulnerability / 私密反馈安全漏洞
+    url: https://github.com/ruishanio/adm/security/advisories/new
+    about: Report vulnerabilities privately; do not disclose them in public issues. / 私密报告安全漏洞，请勿在公开 Issue 中披露。

@@ -10,6 +10,12 @@ The frontend uses **Vue 3, TypeScript, Tailwind CSS 4, and shadcn-vue**, with **
 
 For device control, Rust implements sessions, the protocol, input, and MP4 muxing; the frontend decodes video with WebCodecs. The Android side reuses the official scrcpy server. See the [server notes](src-tauri/resources/scrcpy/README.md) for the pinned version, source, and license.
 
+## Community and feedback
+
+Follow the [code of conduct](CODE_OF_CONDUCT.md). Use the [issue forms](https://github.com/ruishanio/adm/issues/new/choose) for bugs, feature requests, or accessibility barriers; English and Chinese are both welcome. Search existing issues first and remove private data from any logs or screenshots.
+
+Report security vulnerabilities privately using [SECURITY.md](SECURITY.md), not public issues or pull requests. See [ACCESSIBILITY.md](ACCESSIBILITY.md) for accessibility support, known limitations, and feedback guidance.
+
 ## Local development
 
 Install Node.js 24, Python 3.10+, rustup, and the [Tauri platform prerequisites](https://v2.tauri.app/start/prerequisites/). The Rust toolchain and components are pinned in [rust-toolchain.toml](rust-toolchain.toml). macOS requires Xcode Command Line Tools; Windows requires MSVC C++ build tools and WebView2.

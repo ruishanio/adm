@@ -1,0 +1,75 @@
+name: Bug report / 问题反馈
+description: Report a reproducible problem in ADM / 反馈可复现的问题
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please search existing issues first. English and Chinese are both welcome.
+        请先检索已有 Issue，可使用中文或英文。
+
+        For security vulnerabilities, use [private reporting](https://github.com/ruishanio/adm/security/advisories/new).
+        安全漏洞请使用私密反馈，不要在此公开细节。
+  - type: input
+    id: version
+    attributes:
+      label: ADM version / ADM 版本
+      placeholder: e.g. 0.1.4; for source builds include the commit / 源码运行请附提交号
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Desktop platform / 桌面平台
+      options:
+        - macOS (Apple Silicon)
+        - Windows (x64)
+        - Other or source build / 其他或源码运行
+    validations:
+      required: true
+  - type: input
+    id: os-version
+    attributes:
+      label: OS version / 系统版本
+      placeholder: e.g. macOS 15.7 or Windows 11 24H2
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Android device / Android 设备
+      description: If device-related, include model and Android version, without serial numbers or IP addresses. / 设备相关问题请提供型号和 Android 版本，不要填写序列号或 IP。
+  - type: dropdown
+    id: connection
+    attributes:
+      label: Connection / 连接方式
+      options:
+        - USB
+        - Network ADB / 网络 ADB
+        - Wireless debugging (paired) / 无线调试（已配对）
+        - Emulator / 模拟器
+        - Not applicable / 不涉及设备连接
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce / 复现步骤
+      description: Include the affected tab and actions. / 请说明所在页面及具体操作。
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior / 预期与实际结果
+      placeholder: |
+        Expected / 预期：
+        Actual / 实际：
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Logs or screenshots / 日志或截图
+      description: Optional. Attach only relevant excerpts; remove tokens, pairing codes, device identifiers, internal addresses, and personal data. / 可选，只提供相关片段；移除令牌、配对码、设备标识、内网地址及个人信息。

@@ -10,6 +10,12 @@
 
 设备控制的桌面端由 Rust 实现会话、协议、输入与 MP4 封装，前端使用 WebCodecs 解码；Android 端复用官方 scrcpy 服务端。具体版本、来源与许可见 [服务端说明](../../../src-tauri/resources/scrcpy/README.md)。
 
+## 社区协作与反馈
+
+请遵守[行为准则](../../../CODE_OF_CONDUCT.md#行为准则)。问题反馈、功能建议及无障碍问题可以使用 [Issue 表单](https://github.com/ruishanio/adm/issues/new/choose)，支持中文或英文。提交前请检索已有问题，并移除日志或截图中的私人信息。
+
+安全漏洞请通过[安全政策](../../../SECURITY.md#安全政策)中的私密渠道反馈，不要发布到公开 Issue 或 PR。无障碍支持、已知限制及反馈方式见[无障碍说明](../../../ACCESSIBILITY.md#无障碍说明)。
+
 ## 本地开发
 
 需要 Node.js 24、Python 3.10+、rustup，以及 [Tauri 平台开发依赖](https://v2.tauri.app/start/prerequisites/)。Rust 版本和组件由 [rust-toolchain.toml](../../../rust-toolchain.toml) 固定。macOS 需 Xcode Command Line Tools；Windows 需 MSVC C++ 构建工具和 WebView2。

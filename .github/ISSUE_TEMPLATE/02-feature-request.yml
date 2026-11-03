@@ -1,0 +1,27 @@
+name: Feature request / 功能建议
+description: Suggest an improvement to a device-management workflow / 提出设备管理流程的改进建议
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues before submitting. English and Chinese are both welcome.
+        提交前请检索已有 Issue，可使用中文或英文。
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case / 问题或使用场景
+      description: What are you trying to do, and what is difficult today? / 想完成什么操作，目前哪里不方便？
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior / 期望的功能
+      description: Describe the expected workflow and relevant desktop or Android platforms. / 说明期望的操作流程，以及相关的桌面或 Android 平台。
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives and context / 替代方式与补充信息
+      description: Optional. Include workarounds or examples; remove private data. / 可选，提供现有替代方法或示例，请移除私人信息。
