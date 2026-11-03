@@ -31,7 +31,9 @@ const emit = defineEmits<{ 'update:modelValue': [value: string] }>();
     "
   >
     <SelectTrigger :id="id" :class="['app-select-trigger', { 'app-select-inline': variant === 'inline' }]">
-      <SelectValue>{{ options.find((option) => option.value === modelValue)?.label }}</SelectValue>
+      <SelectValue class="app-select-value">{{
+        options.find((option) => option.value === modelValue)?.label
+      }}</SelectValue>
       <ChevronDown aria-hidden="true" />
     </SelectTrigger>
     <SelectPortal>
@@ -43,8 +45,10 @@ const emit = defineEmits<{ 'update:modelValue': [value: string] }>();
             :value="option.value"
             class="app-select-option"
           >
-            <SelectItemText>{{ option.label }}</SelectItemText>
-            <SelectItemIndicator><Check aria-hidden="true" /></SelectItemIndicator>
+            <SelectItemText class="app-select-option-label">{{ option.label }}</SelectItemText>
+            <SelectItemIndicator class="app-select-indicator"
+              ><Check aria-hidden="true"
+            /></SelectItemIndicator>
           </SelectItem>
         </SelectViewport>
       </SelectContent>

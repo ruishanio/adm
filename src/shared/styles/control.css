@@ -17,16 +17,22 @@
 }
 .control-toolbar .toolbar-row {
   flex-wrap: wrap;
-  gap: 2px;
+  gap: 6px 2px;
 }
 .control-toolbar-end {
   margin-left: auto;
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-shrink: 0;
+  max-width: 100%;
 }
 .control-toolbar-end .app-select-trigger {
-  width: 104px;
+  /* 按译文自然扩展；窄窗口由整组工具换行，不让文字穿过重连和电源按钮。 */
+  width: max-content;
+  min-width: 104px;
+  max-width: 224px;
+  flex-shrink: 0;
 }
 .control-divider {
   width: 1px;

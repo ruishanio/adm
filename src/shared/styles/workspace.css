@@ -373,6 +373,9 @@
 }
 .tabs {
   display: flex;
+  /* 较长的本地化标签允许横向滚动，不能被工作区边界直接裁掉。 */
+  overflow-x: auto;
+  scrollbar-width: thin;
   gap: 4px;
   border-bottom: 1px solid var(--line);
   padding: 0 20px 8px;
@@ -390,7 +393,7 @@
   color: var(--muted);
   font-size: 13px;
 }
-/* 六个功能页在窄工作区收紧间距，英文标签也保持完整可见。 */
+/* 六个功能页在窄工作区收紧间距，保留完整标签和键盘导航。 */
 @container device-workspace (max-width: 760px) {
   .tabs {
     gap: 2px;

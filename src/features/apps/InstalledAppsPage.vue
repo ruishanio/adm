@@ -32,7 +32,8 @@ const appColumns: readonly ColumnDefinition[] = [
   { label: '版本', width: 90, min: 70, max: 600 },
   { label: '安装包大小', width: 100, min: 90, max: 360 },
   { label: '运行状态', width: 104, min: 86, max: 360 },
-  { label: '操作', width: 96, min: 96, max: 96, resizable: false },
+  // 预留长译文与 Windows 按钮宽度，避免“更多操作”被单元格裁掉；旧列宽偏好会按下限归一。
+  { label: '操作', width: 120, min: 120, max: 120, resizable: false },
 ];
 function isOwner(app: InstalledApp) {
   return devicesFeature.state.details?.owner?.split('/')[0] === app.packageName;

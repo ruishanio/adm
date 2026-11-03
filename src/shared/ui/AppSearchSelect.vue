@@ -60,7 +60,7 @@ watch(
         class="app-select-trigger"
         @keydown.enter.space.down.prevent="open = true"
       >
-        <span>{{ selected?.label || placeholder }}</span>
+        <span class="app-select-value">{{ selected?.label || placeholder }}</span>
         <ChevronDown aria-hidden="true" />
       </ComboboxTrigger>
     </ComboboxAnchor>
@@ -97,7 +97,9 @@ watch(
                 option.description
               }}</span>
             </span>
-            <ComboboxItemIndicator><Check aria-hidden="true" /></ComboboxItemIndicator>
+            <ComboboxItemIndicator class="app-select-indicator"
+              ><Check aria-hidden="true"
+            /></ComboboxItemIndicator>
           </ComboboxItem>
           <p v-if="!filtered.length" class="app-select-empty" role="status">{{ emptyLabel }}</p>
         </div>
