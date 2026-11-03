@@ -94,15 +94,17 @@
   justify-content: start;
   align-content: center;
 }
+/* 切换设备时整列暂时禁用，保持透明底色；选中态由后面的规则继续高亮。 */
+.device-row:disabled {
+  background: transparent;
+  opacity: 1;
+}
 .device-row:hover:not(:disabled) {
   background: var(--hover);
 }
 .device-row.selected,
 .device-row.selected:hover:not(:disabled) {
   background: var(--selection);
-}
-.device-row:disabled {
-  opacity: 1;
 }
 .device-row,
 .file-table tr {

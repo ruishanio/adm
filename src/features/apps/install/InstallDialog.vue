@@ -12,6 +12,7 @@ import { Checkbox } from '@/shared/ui/checkbox/index';
 import { useWorkspace } from '@/shared/composables/workspace';
 import { sizeLabel } from '@/shared/utils/format';
 import AppDialog from '@/shared/ui/AppDialog.vue';
+import DialogDeviceTarget from '@/shared/ui/DialogDeviceTarget.vue';
 const w = useWorkspace(),
   s = w.state;
 const properties = computed(() =>
@@ -37,14 +38,14 @@ const properties = computed(() =>
     content-class="install-dialog"
     @close="installFeature.closeInstall"
   >
-    <div class="dialog-body install-dialog-body">
-      <p class="install-target muted">
-        {{ w.online.value ? t('目标：{name}', { name: w.title.value }) : t('请先选择已连接的设备') }}
-        <span v-if="w.online.value" class="metadata-inline">
-          <span>{{ w.device.value?.serial }}</span
-          ><span>{{ t('主用户（用户 0）') }}</span>
-        </span>
-      </p>
+    <div class="dialog-body dialog-stack">
+      <DialogDeviceTarget
+        v-if="w.online.value"
+        :name="w.title.value"
+        :serial="w.device.value?.serial"
+        :scope="t('主用户（用户 0）')"
+      />
+      <p v-else class="muted">{{ t('请先选择已连接的设备') }}</p>
       <section>
         <div class="section-heading">
           <h2><Package class="icon-install" aria-hidden="true" />{{ t('安装包') }}</h2>
@@ -91,7 +92,7 @@ const properties = computed(() =>
             ></template
           >
         </div>
-        <dl v-if="installFeature.state.apk" class="properties apk-properties">
+        <dl v-if="installFeature.state.apk" class="app-properties apk-properties">
           <div v-for="[label, value] in properties" :key="label">
             <dt>{{ label }}</dt>
             <dd :title="value">{{ value }}</dd>

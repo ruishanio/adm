@@ -51,7 +51,7 @@
   flex: 1;
   min-width: 0;
   overflow: auto;
-  padding: 20px 24px;
+  padding: 16px 20px;
 }
 .settings-content .field {
   display: flex;

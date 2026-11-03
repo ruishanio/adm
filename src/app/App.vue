@@ -41,6 +41,7 @@ import PerformancePage from '@/features/performance/PerformancePage.vue';
 import ConnectionDialog from '@/features/devices/ConnectionDialog.vue';
 import SettingsDialog from '@/features/settings/SettingsDialog.vue';
 import AppDialog from '@/shared/ui/AppDialog.vue';
+import DialogDeviceTarget from '@/shared/ui/DialogDeviceTarget.vue';
 const w = createWorkbench(api),
   s = w.workspace.state;
 provideWorkbench(w);
@@ -208,23 +209,30 @@ onBeforeUnmount(() => {
       :busy="!!s.busy"
       @close="s.modal = null"
       ><form @submit.prevent="w.saveModal">
-        <div class="dialog-body">
-          <label class="field"
-            >{{ s.modal === 'rename' ? t('设备备注') : t('文件夹名称')
-            }}<Input
-              v-model="s.name"
-              autofocus
-              :maxlength="s.modal === 'rename' ? 80 : 255"
-              :required="s.modal === 'folder'"
-              :disabled="!!s.busy"
-          /></label>
-          <p class="field-hint">
-            {{
-              s.modal === 'rename'
-                ? t('备注仅在本机显示，留空恢复设备原名称。')
-                : t('创建于 {path}', { path: w.files.state.path })
-            }}
-          </p>
+        <div class="dialog-body dialog-stack">
+          <DialogDeviceTarget
+            v-if="s.modal === 'rename' && w.devices.state.renameDevice"
+            :name="w.devices.state.renameDevice.model || w.devices.state.renameDevice.serial"
+            :serial="w.devices.state.renameDevice.serial"
+          />
+          <div>
+            <label class="field"
+              >{{ s.modal === 'rename' ? t('设备备注') : t('文件夹名称')
+              }}<Input
+                v-model="s.name"
+                autofocus
+                :maxlength="s.modal === 'rename' ? 80 : 255"
+                :required="s.modal === 'folder'"
+                :disabled="!!s.busy"
+            /></label>
+            <p class="field-hint">
+              {{
+                s.modal === 'rename'
+                  ? t('备注仅在本机显示，留空恢复设备原名称。')
+                  : t('创建于 {path}', { path: w.files.state.path })
+              }}
+            </p>
+          </div>
           <p v-if="s.notice?.error" class="inline-result error" role="alert">{{ s.notice.text }}</p>
         </div>
         <footer class="dialog-footer">

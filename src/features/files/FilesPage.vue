@@ -40,6 +40,7 @@ import {
   DropdownMenuItem,
 } from 'reka-ui';
 import AppDialog from '@/shared/ui/AppDialog.vue';
+import DialogDeviceTarget from '@/shared/ui/DialogDeviceTarget.vue';
 import ResizableTable from '@/shared/ui/ResizableTable.vue';
 import type { ColumnDefinition } from '@/shared/composables/column-widths';
 import type { DeviceFile } from '@/shared/api/types';
@@ -315,17 +316,31 @@ const date = (value: number) =>
     v-if="pending && (s.modal === 'file-rename' || s.modal === 'file-delete')"
     :title="s.modal === 'file-rename' ? t('重命名') : t('删除')"
     :busy="!!s.busy"
+    :content-class="s.modal === 'file-delete' ? 'confirm-dialog' : undefined"
     @close="s.modal = null"
   >
     <form @submit.prevent="submitAction">
-      <div class="dialog-body">
+      <div class="dialog-body dialog-stack">
         <template v-if="s.modal === 'file-rename'">
-          <label class="field"
-            >{{ t('名称') }}<Input v-model="nextName" required :disabled="!!s.busy" :spellcheck="false"
-          /></label>
+          <div>
+            <label class="field"
+              >{{ t('名称') }}<Input v-model="nextName" required :disabled="!!s.busy" :spellcheck="false"
+            /></label>
+            <p class="dialog-subject-description">{{ pending.file.path }}</p>
+          </div>
         </template>
-        <p v-else>{{ t('删除后无法恢复，文件夹内的所有内容也会一并删除。') }}</p>
-        <div class="path-display">{{ pending.file.path }}</div>
+        <div v-else class="dialog-subject">
+          <Folder v-if="pending.file.type === 'directory'" class="icon-files" aria-hidden="true" />
+          <File v-else class="muted" aria-hidden="true" />
+          <div>
+            <p class="dialog-subject-name">{{ pending.file.name }}</p>
+            <p class="dialog-subject-description">{{ pending.directory }}</p>
+          </div>
+        </div>
+        <DialogDeviceTarget :name="w.title.value" :serial="pending.target.serial" />
+        <p v-if="s.modal === 'file-delete'" class="dialog-message">
+          {{ t('删除后无法恢复，文件夹内的所有内容也会一并删除。') }}
+        </p>
         <p v-if="actionError" class="file-action-error" role="alert">{{ actionError }}</p>
       </div>
       <footer class="dialog-footer">

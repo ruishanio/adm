@@ -5,12 +5,13 @@ import { useDevices } from '@/features/devices/state';
 const devicesFeature = useDevices();
 
 import { computed } from 'vue';
-import { Trash2, Square, Eraser } from '@lucide/vue';
+import { AppWindow } from '@lucide/vue';
 import { Button } from '@/shared/ui/button/index';
 import { useWorkspace } from '@/shared/composables/workspace';
 import { t } from '@/shared/i18n/index';
 import type { InstalledApp } from '@/shared/api/types';
 import AppDialog from '@/shared/ui/AppDialog.vue';
+import DialogDeviceTarget from '@/shared/ui/DialogDeviceTarget.vue';
 import { sizeLabel } from '@/shared/utils/format';
 defineProps<{ returnFocus?: HTMLElement }>();
 const w = useWorkspace(),
@@ -22,8 +23,6 @@ const details = computed(() => appsFeature.state.application?.details);
 const rows = computed(() =>
   details.value
     ? [
-        [t('应用名称'), details.value.label || details.value.packageName],
-        [t('应用包名'), details.value.packageName],
         [t('版本'), details.value.versionName || '—'],
         [t('版本代码'), details.value.versionCode],
         [t('应用类型'), details.value.system ? t('系统应用') : t('用户应用')],
@@ -60,30 +59,42 @@ function close() {
     :title="dialogTitle"
     :busy="!!s.busy"
     :return-focus="returnFocus"
-    content-class="app-details-dialog"
+    :content-class="confirmation ? 'confirm-dialog' : 'app-details-dialog'"
     @close="close"
   >
-    <div class="dialog-body app-details-body">
-      <p class="muted app-target">
-        {{ t('目标：{name}', { name: appsFeature.state.application?.deviceName || '' }) }}
-        <span class="metadata-inline">
-          <span>{{ appsFeature.state.application?.target.serial }}</span
-          ><span>{{ t('主用户（用户 0）') }}</span>
-        </span>
-      </p>
+    <div class="dialog-body dialog-stack">
+      <div v-if="details" class="dialog-subject">
+        <AppWindow v-if="!confirmation" class="icon-apps" aria-hidden="true" />
+        <div>
+          <p class="dialog-subject-name">{{ details.label || details.packageName }}</p>
+          <!-- 确认操作只展示可辨认的应用和设备名称，技术明细留在详情页。 -->
+          <p v-if="confirmation" class="dialog-subject-description">
+            {{ appsFeature.state.application?.deviceName }}
+          </p>
+          <p
+            v-else-if="details.label && details.label !== details.packageName"
+            class="dialog-subject-description"
+          >
+            {{ details.packageName }}
+          </p>
+        </div>
+      </div>
+      <DialogDeviceTarget
+        v-if="!confirmation"
+        :name="appsFeature.state.application?.deviceName || ''"
+        :serial="appsFeature.state.application?.target.serial"
+        :scope="t('主用户（用户 0）')"
+      />
       <template v-if="confirmation && details">
-        <p class="app-uninstall-package">{{ details.label || details.packageName }}</p>
-        <p v-if="details.label" class="app-confirm-version">{{ details.packageName }}</p>
-        <p class="app-confirm-version">
-          {{ t('版本') }}：{{ details.versionName || '—' }} ({{ details.versionCode }})
+        <p v-if="s.modal === 'app-uninstall'" class="dialog-message">
+          {{ t('卸载将删除应用及其数据，此操作无法撤销。') }}
         </p>
-        <p v-if="s.modal === 'app-uninstall'">
-          {{ t('卸载会删除该用户下的应用及其数据，此操作无法撤销。') }}
-        </p>
-        <p v-else-if="appsFeature.state.application?.action === 'clear-data'">
+        <p v-else-if="appsFeature.state.application?.action === 'clear-data'" class="dialog-message">
           {{ t('将删除此应用的登录状态、设置、数据库及缓存，无法撤销。应用仍会保留安装。') }}
         </p>
-        <p v-else>{{ t('将停止此应用的所有关联进程，当前任务可能中断；保存的数据不会被清除。') }}</p>
+        <p v-else class="dialog-message">
+          {{ t('将停止此应用的所有关联进程，当前任务可能中断；保存的数据不会被清除。') }}
+        </p>
       </template>
       <dl v-else-if="details" class="app-properties">
         <div v-for="[label, value] in rows" :key="label">
@@ -109,15 +120,10 @@ function close() {
           >{{ t('取消') }}</Button
         >
         <Button
-          :class="appsFeature.state.application?.action === 'force-stop' ? '' : 'destructive'"
+          :class="appsFeature.state.application?.action === 'force-stop' ? 'primary' : 'destructive'"
           :disabled="!!s.busy || !w.online.value || !details || details.system || isOwner(details)"
           @click="s.modal === 'app-uninstall' ? appsFeature.uninstallApp() : appsFeature.confirmAppAction()"
         >
-          <Trash2 v-if="s.modal === 'app-uninstall'" aria-hidden="true" />
-          <Eraser
-            v-else-if="appsFeature.state.application?.action === 'clear-data'"
-            aria-hidden="true"
-          /><Square v-else aria-hidden="true" />
           {{
             s.modal === 'app-uninstall'
               ? t('确认卸载')
@@ -130,10 +136,11 @@ function close() {
       <template v-else>
         <Button
           v-if="details && !details.system && !isOwner(details)"
-          variant="outline"
+          variant="ghost"
+          class="text-button dialog-secondary-action"
           :disabled="!!s.busy"
           @click="s.modal = 'app-uninstall'"
-          ><Trash2 aria-hidden="true" />{{ t('卸载应用') }}</Button
+          >{{ t('卸载应用') }}</Button
         >
         <Button variant="outline" :disabled="!!s.busy" @click="close">{{ t('关闭') }}</Button>
       </template>

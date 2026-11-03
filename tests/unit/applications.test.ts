@@ -172,8 +172,11 @@ it('信息页和卸载确认分开，取消不执行卸载，确认携带原设�
   };
   await click('卸载应用');
   expect(document.body.textContent).toContain('无法撤销');
-  expect(document.querySelector('.app-uninstall-package')?.textContent).toBe(app.label);
-  expect(document.querySelector('.app-details-body')?.textContent).toContain(app.packageName);
+  const confirmation = document.querySelector('[role="dialog"]')!;
+  expect(confirmation.querySelector('.dialog-subject-name')?.textContent).toBe(app.label);
+  expect(confirmation.querySelector('.dialog-subject-description')?.textContent).toContain('第一台');
+  expect(confirmation.textContent).not.toContain(app.packageName);
+  expect(confirmation.textContent).not.toContain('主用户（用户 0）');
   expect(api.uninstallApp).not.toHaveBeenCalled();
   await click('取消');
   expect(w.workspace.state.modal).toBe('app-details');
@@ -265,7 +268,7 @@ it('安装入口打开弹窗，取消不安装且保留列表搜索，关闭后�
   expect(w.workspace.state.modal).toBe('install');
   expect(document.querySelector('.install-dialog')).not.toBeNull();
   expect(view.find('[role="tablist"]').exists()).toBe(false);
-  expect(document.querySelector('.install-dialog')?.textContent).toContain('目标：第一台');
+  expect(document.querySelector('.install-dialog .dialog-device-target')?.textContent).toContain('第一台');
   expect(
     [...document.querySelectorAll<HTMLButtonElement>('.install-dialog button')].find(
       (b) => b.textContent?.trim() === '安装到此设备',

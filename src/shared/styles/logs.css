@@ -166,12 +166,25 @@ button.log-row.log-crash {
   color: var(--muted);
   text-align: center;
 }
-.log-detail-dialog {
+.dialog.log-detail-dialog {
   width: min(760px, calc(100vw - 48px));
 }
+.log-detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.log-detail-meta {
+  flex-shrink: 0;
+  font-size: 12px;
+}
 .log-detail-text {
-  max-height: 55vh;
+  min-height: 0;
+  max-height: 50vh;
   overflow: auto;
+  padding: 12px;
+  border-radius: var(--radius-control);
+  background: var(--surface-subtle);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   user-select: text;

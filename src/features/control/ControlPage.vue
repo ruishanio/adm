@@ -28,6 +28,7 @@ import {
 import { Button } from '@/shared/ui/button';
 import AppSelect from '@/shared/ui/AppSelect.vue';
 import AppDialog from '@/shared/ui/AppDialog.vue';
+import DialogDeviceTarget from '@/shared/ui/DialogDeviceTarget.vue';
 import { useWorkspace } from '@/shared/composables/workspace';
 import { t } from '@/shared/i18n';
 import { createControl } from './session';
@@ -346,22 +347,25 @@ onBeforeUnmount(() => {
     <AppDialog
       v-if="dialog"
       :title="dialog === 'text' ? t('输入文本') : dialog === 'reboot' ? t('重启设备') : t('关闭设备')"
+      :content-class="dialog === 'text' ? undefined : 'confirm-dialog'"
       @close="dialog = undefined"
       ><form @submit.prevent="confirm">
-        <div class="dialog-body">
+        <div class="dialog-body dialog-stack">
+          <DialogDeviceTarget :name="w.title.value" :serial="w.device.value?.serial" />
           <template v-if="dialog === 'text'">
-            <textarea
-              v-model="text"
-              class="control-text"
-              maxlength="1000"
-              autofocus
-              :aria-label="t('输入文本')"
-            />
+            <label class="field"
+              >{{ t('输入文本') }}
+              <textarea
+                v-model="text"
+                class="control-text"
+                maxlength="1000"
+                autofocus
+                :aria-label="t('输入文本')"
+              />
+            </label>
             <p class="field-hint">{{ t('将文本粘贴到设备当前输入框，会替换设备剪贴板。') }}</p></template
           ><template v-else
-            ><p>{{ w.title.value }}</p>
-            <p class="field-hint">{{ w.device.value?.serial }}</p>
-            <p>
+            ><p class="dialog-message">
               {{
                 dialog === 'reboot'
                   ? t('将重启此设备，当前连接和未保存的操作会中断。')
@@ -375,8 +379,8 @@ onBeforeUnmount(() => {
           ><Button
             type="submit"
             :disabled="dialog === 'text' && !text"
-            :class="dialog === 'shutdown' ? 'danger' : 'primary'"
-            >{{ dialog === 'text' ? t('发送') : t('确认') }}</Button
+            :class="dialog === 'shutdown' ? 'destructive' : 'primary'"
+            >{{ dialog === 'text' ? t('发送') : dialog === 'reboot' ? t('重启设备') : t('关闭设备') }}</Button
           >
         </footer>
       </form></AppDialog

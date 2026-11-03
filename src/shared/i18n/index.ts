@@ -194,6 +194,7 @@ export const english = {
   '主用户（用户 0）': 'Primary user (user 0)',
   '{count} 个应用': '{count} apps',
   应用信息: 'App info',
+  目标设备: 'Device',
   应用类型: 'Type',
   应用状态: 'Status',
   系统应用: 'System app',
@@ -219,8 +220,7 @@ export const english = {
   卸载应用: 'Uninstall app',
   确认卸载: 'Confirm uninstall',
   关闭: 'Close',
-  '卸载会删除该用户下的应用及其数据，此操作无法撤销。':
-    'This removes the app and its data for this user. This cannot be undone.',
+  '卸载将删除应用及其数据，此操作无法撤销。': 'This removes the app and its data. This cannot be undone.',
   '系统应用仅支持查看，不支持卸载。': 'System apps can be viewed but cannot be uninstalled here.',
   '应用已卸载，已核对设备上的结果。': 'App uninstalled and verified on the device.',
   '应用已卸载，但列表刷新失败，请手动刷新。':

@@ -287,14 +287,17 @@ function pauseOnNavigate(event: KeyboardEvent) {
       content-class="log-detail-dialog"
       @close="selected = undefined"
     >
-      <div class="dialog-body">
-        <p class="field-hint metadata-inline">
+      <div class="dialog-body log-detail-body">
+        <p class="metadata-inline log-detail-meta">
           <span>UID {{ selected.uid || '—' }}</span>
           <span>PID {{ selected.pid || '—' }}</span>
           <span>TID {{ selected.tid || '—' }}</span>
         </p>
         <pre class="log-detail-text">{{ selected.raw }}</pre>
       </div>
+      <footer class="dialog-footer">
+        <Button variant="outline" @click="selected = undefined">{{ t('关闭') }}</Button>
+      </footer>
     </AppDialog>
   </section>
 </template>

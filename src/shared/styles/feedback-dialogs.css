@@ -50,71 +50,165 @@
   }
 }
 .dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   width: 460px;
   max-width: calc(100vw - 48px);
   max-height: calc(100dvh - 48px);
-  border: 1px solid var(--control-border);
+  border: 1px solid var(--control-edge);
   border-radius: var(--radius-dialog);
   padding: 0;
   color: var(--foreground);
   background: var(--surface);
   box-shadow: 0 12px 40px rgb(0 0 0 / 18%);
+  overflow: hidden;
+  animation: none;
 }
-.dialog::backdrop {
+[data-slot='dialog-overlay'] {
   background: rgb(0 0 0 / 18%);
+  animation: none;
 }
 .dialog-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  gap: 12px;
+  padding: 10px 16px;
   border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
 }
 .dialog-header h2 {
   font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 .dialog-header .icon-button {
   color: var(--muted);
+  flex-shrink: 0;
+  margin-right: -4px;
+}
+/* 所有弹窗共用滚动边界，长名称和错误只扩展正文，不挤走标题与操作按钮。 */
+.dialog > form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 .dialog-body {
-  padding: 20px;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 16px;
+  overflow-wrap: anywhere;
+}
+.dialog-body .field {
+  margin-bottom: 0;
+}
+.dialog-body .field + .field {
+  margin-top: 12px;
 }
 .dialog-footer {
   display: flex;
   justify-content: flex-end;
   align-items: center;
   gap: 8px;
-  background: var(--surface-subtle);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  background: var(--surface);
   border-top: 1px solid var(--line);
   padding: 12px 16px;
 }
 .dialog-footer > .muted {
   margin-right: auto;
   font-size: 12px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .dialog-footer button {
-  min-width: 66px;
+  min-width: 72px;
   font-size: 12px;
+}
+.dialog-footer .dialog-secondary-action {
+  margin-right: auto;
+}
+.dialog.confirm-dialog {
+  width: 440px;
+}
+.dialog-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.dialog-subject {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.dialog-subject > svg {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  stroke-width: 1.5;
+}
+.dialog-subject > div {
+  min-width: 0;
+}
+.dialog-subject-name {
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+.dialog-subject-description {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+.dialog-device-target {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  min-width: 0;
+}
+.dialog-device-target > svg {
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  flex-shrink: 0;
+  stroke-width: 1.5;
+}
+.dialog-device-target > div {
+  min-width: 0;
+}
+.dialog-target-name {
+  overflow-wrap: anywhere;
+}
+.dialog-target-name > span {
+  color: var(--muted);
+  margin-right: 8px;
+}
+.dialog-target-meta {
+  margin-top: 2px;
+}
+.dialog-message {
+  line-height: 1.65;
+}
+.dialog-stack > .inline-result,
+.dialog-stack > .field-hint,
+.dialog-stack > .file-action-error {
+  margin-top: 0;
 }
 .connection-dialog {
   width: 480px;
   height: 380px;
 }
-.dialog.connection-dialog,
-.dialog.settings-dialog {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
 .connection-dialog > .dialog-body {
-  min-height: 0;
   flex: 1;
-  overflow: auto;
-  padding: 12px 20px 16px;
-}
-.connection-dialog > .dialog-footer,
-.dialog-header {
-  flex-shrink: 0;
 }
 .connection-layout {
   display: flex;
@@ -131,7 +225,7 @@
   border: 1px solid var(--line);
   border-radius: 6px;
   background: var(--sidebar);
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 .connection-tabs button {
   border: 1px solid transparent;
@@ -169,16 +263,16 @@
 }
 .usb-guide {
   font-size: 12px;
-  line-height: 1.9;
+  line-height: 1.6;
   color: var(--muted);
 }
 .usb-guide ol {
   padding-left: 20px;
-  margin: 18px 0;
+  margin: 16px 0;
   list-style: decimal;
 }
 .usb-guide li + li {
-  margin-top: 10px;
+  margin-top: 8px;
 }
 .path-display {
   font-family: 'SFMono-Regular', Consolas, monospace;
