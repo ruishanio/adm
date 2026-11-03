@@ -248,6 +248,15 @@ onBeforeUnmount(() => {
       /></Button>
     </div>
     <div class="control-stage-wrap">
+      <!-- 纹理只装饰投屏工作区，不拦截操作，也不参与画面尺寸计算。 -->
+      <svg class="control-stage-grid" aria-hidden="true" focusable="false">
+        <defs>
+          <pattern id="control-stage-grid" width="32" height="32" patternUnits="userSpaceOnUse">
+            <path d="M 32 0.5 H 0.5 V 32" fill="none" stroke="currentColor" />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#control-stage-grid)" />
+      </svg>
       <div ref="stage" class="control-stage">
         <canvas
           :draggable="false"
