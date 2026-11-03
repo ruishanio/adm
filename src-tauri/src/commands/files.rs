@@ -26,8 +26,12 @@ impl AppState {
                 let (target, path, kind): (Target, String, String) = decoded(args)?;
                 let picker = app.dialog().file();
                 let chosen = match kind.as_str() {
-                    "files" => picker.set_title("上传文件到设备").blocking_pick_files(),
-                    "folders" => picker.set_title("上传文件夹到设备").blocking_pick_folders(),
+                    "files" => picker
+                        .set_title(self.localized("上传文件到设备"))
+                        .blocking_pick_files(),
+                    "folders" => picker
+                        .set_title(self.localized("上传文件夹到设备"))
+                        .blocking_pick_folders(),
                     _ => return Err("不支持的上传类型。".into()),
                 };
                 if let Some(chosen) = chosen {
@@ -66,7 +70,7 @@ impl AppState {
                 let chosen = app
                     .dialog()
                     .file()
-                    .set_title("下载设备文件")
+                    .set_title(self.localized("下载设备文件"))
                     .set_file_name(name)
                     .blocking_save_file();
                 if let Some(chosen) = chosen {

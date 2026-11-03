@@ -30,6 +30,11 @@ impl Drop for Operation<'_> {
     }
 }
 impl AppState {
+    /// 在打开原生对话框前取当前语言，避免持有设置锁等待用户操作。
+    pub(crate) fn localized(&self, source: &str) -> String {
+        crate::platform::i18n::text(&self.store.lock().unwrap().value.language, source).into()
+    }
+
     pub(crate) fn begin(&self) -> Result<Operation<'_>> {
         let mut active = self.active.lock().unwrap();
         if active.is_some() {

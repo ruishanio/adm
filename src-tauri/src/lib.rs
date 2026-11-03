@@ -22,6 +22,18 @@ use state::AppState;
 use std::sync::Arc;
 use tauri::{DragDropEvent, Manager, WindowEvent};
 pub fn run() {
+    let config = dirs::config_dir().unwrap_or_default();
+    let local = dirs::data_local_dir().unwrap_or_default();
+    let store = settings::SettingsStore::load(
+        settings::data_path(),
+        &[
+            config.join("AndroidTool/settings.json"),
+            local.join("AndroidTool/settings.json"),
+        ],
+    );
+    // AppKit 会缓存系统文案，必须在 Tauri 创建应用和窗口前应用已保存的语言。
+    #[cfg(target_os = "macos")]
+    platform::native_menu::initialize_language(&store.value.language);
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _, _| {
             if let Some(window) = app.get_webview_window("main") {
@@ -32,16 +44,7 @@ pub fn run() {
         }))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
-        .setup(|app| {
-            let config = dirs::config_dir().unwrap_or_default();
-            let local = dirs::data_local_dir().unwrap_or_default();
-            let store = settings::SettingsStore::load(
-                settings::data_path(),
-                &[
-                    config.join("AndroidTool/settings.json"),
-                    local.join("AndroidTool/settings.json"),
-                ],
-            );
+        .setup(move |app| {
             // 菜单与界面使用同一份偏好；重启时不再回到框架默认的英文菜单。
             #[cfg(target_os = "macos")]
             app.set_menu(platform::native_menu::build(

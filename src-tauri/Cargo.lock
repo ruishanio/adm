@@ -15,6 +15,7 @@ dependencies = [
  "bytes",
  "dirs 6.0.0",
  "mp4",
+ "objc2-foundation",
  "regex",
  "serde",
  "serde_json",

@@ -30,7 +30,7 @@
   <a href="../../../LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License"></a>
 </p>
 
-ADM es una herramienta de escritorio de código abierto basada en ADB para macOS Apple Silicon y Windows x64. Conecta un teléfono, una tableta o un emulador para gestionar aplicaciones y archivos, controlar la pantalla y consultar el rendimiento y los registros. Los paquetes de distribución incluyen ADB. La interfaz de la aplicación está disponible en inglés y chino simplificado.
+ADM es una herramienta de escritorio de código abierto basada en ADB para macOS Apple Silicon y Windows x64. Conecta un teléfono, una tableta o un emulador para gestionar aplicaciones y archivos, controlar la pantalla y consultar el rendimiento y los registros. Los paquetes de distribución incluyen ADB. La interfaz está disponible en inglés, chino simplificado, chino tradicional, japonés, francés, alemán, español y ruso. Elija el idioma en Ajustes → General; se guarda y se aplica al instante.
 
 ![Espacio de trabajo de ADM con la lista de dispositivos, su información y seis pestañas de funciones](../../../resources/readme/en/workbench.jpg)
 

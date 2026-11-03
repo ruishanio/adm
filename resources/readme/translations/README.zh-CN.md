@@ -30,7 +30,7 @@
   <a href="../../../LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License"></a>
 </p>
 
-ADM 是一款基于 ADB 的开源桌面工具，支持 macOS Apple Silicon 和 Windows x64。连接手机、平板或模拟器，即可管理应用与文件、操作设备画面、查看性能与日志。发布包内置 ADB，界面支持简体中文和 English。
+ADM 是一款基于 ADB 的开源桌面工具，支持 macOS Apple Silicon 和 Windows x64。连接手机、平板或模拟器，即可管理应用与文件、操作设备画面、查看性能与日志。发布包内置 ADB，界面支持 English、简体中文、繁體中文、日本語、Français、Deutsch、Español 和 Русский，可在“设置 → 通用”中切换，即时生效并保存。
 
 ![ADM 工作台：设备列表、设备信息与六个功能标签页](../../../resources/readme/workbench.jpg)
 

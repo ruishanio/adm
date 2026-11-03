@@ -30,7 +30,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License"></a>
 </p>
 
-ADM is an open-source desktop tool built around ADB for macOS Apple Silicon and Windows x64. Connect a phone, tablet, or emulator to manage apps and files, control its screen, and inspect performance and logs. ADB is included in release packages. The app interface supports English and Simplified Chinese.
+ADM is an open-source desktop tool built around ADB for macOS Apple Silicon and Windows x64. Connect a phone, tablet, or emulator to manage apps and files, control its screen, and inspect performance and logs. ADB is included in release packages. The app interface supports English, Simplified Chinese, Traditional Chinese, Japanese, French, German, Spanish, and Russian. Choose a language in Settings → General; it is saved and takes effect immediately.
 
 ![ADM workspace with the device list, device information, and six feature tabs](resources/readme/en/workbench.jpg)
 

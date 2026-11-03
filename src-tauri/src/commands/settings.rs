@@ -66,7 +66,7 @@ impl AppState {
             }
             "language" => {
                 let (language,): (String,) = decoded(args)?;
-                if !["zh-CN", "en"].contains(&language.as_str()) {
+                if !crate::platform::i18n::is_supported(&language) {
                     return Err("不支持的界面语言。".into());
                 }
                 #[cfg(target_os = "macos")]
@@ -91,7 +91,7 @@ impl AppState {
                 let chosen = app
                     .dialog()
                     .file()
-                    .set_title("选择 ADB 可执行文件")
+                    .set_title(self.localized("选择 ADB 可执行文件"))
                     .blocking_pick_file();
                 if let Some(chosen) = chosen {
                     let path = chosen.into_path().map_err(|e| e.to_string())?;

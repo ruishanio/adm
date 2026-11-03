@@ -15,7 +15,7 @@ impl SettingsStore {
         let mut store = Self { value, path };
         store.value.sidebar_width = store.value.sidebar_width.clamp(220., 3000.);
         // 空值交由前端首次识别并保存；迁移旧版 system 时不丢弃设备备注等偏好。
-        if !["zh-CN", "en"].contains(&store.value.language.as_str()) {
+        if !crate::platform::i18n::is_supported(&store.value.language) {
             store.value.language.clear();
         }
         store

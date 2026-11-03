@@ -465,10 +465,21 @@ fn language_preferences_preserve_legacy_data_and_survive_reload() {
     assert!(store.value.language.is_empty());
     assert_eq!(store.value.device_names["serial"], "工位一");
     let mut next = store.value.clone();
-    next.language = "en".into();
-    store.save(next).unwrap();
+    for language in crate::platform::i18n::LOCALES {
+        next.language = language.into();
+        store.save(next.clone()).unwrap();
+        let restored = SettingsStore::load(path.clone(), &[]);
+        assert_eq!(restored.value.language, language);
+        assert_eq!(
+            restored
+                .value
+                .device_names
+                .get("serial")
+                .map(String::as_str),
+            Some("工位一")
+        );
+    }
     let restored = SettingsStore::load(path, &[]);
-    assert_eq!(restored.value.language, "en");
     assert_eq!(restored.value.device_names["serial"], "工位一");
 }
 

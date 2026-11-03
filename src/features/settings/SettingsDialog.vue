@@ -11,7 +11,7 @@ import AppDialog from '@/shared/ui/AppDialog.vue';
 import AppSelect from '@/shared/ui/AppSelect.vue';
 import { useWorkspace } from '@/shared/composables/workspace';
 import AboutPanel from '@/features/settings/AboutPanel.vue';
-import { language, setLanguage } from '@/shared/i18n/index';
+import { language, setLanguage, isLocale, languageOptions } from '@/shared/i18n/index';
 const w = useWorkspace(),
   s = w.state;
 const section = ref('general');
@@ -33,7 +33,7 @@ async function restore() {
   });
 }
 async function changeLanguage(next: string) {
-  if (next !== 'zh-CN' && next !== 'en') return;
+  if (!isLocale(next)) return;
   await w.run(t('切换语言'), async () => {
     // 保存成功后再切换界面，避免磁盘写入失败时显示与偏好不一致。
     await w.api.language(next);
@@ -59,13 +59,13 @@ async function changeLanguage(next: string) {
               id="language-preference"
               :model-value="language"
               :disabled="!!s.busy"
-              :options="[
-                { value: 'zh-CN', label: '简体中文' },
-                { value: 'en', label: 'English' },
-              ]"
+              :options="languageOptions"
               @update:model-value="changeLanguage"
             />
           </label>
+          <p v-if="devicesFeature.state.snapshot?.platform === 'darwin'" class="field-hint">
+            {{ t('部分 macOS 系统菜单将在重启应用后使用所选语言。') }}
+          </p>
         </TabsContent>
         <TabsContent value="adb">
           <p class="field-hint">{{ t('优先使用随应用附带的 ADB，也可指定本机 platform-tools。') }}</p>

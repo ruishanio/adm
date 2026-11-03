@@ -26,8 +26,8 @@ impl AppState {
                 let path = app
                     .dialog()
                     .file()
-                    .set_title("选择 APK")
-                    .add_filter("Android 安装包", &["apk"])
+                    .set_title(self.localized("选择 APK"))
+                    .add_filter(self.localized("Android 安装包"), &["apk"])
                     .blocking_pick_file();
                 match path {
                     Some(path) => encoded(

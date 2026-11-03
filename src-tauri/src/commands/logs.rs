@@ -40,7 +40,7 @@ impl AppState {
                 let path = app
                     .dialog()
                     .file()
-                    .set_title("导出日志")
+                    .set_title(self.localized("导出日志"))
                     .set_file_name("logcat.log")
                     .add_filter("Logcat", &["log", "txt"])
                     .blocking_save_file();

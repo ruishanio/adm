@@ -30,7 +30,7 @@
   <a href="../../../LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License"></a>
 </p>
 
-ADM ist ein quelloffenes Desktop-Werkzeug auf Basis von ADB für macOS Apple Silicon und Windows x64. Verbinde ein Smartphone, Tablet oder einen Emulator, um Apps und Dateien zu verwalten, den Bildschirm zu steuern sowie Leistung und Protokolle zu prüfen. ADB ist in den veröffentlichten Paketen enthalten. Die Benutzeroberfläche unterstützt Englisch und vereinfachtes Chinesisch.
+ADM ist ein quelloffenes Desktop-Werkzeug auf Basis von ADB für macOS Apple Silicon und Windows x64. Verbinde ein Smartphone, Tablet oder einen Emulator, um Apps und Dateien zu verwalten, den Bildschirm zu steuern sowie Leistung und Protokolle zu prüfen. ADB ist in den veröffentlichten Paketen enthalten. Die Oberfläche unterstützt Englisch, vereinfachtes und traditionelles Chinesisch, Japanisch, Französisch, Deutsch, Spanisch und Russisch. Unter Einstellungen → Allgemein wird die Sprache sofort übernommen und gespeichert.
 
 ![ADM-Arbeitsbereich mit Geräteliste, Geräteinformationen und sechs Funktionsreitern](../../../resources/readme/en/workbench.jpg)
 

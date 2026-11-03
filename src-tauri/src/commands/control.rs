@@ -73,11 +73,11 @@ impl AppState {
                 let chosen = app
                     .dialog()
                     .file()
-                    .set_title(if recording {
+                    .set_title(self.localized(if recording {
                         "保存设备录像"
                     } else {
                         "保存设备截图"
-                    })
+                    }))
                     .set_file_name(format!(
                         "ADM-{}.{}",
                         std::time::SystemTime::now()

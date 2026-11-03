@@ -1,3 +1,4 @@
+import type { Locale } from '@/shared/i18n';
 export interface Target {
   serial: string;
   transportId: string;
@@ -132,7 +133,7 @@ export interface LogApp {
   uid: string;
 }
 export interface Settings {
-  language?: 'zh-CN' | 'en' | '';
+  language?: Locale | '';
   adbPath: string;
   endpoint: string;
   deviceNames: Record<string, string>;
@@ -224,7 +225,7 @@ export interface Api {
   chooseAdb(): Promise<boolean>;
   resetAdb(): Promise<void>;
   sidebarWidth(width: number): Promise<void>;
-  language(value: 'zh-CN' | 'en'): Promise<void>;
+  language(value: Locale): Promise<void>;
   cancel(): Promise<void>;
 }
 

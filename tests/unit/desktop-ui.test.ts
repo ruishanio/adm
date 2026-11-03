@@ -214,11 +214,29 @@ it('设置语言先保存再即时切换，保存失败保持原偏好', async (
   cleanups.push(() => view.unmount());
   await flushPromises();
   const select = document.querySelector<HTMLElement>('#language-preference')!;
+  expect(document.querySelector('[role="dialog"]')?.textContent).toContain(
+    '部分 macOS 系统菜单将在重启应用后使用所选语言。',
+  );
+  w.devices.state.snapshot!.platform = 'win32';
+  await nextTick();
+  expect(document.querySelector('[role="dialog"]')?.textContent).not.toContain(
+    '部分 macOS 系统菜单将在重启应用后使用所选语言。',
+  );
+  w.devices.state.snapshot!.platform = 'darwin';
   async function chooseLanguage(label: string) {
     select.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
     await flushPromises();
     const options = [...document.querySelectorAll<HTMLElement>('[role="option"]')];
-    expect(options.map((option) => option.textContent)).toEqual(['简体中文', 'English']);
+    expect(options.map((option) => option.textContent)).toEqual([
+      'English',
+      '简体中文',
+      '繁體中文',
+      '日本語',
+      'Français',
+      'Deutsch',
+      'Español',
+      'Русский',
+    ]);
     options
       .find((option) => option.textContent === label)!
       .dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
@@ -230,6 +248,21 @@ it('设置语言先保存再即时切换，保存失败保持原偏好', async (
   expect(language.value).toBe('en');
   expect(document.querySelector('[role="dialog"]')?.textContent).toContain('General');
   expect(document.querySelector('[role="dialog"]')?.textContent).not.toContain('通用');
+  for (const [label, code, general] of [
+    ['繁體中文', 'zh-TW', '一般'],
+    ['日本語', 'ja', '一般'],
+    ['Français', 'fr', 'Général'],
+    ['Deutsch', 'de', 'Allgemein'],
+    ['Español', 'es', 'General'],
+    ['Русский', 'ru', 'Общие'],
+  ]) {
+    await chooseLanguage(label);
+    expect(w.workspace.api.language).toHaveBeenLastCalledWith(code);
+    expect(language.value).toBe(code);
+    expect(w.devices.state.snapshot?.settings.language).toBe(code);
+    expect(document.querySelector('[role="dialog"]')?.textContent).toContain(general);
+  }
+  await chooseLanguage('English');
   vi.mocked(w.workspace.api.language).mockRejectedValueOnce(new Error('disk full'));
   await chooseLanguage('简体中文');
   expect(locale.value).toBe('en');
