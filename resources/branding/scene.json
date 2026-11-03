@@ -15,21 +15,22 @@
   },
   "colors": {
     "base": "#505967",
-    "front": "#0054FF",
+    "front": "#0B2EA8",
     "middle": "#53779E",
     "rear": "#454D5C",
     "screen": "#B2DCFD",
     "speaker": "#25313C",
     "android": "#75DFA0",
-    "tile": "#FAF9F5"
+    "tile": "#2BD9B4",
+    "tile_edge": "#17B28F"
   },
   "camera": {
     "azimuth": 43.0,
     "distance": 25.0,
     "height": 6.2,
-    "lens": 104.0,
-    "shift_y": -0.53,
-    "shift_x": -0.02
+    "lens": 128.0,
+    "shift_y": -0.69,
+    "shift_x": -0.025
   },
   "render": {
     "size": 2048,

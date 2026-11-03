@@ -1,6 +1,6 @@
 # ADM 图标 3D 源文件
 
-图标由三台依次排列的设备、带真实凹腔的深色底座、薄荷绿色 Android 标记和暖白背板组成。全部造型均为 3D 几何体；材质、灯光、遮挡和接触阴影由 Blender 渲染，不依赖 SVG、贴图或外部字体。
+图标由三台依次排列的设备、带真实凹腔的深色底座、薄荷绿色 Android 标记和圆角背板组成。当前采用清亮青绿背板（`#2BD9B4`）与深蓝、蓝灰、深灰机身；放大主体后仍保留圆角和透明安全边距。机身、背板配色和主体占比可通过 `scene.json` 调整。全部造型均为 3D 几何体；材质、灯光、遮挡和接触阴影由 Blender 渲染，不依赖 SVG、贴图或外部字体。
 
 | 文件 | 用途 |
 | --- | --- |
@@ -41,6 +41,8 @@ npm run icons:render -- --rebuild
 ```
 
 **`--rebuild` 会覆盖 `.blend` 中手工调整的场景。** 日常在 Blender 中编辑后只需运行默认渲染命令，不要使用该参数。渲染器优先使用可用 GPU；可用 `--cpu` 强制使用 CPU。平台和 Blender 版本不同可能带来细微的光照差异。
+
+仅调整机身、背板配色、焦距和移轴构图时，编辑 `scene.json` 的 `colors.front`、`colors.middle`、`colors.rear`、`colors.tile`、`colors.tile_edge`、`camera.lens`、`camera.shift_x` 和 `camera.shift_y`，然后执行 `npm run icons:render -- --update-style`。该模式保留现有设备、槽口、标记的几何与灯光，补偿背板尺寸以维持图标外轮廓；可加 `--preview` 先看效果，不覆盖正式源文件。
 
 ## 打包
 

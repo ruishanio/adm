@@ -21,6 +21,7 @@ def arguments():
     parser.add_argument("--output", type=Path, default=BRANDING / "adm-icon.png")
     parser.add_argument("--preview", action="store_true", help="只渲染预览，不覆盖模型源文件")
     parser.add_argument("--rebuild", action="store_true", help="依据 scene.json 重建并覆盖 Blender 模型")
+    parser.add_argument("--update-style", action="store_true", help="仅同步机身与背板配色、相机构图，保留现有模型")
     parser.add_argument("--cpu", action="store_true")
     return parser.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else [])
 
@@ -53,9 +54,9 @@ def collection(name):
     return group
 
 
-def tile_material(color):
-    """根据背板真实法线生成柔和边缘，固定母版底色，避免摄影棚补光把暖白曝成纯白。"""
-    mat = bpy.data.materials.new("背板 · 暖白陶瓷边缘")
+def tile_material(color, edge_color):
+    """根据背板真实法线生成柔和边缘，固定母版底色，避免摄影棚补光改变背板配色。"""
+    mat = bpy.data.materials.new("背板 · 陶瓷边缘")
     mat.use_nodes = True
     nodes, links = mat.node_tree.nodes, mat.node_tree.links
     nodes.clear()
@@ -68,7 +69,7 @@ def tile_material(color):
     absolute.operation = "ABSOLUTE"
     links.new(dot.outputs["Value"], absolute.inputs[0])
     mix = nodes.new("ShaderNodeMixRGB")
-    mix.inputs[1].default_value = linear_color("#DBD9D2")
+    mix.inputs[1].default_value = linear_color(edge_color)
     mix.inputs[2].default_value = linear_color(color)
     links.new(absolute.outputs[0], mix.inputs[0])
     emission = nodes.new("ShaderNodeEmission")
@@ -327,7 +328,8 @@ def setup_scene(config, args):
     floor = move_to(bpy.context.object, floor_group)
     floor.name = "Floor · 透明接触阴影"
     floor.is_shadow_catcher = True
-    floor.data.materials.append(material("地面 · 暖白", config["colors"]["tile"], 0.7))
+    # 阴影平面保持中性，鲜艳背板不应通过间接反射把灰色底座染成背景色。
+    floor.data.materials.append(material("地面 · 中性柔光", "#FAF9F5", 0.7))
 
     # 背板为相机正对的真实圆角实体。独立渲染层防止它挡住地面光线和模型阴影。
     distance = 36.0
@@ -336,8 +338,8 @@ def setup_scene(config, args):
     forward = rotation @ Vector((0, 0, -1))
     up = rotation @ Vector((0, 1, 0))
     right = rotation @ Vector((1, 0, 0))
-    plate = rounded("Tile · 暖白圆角背板", frame * 0.87, frame * 0.85, 0.12, frame * 0.205,
-                    tile_group, tile_material(config["colors"]["tile"]), bevel=0.065)
+    plate = rounded("Tile · 圆角背板", frame * 0.87, frame * 0.85, 0.12, frame * 0.205,
+                    tile_group, tile_material(config["colors"]["tile"], config["colors"]["tile_edge"]), bevel=0.065)
     plate.location = camera.location + forward * distance + up * (cam["shift_y"] * frame) + right * (cam["shift_x"] * frame)
     plate.rotation_euler = camera.rotation_euler
 
@@ -378,6 +380,36 @@ def setup_scene(config, args):
     return scene, model_group
 
 
+def update_style(scene, config):
+    """将 config 的机身、背板颜色和相机构图应用到 scene；保留几何与灯光，无返回值。"""
+    cam, colors = config["camera"], config["colors"]
+    for name in ("Front", "Middle", "Rear"):
+        # 同步基础色与同色自发光，保留原材质的粗糙度、反射和强度，避免旧色残留。
+        body = bpy.data.objects[f"{name} · 设备机身"].active_material
+        shader = body.node_tree.nodes.get("Principled BSDF")
+        rgba = linear_color(colors[name.lower()])
+        shader.inputs["Base Color"].default_value = rgba
+        shader.inputs["Emission Color"].default_value = rgba
+        body.diffuse_color = rgba
+    camera = scene.camera
+    ratio = camera.data.lens / cam["lens"]
+    camera.data.lens = cam["lens"]
+    camera.data.shift_x = cam["shift_x"]
+    camera.data.shift_y = cam["shift_y"]
+    rotation = camera.rotation_euler.to_quaternion()
+    forward, up, right = (rotation @ Vector(axis) for axis in ((0, 0, -1), (0, 1, 0), (1, 0, 0)))
+    for plate in bpy.data.collections["04 · 图标背板"].objects:
+        # 增加焦距只放大主体；按原焦距补偿背板尺寸，保持图标外轮廓及透明安全边距。
+        distance = (plate.location - camera.location).dot(forward)
+        frame = distance * camera.data.sensor_width / camera.data.lens
+        plate.scale.x *= ratio
+        plate.scale.y *= ratio
+        plate.location = camera.location + forward * distance + up * (cam["shift_y"] * frame) + right * (cam["shift_x"] * frame)
+        plate.data.materials.clear()
+        plate.data.materials.append(tile_material(colors["tile"], colors["tile_edge"]))
+        plate.name = "Tile · 圆角背板"
+
+
 def main():
     """解析命令行后重建或读取场景，导出模型并渲染 PNG；失败由 Blender 返回非零状态。"""
     args = arguments()
@@ -391,6 +423,8 @@ def main():
         bpy.ops.wm.open_mainfile(filepath=str(blend_path))
         scene = bpy.context.scene
         model_group = bpy.data.collections["01 · ADM 实体模型"]
+        if args.update_style:
+            update_style(scene, config)
         if args.size:
             scene.render.resolution_x = scene.render.resolution_y = args.size
         if args.samples:
@@ -398,12 +432,17 @@ def main():
     configure_device(scene, args.cpu)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     scene.render.filepath = str(args.output.resolve())
+    # 先完成渲染再保存源场景和导出模型，避免 GPU 渲染失败时只更新一半设计资产。
+    bpy.ops.render.render(write_still=True)
     if not args.preview:
-        if rebuild:
-            bpy.data.texts.load(str(BRANDING / "scene.json"))
-            bpy.data.texts.load(str(Path(__file__).resolve()))
-            attribution = bpy.data.texts.new("Android attribution.txt")
-            attribution.write("The Android robot is reproduced or modified from work created and shared by Google and used according to terms described in the Creative Commons 3.0 Attribution License. https://creativecommons.org/licenses/by/3.0/")
+        if rebuild or args.update_style:
+            for path in (BRANDING / "scene.json", Path(__file__).resolve()):
+                text = bpy.data.texts.get(path.name) or bpy.data.texts.new(path.name)
+                text.clear()
+                text.write(path.read_text())
+            if rebuild:
+                attribution = bpy.data.texts.new("Android attribution.txt")
+                attribution.write("The Android robot is reproduced or modified from work created and shared by Google and used according to terms described in the Creative Commons 3.0 Attribution License. https://creativecommons.org/licenses/by/3.0/")
             bpy.context.preferences.filepaths.save_version = 0
             bpy.ops.wm.save_as_mainfile(filepath=str(blend_path), compress=True)
         # GLB 只包含可旋转查看的标志实体，不把图标背板和摄影棚当成模型一并导出。
@@ -412,7 +451,6 @@ def main():
             obj.select_set(True)
         bpy.ops.export_scene.gltf(filepath=str(BRANDING / "adm-icon.glb"), export_format="GLB",
                                   use_selection=True, export_apply=True, export_cameras=False, export_lights=False)
-    bpy.ops.render.render(write_still=True)
     print(f"ADM 图标渲染完成：{args.output}")
 
 
