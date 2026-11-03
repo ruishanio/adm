@@ -5,7 +5,7 @@
   "version": "0.1.4",
   "private": true,
   "description": "Desktop Android device management via ADB",
-  "author": "RuiNext",
+  "author": "Ruishanio",
   "license": "MIT",
   "type": "module",
   "scripts": {

@@ -11,7 +11,7 @@ defineProps<{ version?: string }>();
     <p class="field-hint">{{ t('版本 {version}', { version: version || APP_VERSION }) }}</p>
     <p class="field-hint metadata-inline">
       <span>{{ t('自有代码采用 MIT 许可') }}</span
-      ><span>© 2026 RuiNext</span>
+      ><span>© 2026 {{ t('睿善科技') }}</span>
     </p>
     <p class="about-attribution">Android is a trademark of Google LLC.</p>
   </section>

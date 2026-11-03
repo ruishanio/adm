@@ -420,6 +420,7 @@ export const english = {
   通用: 'General',
   'ADB 工具': 'ADB tools',
   关于: 'About',
+  睿善科技: 'Ruishanio',
   '自有代码采用 MIT 许可': 'Original code is licensed under MIT',
   界面语言: 'Language',
   '切换后立即生效，无需重新启动。': 'Changes take effect immediately. No restart required.',

@@ -127,7 +127,7 @@ macOS 构建尚未公证，Windows 构建尚未代码签名，首次打开可能
 
 ## 许可与致谢
 
-ADM 自有代码采用 [MIT 许可](../../../LICENSE)，第三方组件与资源遵循各自许可。
+ADM 自有代码采用 [MIT 许可](../../../LICENSE)，另附[简体中文参考译文](../../../LICENSE.zh-CN.md)。第三方组件与资源遵循各自许可。
 
 感谢 [Tauri](https://tauri.app/)、[Vue](https://vuejs.org/)、[shadcn-vue](https://www.shadcn-vue.com/)、[Tailwind CSS](https://tailwindcss.com/)、[Lucide](https://lucide.dev/)、[Android SDK Platform-Tools](https://developer.android.com/tools/releases/platform-tools) 和 [scrcpy](https://github.com/Genymobile/scrcpy)。
 
