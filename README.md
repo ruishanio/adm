@@ -30,6 +30,7 @@ Settings → Environments → github-pages 的 Deployment branches and tags 需�
 - 标题、简介、Open Graph、社交卡片与 WebSite / WebPage / SoftwareApplication JSON-LD 共用 `seo.js`。软件版本来自下载区；结构化信息与可见正文一致，不虚构评分、评价或下载量，不承诺 Google 软件富结果。
 - 构建生成 `/sitemap.xml` 和 `/robots.txt`，允许普通搜索与 AI 搜索抓取公开内容。`OAI-SearchBot` 负责 ChatGPT 搜索，与用于训练的 `GPTBot` 不同；当前通配规则延续公开网站默认允许抓取的行为，不单独更改训练策略。
 - `npm run check:seo` 可单独复查已有产物，正式构建也自动运行：检查八种语言的无脚本正文、规范链接、语言互链、结构化信息、静态资源和站点地图。
+- Google Search Console 与 Bing Webmaster Tools 使用 `index.html` 中的首页验证标记。验证成功后仍需保留；这些公开标记不使用 `data-seo`，避免语言切换或预渲染时被替换。
 
 上线后的运营步骤（需要站长账号，代码构建不等于已完成收录）：
 
