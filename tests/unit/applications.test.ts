@@ -268,10 +268,11 @@ it('安装入口打开弹窗，取消不安装且保留列表搜索，关闭后�
   expect(w.workspace.state.modal).toBe('install');
   expect(document.querySelector('.install-dialog')).not.toBeNull();
   expect(view.find('[role="tablist"]').exists()).toBe(false);
-  expect(document.querySelector('.install-dialog .dialog-device-target')?.textContent).toContain('第一台');
+  expect(document.querySelector('.install-dialog .install-target')?.textContent).toContain('第一台');
+  expect(document.querySelector('.install-dialog')?.textContent).not.toContain('用户 0');
   expect(
     [...document.querySelectorAll<HTMLButtonElement>('.install-dialog button')].find(
-      (b) => b.textContent?.trim() === '安装到此设备',
+      (b) => b.textContent?.trim() === '安装',
     )?.disabled,
   ).toBe(true);
   document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
@@ -280,6 +281,45 @@ it('安装入口打开弹窗，取消不安装且保留列表搜索，关闭后�
   expect(api.install).not.toHaveBeenCalled();
   expect(w.apps.state.appQuery).toBe('笔记');
   await vi.waitFor(() => expect(document.activeElement).toBe(button.element));
+});
+it('同次会话取消文件选择保留当前文件，关闭后重开清空文件、选项和错误', async () => {
+  const { w, api } = await setup();
+  await w.install.chooseApk();
+  w.install.state.allowTest = true;
+  w.install.state.ownerAfter = true;
+  vi.mocked(api.chooseApk).mockResolvedValueOnce(null);
+  await w.install.chooseApk();
+  expect(w.install.state.apk?.fileName).toBe('test.apk');
+  expect(w.install.state.allowTest).toBe(true);
+  w.workspace.state.notice = { error: true, text: '上次安装失败' };
+  w.install.closeInstall();
+  expect(w.install.state.apk).toBeUndefined();
+  w.install.openInstall();
+  await flushPromises();
+  expect(document.querySelector<HTMLInputElement>('#install-apk-file')?.value).toBe('');
+  expect(w.install.state.allowTest).toBe(false);
+  expect(w.install.state.ownerAfter).toBe(false);
+  expect(w.workspace.state.notice).toBeNull();
+  expect(api.install).not.toHaveBeenCalled();
+});
+it.each(['choose', 'drop'])('%s 解析期间断线，迟到的 APK 不恢复已关闭的安装会话', async (source) => {
+  const { w, api, snapshot } = await setup();
+  const apk = (await api.chooseApk())!;
+  let finish!: (value: typeof apk) => void;
+  const read = () =>
+    new Promise<typeof apk>((resolve) => {
+      finish = resolve;
+    });
+  if (source === 'choose') vi.mocked(api.chooseApk).mockImplementationOnce(read);
+  else vi.mocked(api.dropApk).mockImplementationOnce(read);
+  const pending = source === 'choose' ? w.install.chooseApk() : w.install.drop(['/tmp/drop.apk']);
+  snapshot.devices = [{ ...first, state: 'offline' }, second];
+  await w.devices.refresh();
+  expect(w.workspace.state.modal).toBeNull();
+  finish(apk);
+  await pending;
+  expect(w.install.state.apk).toBeUndefined();
+  expect(w.owner.state.component).toBe('');
 });
 it('选择或拖入 APK 打开安装弹窗，弹窗内可更换，其他弹窗阻止拖入', async () => {
   const { w, api } = await setup();
@@ -339,6 +379,9 @@ it('安装时不能关闭弹窗，可停止等待；失败保留安装包，重�
   expect(api.listApps).toHaveBeenCalledTimes(before + 1);
   expect(w.apps.state.appsLoaded).toBe(true);
   expect(w.workspace.state.notice?.text).toContain('安装成功');
+  expect(w.install.state.apk).toBeUndefined();
+  w.install.openInstall();
+  expect(w.install.state.apk).toBeUndefined();
 });
 it('安装已成功但列表读取失败时不误报安装失败或重复安装', async () => {
   const { w, api } = await setup();
@@ -353,8 +396,10 @@ it('安装已成功但列表读取失败时不误报安装失败或重复安装'
 });
 it('安装过程中断线关闭旧弹窗，迟到结果不进入另一会话的所有者配置', async () => {
   const { w, api, snapshot } = await setup();
+  const selected = (await api.chooseApk())!;
+  vi.mocked(api.chooseApk).mockResolvedValueOnce({ ...selected, admins: [app.packageName + '/.Admin'] });
   await w.install.chooseApk();
-  w.owner.state.ownerAfter = true;
+  w.install.state.ownerAfter = true;
   let finish!: () => void;
   vi.mocked(api.install).mockImplementationOnce(
     () =>
@@ -480,4 +525,72 @@ it('操作失败保留确认和错误，断连撤销确认，打开应用后触�
   const calls = vi.mocked(api.appAction).mock.calls.length;
   await w.apps.confirmAppAction();
   expect(api.appAction).toHaveBeenCalledTimes(calls);
+});
+
+it('安装预览显示实际名称和图标，无法加载的图标回退且不阻止普通安装', async () => {
+  const { w, api } = await setup();
+  const selected = (await api.chooseApk())!;
+  vi.mocked(api.chooseApk).mockResolvedValueOnce({
+    ...selected,
+    label: '随手笔记',
+    icon: 'data:image/png,broken',
+  });
+  await w.install.chooseApk();
+  await flushPromises();
+  expect(document.querySelector('.install-app-identity strong')?.textContent).toBe('随手笔记');
+  expect(document.querySelector('.install-app-identity span')?.textContent).toBe(app.packageName);
+  const image = document.querySelector<HTMLImageElement>('.install-app-identity img')!;
+  expect(image.src).toBe('data:image/png,broken');
+  image.dispatchEvent(new Event('error'));
+  await nextTick();
+  expect(document.querySelector('.install-app-identity img')).toBeNull();
+  expect(w.install.canInstall.value).toBe(true);
+});
+it('多个管理接收器必须明确选择，保留所选组件进入独立授权流程', async () => {
+  const { w, api } = await setup();
+  const selected = (await api.chooseApk())!;
+  const admins = [app.packageName + '/.FirstAdmin', app.packageName + '/.SecondAdmin'];
+  vi.mocked(api.chooseApk).mockResolvedValueOnce({ ...selected, admins });
+  await w.install.chooseApk();
+  await flushPromises();
+  expect(w.owner.state.component).toBe('');
+  document.querySelector<HTMLButtonElement>('[aria-label="安装后配置设备所有者"]')!.click();
+  await nextTick();
+  expect(document.querySelector('#install-owner-warning')?.textContent).toContain('恢复出厂设置');
+  expect(document.querySelector('#install-owner-warning')?.textContent).toContain('不会自动授权');
+  expect(w.install.canInstall.value).toBe(false);
+  await w.install.install();
+  expect(api.install).not.toHaveBeenCalled();
+  document
+    .querySelector<HTMLButtonElement>('#install-admin')!
+    .dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+  await flushPromises();
+  const option = [...document.querySelectorAll<HTMLElement>('[role="option"]')].find((n) =>
+    n.textContent?.includes('SecondAdmin'),
+  )!;
+  option.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  await flushPromises();
+  expect(w.install.state.adminComponent).toBe(admins[1]);
+  expect(w.install.canInstall.value).toBe(true);
+  await w.install.install();
+  expect(w.owner.state.component).toBe(admins[1]);
+  expect(w.owner.state.ownerExpanded).toBe(true);
+  expect(w.owner.state.consent).toBe(false);
+  expect(w.owner.state.ownerCheck).toBeUndefined();
+  expect(w.install.state.adminComponent).toBe('');
+});
+it('单接收器自动带入，更换或移除 APK 后不沿用配置意向', async () => {
+  const { w, api } = await setup();
+  const selected = (await api.chooseApk())!;
+  const admin = app.packageName + '/.Admin';
+  vi.mocked(api.chooseApk).mockResolvedValueOnce({ ...selected, admins: [admin] });
+  await w.install.chooseApk();
+  expect(w.install.state.adminComponent).toBe(admin);
+  w.install.state.ownerAfter = true;
+  await w.install.chooseApk();
+  expect(w.install.state.adminComponent).toBe('');
+  expect(w.install.state.ownerAfter).toBe(false);
+  w.install.removeApk();
+  expect(w.install.state.apk).toBeUndefined();
+  expect(w.install.canInstall.value).toBe(false);
 });

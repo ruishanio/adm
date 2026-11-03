@@ -123,23 +123,31 @@ it('断连撤销所有者授权，重连要求重新选择传输会话', async (
   expect(w.owner.state.ownerCheck).toBeUndefined();
   expect(w.workspace.state.selected).toBe(targetKey(first));
 });
-it('跨页和换设备保留已选安装包', async () => {
+it('切换设备关闭安装弹窗并清除文件和安装选项', async () => {
   const w = await ready();
   await w.install.chooseApk();
   expect(w.workspace.state.tab).toBe('apps');
+  w.install.state.allowTest = true;
+  w.install.state.ownerAfter = true;
   w.workspace.state.tab = 'info';
   w.devices.select(second);
   await vi.waitFor(() => expect(w.devices.state.details?.serial).toBe('two'));
-  expect(w.install.state.apk?.fileName).toBe('test.apk');
+  expect(w.workspace.state.modal).toBeNull();
+  expect(w.install.state.apk).toBeUndefined();
+  expect(w.install.state.allowTest).toBe(false);
+  expect(w.install.state.ownerAfter).toBe(false);
 });
-it('安装后没有组件也展开手动填写入口且不自动授权', async () => {
+it('无接收器时不能从安装流程配置所有者，仍可正常安装', async () => {
   const w = await ready();
   await w.install.chooseApk();
-  w.owner.state.ownerAfter = true;
+  w.install.state.ownerAfter = true;
+  expect(w.install.canInstall.value).toBe(false);
   await w.install.install();
-  expect(w.workspace.state.modal).toBeNull();
-  expect(w.workspace.state.tab).toBe('info');
-  expect(w.owner.state.ownerExpanded).toBe(true);
+  expect(api.install).not.toHaveBeenCalled();
+  w.install.state.ownerAfter = false;
+  await w.install.install();
+  expect(api.install).toHaveBeenCalledTimes(1);
+  expect(w.owner.state.ownerExpanded).toBe(false);
   expect(w.owner.state.consent).toBe(false);
 });
 it('变更组件撤销旧检查和授权', async () => {

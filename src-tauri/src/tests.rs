@@ -24,6 +24,8 @@ fn target() -> Target {
 }
 fn apk() -> Apk {
     Apk {
+        label: None,
+        icon: None,
         id: "fixture".into(),
         file_name: "test.apk".into(),
         package_name: "com.example.app".into(),

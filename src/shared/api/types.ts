@@ -58,6 +58,8 @@ export interface RuntimeInfo {
   addresses: string[];
 }
 export interface Apk {
+  label?: string | null;
+  icon?: string | null;
   id: string;
   fileName: string;
   packageName: string;

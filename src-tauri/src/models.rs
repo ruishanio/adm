@@ -77,6 +77,8 @@ pub struct BatteryInfo {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Apk {
+    pub label: Option<String>,
+    pub icon: Option<String>,
     pub id: String,
     pub file_name: String,
     pub package_name: String,

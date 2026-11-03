@@ -10,6 +10,9 @@ use std::{
     io::Read,
     path::{Path, PathBuf},
 };
+mod icon;
+mod resources;
+
 const INVALID: &str = "APK 清单损坏或格式不受支持。";
 const ANDROID: &str = "http://schemas.android.com/apk/res/android";
 #[derive(Default)]
@@ -43,6 +46,60 @@ impl Reader<'_> {
         Ok(u32::from_le_bytes(
             self.range(at, 4, self.0.len())?.try_into().unwrap(),
         ))
+    }
+    fn string_pool(&self, offset: usize) -> Result<Vec<String>> {
+        let r = self;
+        let header = r.u16(offset + 2)? as usize;
+        let size = r.u32(offset + 4)? as usize;
+        r.range(offset, size, r.0.len())?;
+        if header < 28 || header > size {
+            return Err(INVALID.into());
+        }
+        let end = offset + size;
+        let mut strings = vec![];
+        let count = r.u32(offset + 8)? as usize;
+        let utf8 = r.u32(offset + 16)? & 0x100 != 0;
+        let start = r.u32(offset + 20)? as usize;
+        if count > 100000
+            || header + count * 4 > size
+            || start < header + count * 4
+            || start >= size
+        {
+            return Err(INVALID.into());
+        }
+        let mut decoded = 0;
+        for i in 0..count {
+            let mut at = offset + start + r.u32(offset + header + i * 4)? as usize;
+            if utf8 {
+                r.length8(&mut at, end)?;
+            }
+            let length = if utf8 {
+                r.length8(&mut at, end)?
+            } else {
+                r.length16(&mut at, end)? * 2
+            };
+            r.range(at, length + if utf8 { 1 } else { 2 }, end)?;
+            decoded += length;
+            if decoded > 16 * 1024 * 1024 {
+                return Err(INVALID.into());
+            }
+            let bytes = r.range(at, length, end)?;
+            let text = if utf8 {
+                String::from_utf8(bytes.to_vec()).map_err(|_| INVALID)?
+            } else {
+                String::from_utf16(
+                    &bytes
+                        .as_chunks::<2>()
+                        .0
+                        .iter()
+                        .map(|b| u16::from_le_bytes([b[0], b[1]]))
+                        .collect::<Vec<_>>(),
+                )
+                .map_err(|_| INVALID)?
+            };
+            strings.push(text);
+        }
+        Ok(strings)
     }
     fn length8(&self, at: &mut usize, end: usize) -> Result<usize> {
         let n = self.range(*at, 1, end)?[0];
@@ -78,8 +135,8 @@ fn string(pool: &[String], index: u32) -> Result<String> {
             .ok_or_else(|| INVALID.into())
     }
 }
-/// 解析有界 Android 二进制 XML。输入清单字节，返回应用信息；异常偏移、深度和拆分包均拒绝。
-pub fn parse_manifest(data: &[u8]) -> Result<Apk> {
+/// 解析有界 Android 二进制 XML；输入字节返回元素树，拒绝异常偏移、字符串池和嵌套深度。
+fn parse_xml(data: &[u8]) -> Result<Element> {
     let r = Reader(data);
     if data.len() < 8
         || data.len() > 8 * 1024 * 1024
@@ -109,48 +166,7 @@ pub fn parse_manifest(data: &[u8]) -> Result<Apk> {
                 return Err(INVALID.into());
             }
             pool_seen = true;
-            let count = r.u32(offset + 8)? as usize;
-            let utf8 = r.u32(offset + 16)? & 0x100 != 0;
-            let start = r.u32(offset + 20)? as usize;
-            if count > 100000
-                || header + count * 4 > size
-                || start < header + count * 4
-                || start >= size
-            {
-                return Err(INVALID.into());
-            }
-            let mut decoded = 0;
-            for i in 0..count {
-                let mut at = offset + start + r.u32(offset + header + i * 4)? as usize;
-                if utf8 {
-                    r.length8(&mut at, end)?;
-                }
-                let length = if utf8 {
-                    r.length8(&mut at, end)?
-                } else {
-                    r.length16(&mut at, end)? * 2
-                };
-                r.range(at, length + if utf8 { 1 } else { 2 }, end)?;
-                decoded += length;
-                if decoded > 16 * 1024 * 1024 {
-                    return Err(INVALID.into());
-                }
-                let bytes = r.range(at, length, end)?;
-                let text = if utf8 {
-                    String::from_utf8(bytes.to_vec()).map_err(|_| INVALID)?
-                } else {
-                    String::from_utf16(
-                        &bytes
-                            .as_chunks::<2>()
-                            .0
-                            .iter()
-                            .map(|b| u16::from_le_bytes([b[0], b[1]]))
-                            .collect::<Vec<_>>(),
-                    )
-                    .map_err(|_| INVALID)?
-                };
-                strings.push(text);
-            }
+            strings = r.string_pool(offset)?;
         } else if kind == 0x102 {
             if header != 16 || size < 36 {
                 return Err(INVALID.into());
@@ -177,6 +193,8 @@ pub fn parse_manifest(data: &[u8]) -> Result<Apk> {
                 } else {
                     match value_type {
                         3 => string(&strings, value)?,
+                        4 => f32::from_bits(value).to_string(),
+                        0x1c..=0x1f => format!("#{value:08x}"),
                         0x12 => (value != 0).to_string(),
                         0x10 | 0x11 => value.to_string(),
                         _ => format!("@0x{value:x}"),
@@ -214,7 +232,18 @@ pub fn parse_manifest(data: &[u8]) -> Result<Apk> {
         offset = end;
     }
     let root = root.ok_or(INVALID)?;
-    if !stack.is_empty() || root.name != "manifest" {
+    if !stack.is_empty() {
+        return Err(INVALID.into());
+    }
+    Ok(root)
+}
+
+#[cfg(test)]
+pub fn parse_manifest(data: &[u8]) -> Result<Apk> {
+    manifest_info(&parse_xml(data)?)
+}
+fn manifest_info(root: &Element) -> Result<Apk> {
+    if root.name != "manifest" {
         return Err(INVALID.into());
     }
     let pkg = root
@@ -265,6 +294,14 @@ pub fn parse_manifest(data: &[u8]) -> Result<Apk> {
         id: String::new(),
         file_name: String::new(),
         package_name: pkg.clone(),
+        label: root
+            .children
+            .iter()
+            .find(|c| c.name == "application")
+            .map(|app| app.attr("label"))
+            .filter(|v| !v.is_empty() && !v.starts_with('@'))
+            .map(str::to_owned),
+        icon: None,
         version_name: if root.attr("versionName").is_empty() {
             "未知版本".into()
         } else {
@@ -328,7 +365,26 @@ pub fn read_apk(path: &Path, cancel: &Cancel) -> Result<ApkRecord> {
         .take(8 * 1024 * 1024 + 1)
         .read_to_end(&mut data)
         .map_err(|_| "无法解压 APK 清单。")?;
-    let mut info = parse_manifest(&data)?;
+    drop(entry);
+    let root = parse_xml(&data)?;
+    let mut info = manifest_info(&root)?;
+    // 图标或名称资源缺失不影响合法 APK 的安装；所有预览均在本机读取，不向设备写入文件。
+    let table_data = resources::read_entry(&mut zip, "resources.arsc", 32 * 1024 * 1024).ok();
+    let table = table_data
+        .as_deref()
+        .and_then(|data| resources::Table::parse(data).ok());
+    if let Some(app) = root.children.iter().find(|c| c.name == "application") {
+        if let Some(table) = &table {
+            info.label = table
+                .resolve(app.attr("label"))
+                .filter(|label| !label.is_empty() && label.len() <= 2048);
+            if let Some(version) = table.resolve(root.attr("versionName")) {
+                info.version_name = version;
+            }
+        }
+        info.icon = icon::read_icon(&mut zip, table.as_ref(), app.attr("icon"));
+    }
+    check_cancel(cancel)?;
     if hash != file_hash(&path, cancel)? {
         return Err("读取时 APK 已变化，请重新选择。".into());
     }
@@ -336,4 +392,45 @@ pub fn read_apk(path: &Path, cancel: &Cancel) -> Result<ApkRecord> {
     info.file_name = path.file_name().unwrap().to_string_lossy().into_owned();
     info.size = metadata.len();
     Ok(ApkRecord { info, path, hash })
+}
+
+#[cfg(test)]
+mod preview_tests {
+    use super::*;
+    use crate::adb::process::cancellation;
+
+    #[test]
+    fn resolves_resource_label_adaptive_icon_and_all_receivers() {
+        let path =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/Fixtures/apk-preview/preview.apk");
+        let apk = read_apk(&path, &cancellation()).unwrap();
+        assert_eq!(apk.info.label.as_deref(), Some("ADM 预览测试"));
+        let icon = apk.info.icon.unwrap();
+        assert!(icon.starts_with("data:image/svg+xml,"));
+        assert!(icon.contains("%23%32%34%36%62%35%35%66%66"));
+        assert!(icon.contains("%74%72%61%6E%73%6C%61%74%65"));
+        assert_eq!(
+            apk.info.admins,
+            vec![
+                "com.example.preview/com.example.preview.FirstAdmin",
+                "com.example.preview/com.example.preview.SecondAdmin"
+            ]
+        );
+    }
+
+    #[test]
+    #[ignore = "需 ADM_PREVIEW_APK，仅在本机解析指定 APK，不连接设备"]
+    fn local_apk_preview_read_only() {
+        let path = std::env::var("ADM_PREVIEW_APK").unwrap();
+        let apk = read_apk(Path::new(&path), &cancellation()).unwrap();
+        assert!(apk.info.label.as_ref().is_some_and(|s| !s.is_empty()));
+        assert!(apk.info.icon.is_some());
+        println!(
+            "名称：{:?}，包名：{}，接收器：{:?}",
+            apk.info.label, apk.info.package_name, apk.info.admins
+        );
+        if let Ok(output) = std::env::var("ADM_PREVIEW_OUTPUT") {
+            std::fs::write(output, serde_json::to_string(&apk.info).unwrap()).unwrap();
+        }
+    }
 }

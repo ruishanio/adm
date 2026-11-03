@@ -1,16 +1,20 @@
 import { createContext } from '@/shared/composables/context';
-import { watch, reactive } from 'vue';
+import { watch, reactive, computed } from 'vue';
 import { t } from '@/shared/i18n/index';
 import { type Apk, type Target } from '@/shared/api/types';
 import { targetKey } from '@/shared/utils/device';
 import type { FeatureContext } from '@/shared/composables/workspace';
 export function installState() {
-  return { apk: undefined as Apk | undefined, allowTest: false, dragging: false };
+  return {
+    apk: undefined as Apk | undefined,
+    allowTest: false,
+    ownerAfter: false,
+    adminComponent: '',
+    dragging: false,
+  };
 }
 interface Hooks {
-  acceptApk(apk: Apk): void;
-  ownerAfter(): boolean;
-  installed(target: Target, apk: Apk, ownerAfter: boolean): Promise<void>;
+  installed(target: Target, adminComponent?: string): Promise<void>;
 }
 /** 安装流程只负责 APK 和确认会话，完成后的列表刷新/所有者引导由工作区编排。 */
 export function createInstall(
@@ -18,6 +22,19 @@ export function createInstall(
   hooks: Hooks,
 ) {
   const state = reactive(installState());
+  let session = 0;
+  function reset() {
+    // 每次打开都是独立安装会话，关闭后不沿用文件、测试安装选项或所有者配置意向。
+    session++;
+    Object.assign(state, installState());
+  }
+  watch(
+    () => workspace.modal,
+    (modal, previous) => {
+      if (previous === 'install' && modal !== 'install') reset();
+    },
+    { flush: 'sync' },
+  );
   watch(
     () => [workspace.selected, online.value],
     () => {
@@ -26,12 +43,27 @@ export function createInstall(
     },
     { flush: 'sync' },
   );
+  const canInstall = computed(
+    () =>
+      !!state.apk &&
+      online.value &&
+      !workspace.busy &&
+      (!state.ownerAfter || state.apk.admins.includes(state.adminComponent)),
+  );
+  function removeApk() {
+    state.apk = undefined;
+    state.adminComponent = '';
+    state.ownerAfter = false;
+  }
   function acceptApk(apk: Apk) {
     state.apk = apk;
-    hooks.acceptApk(apk);
+    // 只有一个接收器才能自动带入；更换 APK 后撤销旧的所有者意向与选择。
+    state.adminComponent = apk.admins.length === 1 ? apk.admins[0] : '';
+    state.ownerAfter = false;
   }
   function openInstall() {
     if (workspace.busy || (workspace.modal && workspace.modal !== 'install')) return false;
+    if (workspace.modal !== 'install') reset();
     workspace.notice = null;
     workspace.tab = 'apps';
     workspace.modal = 'install';
@@ -40,13 +72,15 @@ export function createInstall(
   function closeInstall() {
     if (workspace.busy) return;
     workspace.modal = null;
-    state.dragging = false;
+    workspace.notice = null;
   }
   async function chooseApk() {
     if (!openInstall()) return;
+    const pending = session;
     await run(t('读取安装包'), async () => {
       const next = await api.chooseApk();
-      if (next) acceptApk(next);
+      // 设备断线或切换会关闭弹窗，迟到的文件解析结果不能填回新会话。
+      if (next && pending === session && workspace.modal === 'install') acceptApk(next);
     });
   }
   function dragEnter() {
@@ -61,23 +95,27 @@ export function createInstall(
       return;
     }
     if (!openInstall()) return;
-    await run(t('读取安装包'), async () => acceptApk(await api.dropApk(paths[0])));
+    const pending = session;
+    await run(t('读取安装包'), async () => {
+      const next = await api.dropApk(paths[0]);
+      if (pending === session && workspace.modal === 'install') acceptApk(next);
+    });
   }
 
   async function install() {
-    if (!device.value || !state.apk || !online.value || workspace.modal !== 'install' || workspace.busy)
-      return;
+    if (!device.value || !state.apk || !canInstall.value || workspace.modal !== 'install') return;
     const target = { ...device.value },
       apk = state.apk,
-      ownerAfter = hooks.ownerAfter();
+      adminComponent = state.ownerAfter ? state.adminComponent : undefined,
+      pending = session;
     await run(t('正在安装到 {name}', { name: title.value }), async () => {
       await api.install(target, apk.id, state.allowTest);
-      if (workspace.selected !== targetKey(target) || !online.value) return;
+      if (pending !== session || workspace.selected !== targetKey(target) || !online.value) return;
       workspace.modal = null;
-      await hooks.installed(target, apk, ownerAfter);
+      await hooks.installed(target, adminComponent);
     });
   }
-  return { state, openInstall, closeInstall, chooseApk, dragEnter, drop, install };
+  return { state, canInstall, removeApk, openInstall, closeInstall, chooseApk, dragEnter, drop, install };
 }
 
 export const { key: installKey, use: useInstall } =

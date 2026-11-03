@@ -28,14 +28,10 @@ export function createWorkbench(api: Api) {
       devices.state.details = details;
     });
     const install = createInstall(workspace, {
-      acceptApk: (apk) => {
-        owner.state.component = apk.admins[0] || '';
-      },
-      ownerAfter: () => owner.state.ownerAfter,
-      installed: async (target, apk, ownerAfter) => {
+      installed: async (target, adminComponent) => {
         apps.invalidate();
-        if (ownerAfter) {
-          owner.prepare(apk.admins[0] || owner.state.component);
+        if (adminComponent) {
+          owner.prepare(adminComponent);
           core.state.tab = 'info';
           core.state.notice = { text: t('安装成功并已核对版本。请检查设备所有者条件，并单独确认授权。') };
         } else {
