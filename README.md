@@ -32,9 +32,18 @@ Settings → Environments → github-pages 的 Deployment branches and tags 需�
 - `npm run check:seo` 可单独复查已有产物，正式构建也自动运行：检查八种语言的无脚本正文、规范链接、语言互链、结构化信息、静态资源和站点地图。
 - Google Search Console 与 Bing Webmaster Tools 使用 `index.html` 中的首页验证标记。验证成功后仍需保留；这些公开标记不使用 `data-seo`，避免语言切换或预渲染时被替换。
 
-上线后的运营步骤（需要站长账号，代码构建不等于已完成收录）：
+站长平台配置状态（2026-11-03）：
 
-1. 在 Google Search Console 与 Bing Webmaster Tools 验证站点所有权，提交 `https://adm.ruishanio.com/sitemap.xml`，检查首页及中文页能否抓取、是否收录。
+| 平台 | 所有权验证 | 站点地图 |
+| --- | --- | --- |
+| Google Search Console | 已通过 HTML 标记验证，资源为 `https://adm.ruishanio.com/` | 已提交并成功处理，发现全部 8 个页面 |
+| Bing Webmaster Tools | 已通过 HTML 元标记验证，站点为 `https://adm.ruishanio.com/` | 已提交，提交后状态为 Processing，等待平台处理 |
+
+两个平台均提交 `https://adm.ruishanio.com/sitemap.xml`。提交和发现页面不等于已经收录；后续以各平台最新抓取、索引与效果报告为准。
+
+后续运营步骤：
+
+1. 复查 Bing 站点地图处理结果，并通过两平台的网址检查与索引报告观察首页和中文页的收录状态。
 2. 优先补充经过实际验证的中英文教程，例如「在 Mac 上安装 APK」「Android 文件传输」「Android 投屏与键鼠控制」；说明前提、步骤、限制和版本，提供稳定链接，避免堆砌关键词或生成大量重复页面。
 3. 观察搜索展现、有效点击、下载转化与 AI 引荐来源；保留 `utm_source=chatgpt.com` 便于未来接入统计。本站尚未接入流量统计，也不能据此宣称排名或 AI 引用已提升。
 
