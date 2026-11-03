@@ -1,0 +1,12 @@
+{
+  "width": 620,
+  "height": 360,
+  "iconSize": 96,
+  "textSize": 14,
+  "appPosition": [170, 145],
+  "applicationsPosition": [450, 145],
+  "background": "#F5F6F8",
+  "arrow": "#9BA4AF",
+  "foreground": "#4B5563",
+  "instruction": "Drag ADM to Applications to install"
+}

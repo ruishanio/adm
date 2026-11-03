@@ -194,6 +194,8 @@ def smoke_install(platform, arch):
                     raise ValueError(f"DMG 中的应用内容不一致：{entry}")
             if not (mount / "Applications").is_symlink() or os.readlink(mount / "Applications") != "/Applications":
                 raise ValueError("DMG 缺少应用程序目录的安装快捷方式")
+            subprocess.run([sys.executable, str(ROOT / "scripts/package_dmg.py"),
+                            "verify", str(mount), f"{name}.app"], check=True, timeout=120)
             subprocess.run(["codesign", "--verify", "--deep", "--strict", str(app)], check=True)
         finally:
             subprocess.run(["hdiutil", "detach", str(mount)], check=True, timeout=60)

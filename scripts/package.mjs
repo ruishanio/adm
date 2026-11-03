@@ -21,7 +21,7 @@ run(process.execPath, [
   '--target',
   target,
   '--bundles',
-  platform === 'mac' ? 'app,dmg' : 'nsis',
+  platform === 'mac' ? 'app' : 'nsis',
   '--ci',
   // Windows 只发布 NSIS，且没有自动更新器；保留原始二进制，确保安装版与便携版可逐字节核对。
   ...(platform === 'win' ? ['--no-binary-patching'] : []),
@@ -44,6 +44,8 @@ if (platform === 'mac') {
     // 改名后旧包可能仍在构建目录，只选择本次产品名和版本的产物。
     `${metadata.productName}_${metadata.version}_aarch64.dmg`,
   );
+  // 直接写入 Finder 布局元数据，避免 Tauri 在 CI 中跳过 DMG 背景与图标排版。
+  run(python, ['scripts/package_dmg.py', 'build', join(destination, app), installer]);
   const zip = resolve('release', `${metadata.shortName}-${metadata.version}-mac-arm64.zip`);
   await rm(zip, { force: true });
   run('ditto', ['-c', '-k', '--sequesterRsrc', '--keepParent', join(destination, app), zip]);

@@ -86,7 +86,7 @@ Release 提供两平台安装包和应用 ZIP，可在附件旁查看 SHA-256。
 
 ADM 使用 **Tauri 2 + Vue 3 + TypeScript**，界面基于 shadcn-vue、Tailwind CSS 4 与 Lucide。Rust 后端负责 ADB、APK 解析和本地配置；应用使用系统 WebView，不携带 Chromium 或 Node.js 运行时。
 
-准备 Node.js 24、Python 3、仓库指定的 Rust 工具链及 [Tauri 平台依赖](https://v2.tauri.app/start/prerequisites/)，然后运行：
+准备 Node.js 24、Python 3.10+、仓库指定的 Rust 工具链及 [Tauri 平台依赖](https://v2.tauri.app/start/prerequisites/)，然后运行：
 
 ```sh
 git clone https://github.com/ruishanio/adm.git
@@ -121,6 +121,8 @@ cargo test --manifest-path src-tauri/Cargo.toml --locked
 npm run package:mac
 npm run package:win
 ```
+
+macOS 打包会在 `artifacts/dmg-tools/` 中安装锁定版本的 `dmgbuild` 构建工具，使用系统 Swift / AppKit 绘制清晰的安装引导，并直接写入 Finder 布局，确保本地与 CI 一致。这些工具不随应用分发。窗口、图标位置和文案在 `resources/dmg/layout.json` 中维护；打包和安装验证都会检查镜像内的布局。
 
 目录按业务归属组织，前端保持单应用，Rust 保持单 crate：
 
