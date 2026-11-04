@@ -42,11 +42,11 @@ export const messages = {
     faq: [
       {
         title: 'Which devices can I connect?',
-        body: 'Android phones, tablets, and emulators with authorized ADB access. Connect over USB or a network. Wireless debugging pairing requires Android 11 or later; pairing and connection use different ports.',
+        body: 'Android phones, tablets, and emulators with authorized ADB access can connect over USB or a network. If an IP connection and wireless discovery reach the same device, ADM lists it once. Right-click to disconnect. Wireless pairing requires Android 11 or later and uses a separate pairing port.',
       },
       {
-        title: 'Does screen mirroring include audio?',
-        body: 'Not yet. Mirroring and recording currently capture video only. They require a working H.264 encoder and WebCodecs support. Some older emulators and protected screens cannot be captured.',
+        title: 'How does screen mirroring work?',
+        body: 'Mirror, control, and record video without audio. The desktop needs WebCodecs. If the system encoder fails on an x86_64 device running Android 6.0 or later, ADM automatically switches to a compatibility encoder. Protected content stays hidden.',
       },
       {
         title: 'Which languages does the app support?',
@@ -110,11 +110,11 @@ export const messages = {
     faq: [
       {
         title: '可以连接哪些设备？',
-        body: '可通过 ADB 授权访问的 Android 手机、平板和模拟器，支持 USB 或网络连接。无线调试配对需要 Android 11 或更高版本；配对端口与连接端口不同。',
+        body: '支持已授权 ADB 的 Android 手机、平板和模拟器，可通过 USB 或网络连接。IP 连接和无线发现识别到同一台设备时，列表只显示一项，右键即可断开网络连接。无线配对需要 Android 11 或更高版本，配对端口与连接端口不同。',
       },
       {
-        title: '投屏和录像包含声音吗？',
-        body: '目前只包含画面，不含音频。投屏依赖设备可用的 H.264 编码器与 WebCodecs 支持，部分旧模拟器和受保护画面无法捕获。',
+        title: '投屏和录像如何工作？',
+        body: '可以查看、控制和录制设备画面，录像不含声音。桌面端需要支持 WebCodecs。运行 Android 6.0 及以上版本的 x86_64 设备如果遇到系统编码器故障，ADM 会自动切换到兼容编码。受保护的内容不会显示。',
       },
       {
         title: '应用支持哪些语言？',
@@ -178,11 +178,11 @@ export const messages = {
     faq: [
       {
         title: '可以連接哪些裝置？',
-        body: '可透過 ADB 授權存取的 Android 手機、平板和模擬器，支援 USB 或網路連線。無線偵錯配對需要 Android 11 或更新版本；配對與連線使用不同的連接埠。',
+        body: '支援已授權 ADB 的 Android 手機、平板與模擬器，可透過 USB 或網路連線。IP 連線與無線探索找到同一台裝置時，清單只顯示一項，按右鍵即可中斷網路連線。無線配對需要 Android 11 以上版本，配對與連線使用不同連接埠。',
       },
       {
-        title: '螢幕鏡像與錄影包含聲音嗎？',
-        body: '目前僅包含畫面，不含音訊。需要裝置可用的 H.264 編碼器與 WebCodecs 支援，部分舊版模擬器和受保護畫面無法擷取。',
+        title: '螢幕鏡像與錄影如何運作？',
+        body: '可以檢視、控制及錄製裝置畫面，錄影不含音訊。桌面端須支援 WebCodecs。執行 Android 6.0 以上版本的 x86_64 裝置若發生系統編碼器故障，ADM 會自動切換至相容編碼。受保護的內容不會顯示。',
       },
       {
         title: '應用程式支援哪些語言？',
@@ -245,12 +245,12 @@ export const messages = {
     feedback: '質問やアイデアがありますか？',
     faq: [
       {
-        title: 'どのデバイスに接続できますか？',
-        body: 'ADB の使用を許可した Android スマートフォン、タブレット、エミュレーターに USB またはネットワークで接続できます。ワイヤレスデバッグのペア設定には Android 11 以降が必要です。ペア設定と接続では別のポートを使用します。',
+        title: 'どの端末に接続できますか？',
+        body: 'ADB 接続を許可した Android スマートフォン、タブレット、エミュレーターに USB またはネットワークで接続できます。IP 接続と無線検出が同じ端末を指す場合、一覧には 1 件だけ表示されます。右クリックでネットワーク接続を切断できます。無線ペア設定には Android 11 以降が必要で、接続用とは別のポートを使います。',
       },
       {
-        title: 'ミラーリングに音声は含まれますか？',
-        body: '現在は映像のみです。正常に動作する H.264 エンコーダーと WebCodecs の対応が必要です。一部の古いエミュレーターや保護された画面はキャプチャできません。',
+        title: '画面のミラーリングと録画はどのように動作しますか？',
+        body: '端末の画面を表示、操作、録画できます。音声は含まれません。デスクトップ側には WebCodecs が必要です。Android 6.0 以降の x86_64 端末でシステムのエンコーダーが停止した場合は、自動で互換エンコーダーに切り替わります。保護されたコンテンツは表示されません。',
       },
       {
         title: 'アプリの表示言語は？',
@@ -314,11 +314,11 @@ export const messages = {
     faq: [
       {
         title: 'Quels appareils puis-je connecter ?',
-        body: 'Téléphones, tablettes et émulateurs Android avec un accès ADB autorisé, par USB ou réseau. L’association pour le débogage sans fil nécessite Android 11 ou ultérieur. Les ports d’association et de connexion sont différents.',
+        body: 'Les téléphones, tablettes et émulateurs Android avec un accès ADB autorisé se connectent par USB ou via le réseau. Un appareil connecté par IP et détecté sans fil apparaît une seule fois. Un clic droit permet de le déconnecter du réseau. L’association sans fil nécessite Android 11 ou ultérieur et utilise un port distinct de celui de connexion.',
       },
       {
-        title: 'La duplication d’écran inclut-elle l’audio ?',
-        body: 'Pas encore. Seule la vidéo est capturée. Un encodeur H.264 fonctionnel et WebCodecs sont nécessaires. Certains anciens émulateurs et les écrans protégés ne peuvent pas être capturés.',
+        title: 'Comment fonctionnent la recopie d’écran et l’enregistrement ?',
+        body: 'ADM permet d’afficher, de contrôler et d’enregistrer l’écran sans le son. L’ordinateur doit prendre en charge WebCodecs. Si l’encodeur système échoue sur un appareil x86_64 sous Android 6.0 ou ultérieur, ADM passe automatiquement à un encodeur de compatibilité. Le contenu protégé reste masqué.',
       },
       {
         title: 'Quelles langues l’application prend-elle en charge ?',
@@ -382,11 +382,11 @@ export const messages = {
     faq: [
       {
         title: 'Welche Geräte kann ich verbinden?',
-        body: 'Android-Smartphones, Tablets und Emulatoren mit autorisiertem ADB-Zugriff, per USB oder Netzwerk. Drahtlose Debugging-Kopplung setzt Android 11 oder neuer voraus. Kopplung und Verbindung verwenden unterschiedliche Ports.',
+        body: 'Android-Smartphones, Tablets und Emulatoren mit autorisiertem ADB-Zugriff lassen sich per USB oder Netzwerk verbinden. Ein per IP verbundenes und drahtlos erkanntes Gerät erscheint nur einmal. Per Rechtsklick lässt sich die Netzwerkverbindung trennen. Drahtloses Koppeln erfordert Android 11 oder neuer und verwendet einen eigenen Kopplungsport.',
       },
       {
-        title: 'Wird auch Ton übertragen?',
-        body: 'Noch nicht. Übertragung und Aufzeichnung enthalten derzeit nur Video. Ein funktionsfähiger H.264-Encoder und WebCodecs sind erforderlich. Manche älteren Emulatoren und geschützte Bildschirme lassen sich nicht aufnehmen.',
+        title: 'Wie funktionieren Bildschirmübertragung und Aufnahme?',
+        body: 'ADM zeigt den Bildschirm an und ermöglicht Fernsteuerung und Videoaufnahmen ohne Ton. Der Computer muss WebCodecs unterstützen. Fällt der Systemencoder auf einem x86_64-Gerät mit Android 6.0 oder neuer aus, wechselt ADM automatisch zum Kompatibilitätsencoder. Geschützte Inhalte bleiben ausgeblendet.',
       },
       {
         title: 'Welche Sprachen unterstützt die App?',
@@ -450,11 +450,11 @@ export const messages = {
     faq: [
       {
         title: '¿Qué dispositivos puedo conectar?',
-        body: 'Teléfonos, tabletas y emuladores Android con acceso ADB autorizado, por USB o red. La vinculación inalámbrica requiere Android 11 o posterior. La vinculación y la conexión usan puertos diferentes.',
+        body: 'Puedes conectar por USB o por red teléfonos, tabletas y emuladores Android con acceso ADB autorizado. Si un dispositivo conectado por IP también se detecta de forma inalámbrica, aparece una sola vez. Haz clic con el botón derecho para desconectarlo de la red. La vinculación inalámbrica requiere Android 11 o posterior y utiliza un puerto distinto al de conexión.',
       },
       {
-        title: '¿La duplicación de pantalla incluye audio?',
-        body: 'Todavía no. La duplicación y la grabación solo incluyen vídeo. Se necesitan un codificador H.264 funcional y WebCodecs. Algunos emuladores antiguos y pantallas protegidas no pueden capturarse.',
+        title: '¿Cómo funcionan la duplicación y la grabación de pantalla?',
+        body: 'Puedes ver, controlar y grabar la pantalla sin audio. El ordenador debe ser compatible con WebCodecs. Si falla el codificador del sistema en un dispositivo x86_64 con Android 6.0 o posterior, ADM cambia automáticamente a un codificador de compatibilidad. El contenido protegido permanece oculto.',
       },
       {
         title: '¿Qué idiomas admite la aplicación?',
@@ -518,11 +518,11 @@ export const messages = {
     faq: [
       {
         title: 'Какие устройства можно подключить?',
-        body: 'Телефоны, планшеты и эмуляторы Android с разрешённым доступом ADB, по USB или сети. Сопряжение для беспроводной отладки требует Android 11 или новее. Для сопряжения и подключения нужны разные порты.',
+        body: 'Телефоны, планшеты и эмуляторы Android с разрешённым доступом по ADB можно подключать по USB или сети. Если подключённое по IP устройство также обнаружено по беспроводной сети, оно появится в списке один раз. Отключить его от сети ADB можно через контекстное меню. Для беспроводного сопряжения нужен Android 11 или новее. Порт сопряжения отличается от порта подключения.',
       },
       {
-        title: 'Передаётся ли звук вместе с экраном?',
-        body: 'Пока нет. Трансляция и запись содержат только видео. Нужны работающий кодировщик H.264 и WebCodecs. Некоторые старые эмуляторы и защищённые экраны нельзя захватить.',
+        title: 'Как работают трансляция и запись экрана?',
+        body: 'ADM позволяет просматривать экран, управлять устройством и записывать видео без звука. На компьютере требуется поддержка WebCodecs. При сбое системного кодировщика на устройстве x86_64 с Android 6.0 или новее ADM автоматически переключается на совместимый кодировщик. Защищённое содержимое не отображается.',
       },
       {
         title: 'Какие языки поддерживает приложение?',

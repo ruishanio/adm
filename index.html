@@ -207,7 +207,7 @@
             <img src="/assets/icon.png" alt="" width="40" height="40" loading="lazy" />
             <h2 id="download-title">
               <span data-i18n="downloadHeading">Get ADM.</span>
-              <a class="download-version" href="https://github.com/ruishanio/adm/releases/tag/v0.1.5">v0.1.5</a>
+              <a class="download-version" href="https://github.com/ruishanio/adm/releases/tag/v0.1.6">v0.1.6</a>
             </h2>
           </div>
           <div class="download-options">
@@ -222,7 +222,7 @@
                 data-download="mac"
                 aria-label="Download for macOS"
                 data-i18n-aria="downloadMac"
-                href="https://github.com/ruishanio/adm/releases/download/v0.1.5/ADM-0.1.5-mac-arm64.dmg"
+                href="https://github.com/ruishanio/adm/releases/download/v0.1.6/ADM-0.1.6-mac-arm64.dmg"
                 ><span data-i18n="downloadAction">Download</span><svg class="icon" aria-hidden="true"><use href="#icon-download"></use></svg
               ></a>
             </article>
@@ -237,7 +237,7 @@
                 data-download="windows"
                 aria-label="Download for Windows"
                 data-i18n-aria="downloadWindows"
-                href="https://github.com/ruishanio/adm/releases/download/v0.1.5/ADM-0.1.5-win-x64-setup.exe"
+                href="https://github.com/ruishanio/adm/releases/download/v0.1.6/ADM-0.1.6-win-x64-setup.exe"
                 ><span data-i18n="downloadAction">Download</span><svg class="icon" aria-hidden="true"><use href="#icon-download"></use></svg
               ></a>
             </article>
@@ -259,21 +259,14 @@
               <span data-i18n="faq.0.title">Which devices can I connect?</span
               ><svg class="icon" aria-hidden="true"><use href="#icon-chevron"></use></svg>
             </summary>
-            <p data-i18n="faq.0.body">
-              Android phones, tablets, and emulators with authorized ADB access. Connect over USB or a
-              network. Wireless debugging pairing requires Android 11 or later; pairing and connection use
-              different ports.
-            </p>
+            <p data-i18n="faq.0.body">Android phones, tablets, and emulators with authorized ADB access can connect over USB or a network. If an IP connection and wireless discovery reach the same device, ADM lists it once. Right-click to disconnect. Wireless pairing requires Android 11 or later and uses a separate pairing port.</p>
           </details>
           <details>
             <summary>
-              <span data-i18n="faq.1.title">Does screen mirroring include audio?</span
+              <span data-i18n="faq.1.title">How does screen mirroring work?</span
               ><svg class="icon" aria-hidden="true"><use href="#icon-chevron"></use></svg>
             </summary>
-            <p data-i18n="faq.1.body">
-              Not yet. Mirroring and recording currently capture video only. They require a working H.264
-              encoder and WebCodecs support. Some older emulators and protected screens cannot be captured.
-            </p>
+            <p data-i18n="faq.1.body">Mirror, control, and record video without audio. The desktop needs WebCodecs. If the system encoder fails on an x86_64 device running Android 6.0 or later, ADM automatically switches to a compatibility encoder. Protected content stays hidden.</p>
           </details>
           <details>
             <summary>
