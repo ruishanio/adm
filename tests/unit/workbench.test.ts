@@ -128,22 +128,20 @@ it('切换设备关闭安装弹窗并清除文件和安装选项', async () => {
   const w = await ready();
   await w.install.chooseApk();
   expect(w.workspace.state.tab).toBe('apps');
-  w.install.state.ownerAfter = true;
   w.workspace.state.tab = 'info';
   w.devices.select(second);
   await vi.waitFor(() => expect(w.devices.state.details?.serial).toBe('two'));
   expect(w.workspace.state.modal).toBeNull();
   expect(w.install.state.apk).toBeUndefined();
-  expect(w.install.state.ownerAfter).toBe(false);
+  expect(w.install.state.ownerConsent).toBeUndefined();
 });
 it('无接收器时不能从安装流程配置所有者，仍可正常安装', async () => {
   const w = await ready();
   await w.install.chooseApk();
-  w.install.state.ownerAfter = true;
-  expect(w.install.canInstall.value).toBe(false);
-  await w.install.install();
-  expect(api.install).not.toHaveBeenCalled();
-  w.install.state.ownerAfter = false;
+  w.install.requestOwnerAfter(true);
+  w.install.finishOwnerWarning(true);
+  expect(w.install.state.ownerWarningOpen).toBe(false);
+  expect(w.install.state.ownerConsent).toBeUndefined();
   await w.install.install();
   expect(api.install).toHaveBeenCalledTimes(1);
   expect(w.owner.state.ownerExpanded).toBe(false);

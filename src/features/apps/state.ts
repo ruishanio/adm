@@ -217,7 +217,7 @@ export function createApps({
         state.appsLoaded = true;
       }
     } catch {
-      if (workspace.selected === targetKey(target) && online.value)
+      if (workspace.selected === targetKey(target) && online.value && !workspace.notice?.error)
         workspace.notice = { text: t('应用已安装，但列表刷新失败，请手动刷新。'), error: true };
     }
   }

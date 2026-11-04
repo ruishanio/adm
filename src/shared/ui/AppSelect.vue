@@ -15,6 +15,7 @@ defineProps<{
   id: string;
   modelValue: string;
   options: { value: string; label: string }[];
+  placeholder?: string;
   disabled?: boolean;
   variant?: 'default' | 'inline';
 }>();
@@ -31,8 +32,8 @@ const emit = defineEmits<{ 'update:modelValue': [value: string] }>();
     "
   >
     <SelectTrigger :id="id" :class="['app-select-trigger', { 'app-select-inline': variant === 'inline' }]">
-      <SelectValue class="app-select-value">{{
-        options.find((option) => option.value === modelValue)?.label
+      <SelectValue class="app-select-value" :placeholder="placeholder">{{
+        options.find((option) => option.value === modelValue)?.label ?? placeholder
       }}</SelectValue>
       <ChevronDown aria-hidden="true" />
     </SelectTrigger>

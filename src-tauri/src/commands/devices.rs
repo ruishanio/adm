@@ -8,6 +8,19 @@ use crate::{
 use serde_json::{json, Value};
 
 impl AppState {
+    /// 设置前的阻断原因属于 ADM 文案；保留组件、包名和未知的 ADB 诊断原文。
+    fn owner_reason(&self, reason: &str) -> String {
+        for (prefix, template) in [
+            ("已配置其他设备所有者：", "已配置其他设备所有者：{value}"),
+            ("应用尚未安装到主用户：", "应用尚未安装到主用户：{value}"),
+        ] {
+            if let Some(value) = reason.strip_prefix(prefix) {
+                return self.localized(template).replace("{value}", value);
+            }
+        }
+        self.localized(reason)
+    }
+
     pub(crate) fn devices_command(
         &self,
         app: &tauri::AppHandle,
@@ -82,7 +95,9 @@ impl AppState {
                 if !consent {
                     return Err("请明确确认设备所有者授权。".into());
                 }
-                self.adb(cancel)?.set_owner(&target, &name)?;
+                self.adb(cancel)?
+                    .set_owner(&target, &name)
+                    .map_err(|reason| self.owner_reason(&reason))?;
                 Ok(Value::Null)
             }
             "checkOwnerRemoval" => {

@@ -1,43 +1,16 @@
-.dialog.app-details-dialog {
-  width: 560px;
-  max-height: min(640px, calc(100vh - 48px));
-}
-.app-properties {
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
-}
-.app-properties > div {
-  display: grid;
-  grid-template-columns: minmax(112px, 30%) minmax(0, 1fr);
-  gap: 12px;
-  padding: 4px 0;
-  font-size: 13px;
-}
-.app-properties dt {
-  color: var(--muted);
-}
-.app-properties dd {
-  overflow-wrap: anywhere;
-  user-select: text;
-  margin: 0;
-}
-/* 安装采用固定尺寸的桌面表单，文件选择前后共用同一行控件和信息位置。 */
+/* 文件选择和 APK 属性共用标签列，各语言按内容宽度保留可读的值列。 */
 .dialog.install-dialog {
-  --install-label-width: 104px;
-  width: 560px;
-  height: 540px;
+  --install-label-width: 100px;
+  width: 520px;
 }
 .dialog.install-dialog:not(:lang(zh)):not(:lang(ja)) {
-  --install-label-width: 132px;
+  --install-label-width: 126px;
 }
-.install-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+.dialog-body.install-body {
+  padding-bottom: 8px;
 }
-.install-body > * {
-  flex-shrink: 0;
+.install-package {
+  padding-block: 8px;
 }
 .install-file-row {
   display: grid;
@@ -80,48 +53,88 @@
   border-color: var(--accent);
   background: var(--accent-soft);
 }
+.install-package.dragging .install-properties {
+  background: var(--accent-soft);
+}
 .install-file-hint {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  margin: 6px 0 12px calc(var(--install-label-width) + 12px);
+  margin: 4px 0 10px calc(var(--install-label-width) + 12px);
   color: var(--muted);
   font-size: 12px;
-  line-height: 1.6;
 }
 .install-properties {
   margin: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-.install-properties > div {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  column-gap: 12px;
-}
-.install-properties > div {
-  padding-block: 3px;
-  min-height: 24px;
   font-size: 12px;
+}
+.install-properties > div {
+  display: grid;
+  grid-template-columns: var(--install-label-width) minmax(0, 1fr);
+  align-items: center;
+  column-gap: 12px;
+  min-height: 26px;
 }
 .install-properties dd {
   margin: 0;
-  overflow-wrap: anywhere;
   user-select: text;
+}
+.install-properties dd,
+.install-app-identity strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.install-reviewed-file {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.install-reviewed-file span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.install-reviewed-file small {
+  flex: none;
+  color: var(--muted);
+  font-size: 11px;
+}
+.install-app-identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.install-app-identity strong {
+  font-weight: 500;
+}
+.install-package-type {
+  flex: none;
+  padding-inline: 5px;
+  border-radius: var(--radius-control);
+  background: var(--surface-subtle);
+  color: var(--muted);
+  font-size: 11px;
+}
+.install-package-type.test-only {
+  background: var(--install-soft);
+  color: var(--install);
+}
+.install-app-identity > img,
+.install-app-identity > svg {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  object-fit: contain;
 }
 .install-target {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--line);
-  background: var(--surface-subtle);
-  font-size: 12px;
+  min-height: 40px;
   flex-shrink: 0;
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
 }
 .install-target > svg {
-  color: var(--device);
   width: 16px;
   height: 16px;
   flex-shrink: 0;
@@ -129,89 +142,89 @@
 .install-target > .muted {
   flex-shrink: 0;
 }
-.install-target strong {
+.install-target strong,
+.install-target-serial {
   min-width: 0;
-  font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.install-target strong {
+  font-weight: 500;
 }
 .install-target-serial {
-  margin-left: auto;
   color: var(--muted);
-  min-width: 80px;
-  max-width: 38%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 11px;
 }
-.install-app-identity {
+/* 折叠入口沿用表单标签的字号与左边线，只用底部操作区的分隔线收尾。 */
+.install-options summary {
   display: flex;
   align-items: center;
-  gap: 12px;
-  min-height: 56px;
-  margin: 4px 0 12px;
-}
-.install-app-identity > img,
-.install-app-identity > svg {
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-  object-fit: contain;
-}
-.install-app-identity > svg {
-  padding: 4px;
-}
-.install-app-identity > div {
-  display: grid;
-  gap: 3px;
-  min-width: 0;
-}
-.install-app-identity strong {
-  font-size: 14px;
-  font-weight: 600;
-}
-.install-app-identity span {
+  gap: 4px;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 28px;
+  color: var(--muted);
   font-size: 12px;
+  border-radius: var(--radius-control);
+  list-style: none;
+  cursor: pointer;
 }
-.install-app-identity strong,
-.install-app-identity span {
+.install-options summary::-webkit-details-marker {
+  display: none;
+}
+.install-options summary:hover,
+.install-options summary:focus-visible {
+  color: var(--foreground);
+}
+.install-options summary > svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+.install-options[open] summary > svg {
+  transform: rotate(90deg);
+}
+.install-options-preview {
+  min-width: 0;
+  margin-inline-start: 4px;
+  color: var(--muted);
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-.install-options {
-  border-top: 1px solid var(--line);
-  padding-top: 12px;
+.install-options[open] .install-options-preview {
+  display: none;
 }
-.install-options h3 {
-  font-size: 12px;
-  font-weight: 600;
-  margin: 0 0 10px;
+.install-options-body {
+  padding: 4px 0 8px;
 }
 .install-options .checkbox {
   color: var(--foreground);
-}
-.install-options .checkbox + .checkbox {
-  margin-top: 8px;
 }
 .install-options .field-hint {
   margin: 6px 0 0 24px;
 }
 .install-receiver-row {
   display: grid;
-  grid-template-columns: var(--install-label-width) minmax(0, 1fr);
+  grid-template-columns: minmax(72px, auto) minmax(0, 1fr);
   align-items: center;
   gap: 12px;
   margin-top: 10px;
   font-size: 12px;
 }
-.install-receiver-row > label {
-  color: var(--muted);
+.install-owner-package {
+  display: block;
 }
-.install-receiver-row .app-select-trigger {
+/* 多行信息按首行对齐，接收器标签则跟随同一行的控件高度居中。 */
+.install-owner-receiver-label {
+  align-self: center;
+}
+.install-owner-confirm .app-select-trigger {
+  display: flex;
   font-size: 12px;
   min-width: 0;
+  width: 100%;
 }
 .install-single-receiver {
   overflow: hidden;
@@ -224,28 +237,13 @@
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  margin-top: 10px;
-  color: var(--warning);
-  font-size: 12px;
-  line-height: 1.6;
 }
 .install-owner-warning > svg {
+  color: var(--warning);
   width: 16px;
   height: 16px;
   flex-shrink: 0;
   margin-top: 2px;
-}
-.install-owner-warning p {
-  margin: 0;
-}
-.install-owner-warning p + p {
-  margin-top: 4px;
-  color: var(--muted);
-}
-.install-upgrade-hint {
-  margin-right: auto;
-  color: var(--muted);
-  font-size: 11px;
 }
 .install-feedback {
   display: flex;

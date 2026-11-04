@@ -1,5 +1,5 @@
 import { effectScope, watch, provide } from 'vue';
-import { t, language } from '@/shared/i18n';
+import { language } from '@/shared/i18n';
 import type { Api } from '@/shared/api/types';
 import { invalidateAppOptions } from '@/shared/api/app-options';
 import { createWorkspace, workspaceKey } from '@/shared/composables/workspace';
@@ -32,16 +32,10 @@ export function createWorkbench(api: Api) {
       () => devices.state.details?.owner,
     );
     const install = createInstall(workspace, {
-      installed: async (target, adminComponent) => {
+      installed: async (target, verifiedOwner) => {
         apps.invalidate();
-        if (adminComponent) {
-          owner.prepare(adminComponent);
-          core.state.tab = 'info';
-          core.state.notice = { text: t('安装成功并已核对版本。请检查设备所有者条件，并单独确认授权。') };
-        } else {
-          core.state.notice = { text: t('安装成功，已核对设备上的安装版本。') };
-          await apps.refreshInstalled(target);
-        }
+        if (verifiedOwner && devices.state.details) devices.state.details.owner = verifiedOwner;
+        await apps.refreshInstalled(target);
       },
     });
     watch(
