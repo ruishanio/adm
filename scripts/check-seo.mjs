@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { access, readFile } from 'node:fs/promises';
 import { parse } from 'parse5';
 import { messages } from '../i18n.js';
-import { locales, localeFromUrl, localePath, localizedUrl, SITE_URL } from '../seo.js';
+import { locales, localeFromUrl, localePath, localizedUrl, REPOSITORY_URL, SITE_URL } from '../seo.js';
 
 const output = new URL('../dist/', import.meta.url);
 const attr = (node, key) => node.attrs?.find(entry => entry.name === key)?.value;
@@ -57,7 +57,15 @@ for (const locale of locales) {
   const data = JSON.parse(text(find('type', 'application/ld+json')));
   const software = data['@graph'].find(node => node['@type'] === 'SoftwareApplication');
   assert.equal(software.softwareVersion, text(find('class', 'download-version')).replace(/^v/, ''));
-  assert.deepEqual(software.inLanguage, ['en', 'zh-CN'], '不混淆官网语言与桌面应用语言');
+  assert.deepEqual(software.inLanguage, ['en', 'zh-CN', 'zh-TW', 'ja', 'fr', 'de', 'es', 'ru']);
+  // 可见版本号、发行说明和两个安装包必须指向同一版本。
+  const tag = `v${software.softwareVersion}`;
+  assert.equal(software.releaseNotes, `${REPOSITORY_URL}/releases/tag/${tag}`);
+  assert.equal(attr(find('class', 'download-version'), 'href'), software.releaseNotes);
+  for (const [platform, suffix] of [['mac', 'mac-arm64.dmg'], ['windows', 'win-x64-setup.exe']]) {
+    assert.equal(attr(find('data-download', platform), 'href'),
+      `${REPOSITORY_URL}/releases/download/${tag}/ADM-${software.softwareVersion}-${suffix}`);
+  }
   assert.deepEqual(software.featureList, messages[locale].features.map(feature => feature.body));
   assert.equal(software.aggregateRating, undefined, '不虚构评分');
   assert.equal(software.review, undefined, '不虚构评价');

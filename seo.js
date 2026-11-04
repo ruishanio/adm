@@ -62,7 +62,7 @@ export function seoHead(locale, version) {
         alternateName: 'Device manager for Android', url: `${SITE_URL}/`, description,
         applicationCategory: 'DeveloperApplication',
         operatingSystem: ['macOS 13.3 or later (Apple Silicon)', 'Windows 10 or 11 (x64)'],
-        softwareVersion: version, inLanguage: ['en', 'zh-CN'],
+        softwareVersion: version, inLanguage: locales,
         image: `${SITE_URL}/assets/icon.png`, screenshot: image,
         license: `${REPOSITORY_URL}/blob/master/LICENSE`, sameAs: [REPOSITORY_URL],
         releaseNotes: `${REPOSITORY_URL}/releases/tag/v${version}`,

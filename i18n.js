@@ -18,7 +18,7 @@ export const messages = {
     features: [
       {
         title: 'Know your device',
-        body: "Device details, battery, storage, and owner settings.",
+        body: "Check battery and storage, and configure the device owner.",
       },
       {
         title: 'Take the controls',
@@ -26,7 +26,7 @@ export const messages = {
       },
       {
         title: 'Keep apps in order',
-        body: "Find apps, install APKs, and manage installed packages.",
+        body: "Review APKs before installing, find apps, and open app details.",
       },
       {
         title: 'Make room for your files',
@@ -50,7 +50,7 @@ export const messages = {
       },
       {
         title: 'Which languages does the app support?',
-        body: 'The desktop app supports English and Simplified Chinese. This website and the README are available in eight languages.',
+        body: 'ADM supports English, Simplified Chinese, Traditional Chinese, Japanese, French, German, Spanish, and Russian.',
       },
       {
         title: 'Can I contribute?',
@@ -86,7 +86,7 @@ export const messages = {
     features: [
       {
         title: '了解设备状态',
-        body: "查看设备状态、硬件信息与设备所有者。",
+        body: "查看电量和存储空间，设置设备所有者。",
       },
       {
         title: '直接控制画面',
@@ -94,7 +94,7 @@ export const messages = {
       },
       {
         title: '打理设备应用',
-        body: "搜索应用、安装 APK，管理已安装的软件。",
+        body: "安装前核对 APK，也可搜索已安装应用并查看详情。",
       },
       {
         title: '让文件井井有条',
@@ -118,7 +118,7 @@ export const messages = {
       },
       {
         title: '应用支持哪些语言？',
-        body: '桌面应用支持英文和简体中文。官网与 README 提供八种语言。',
+        body: 'ADM 支持英语、简体中文、繁体中文、日语、法语、德语、西班牙语和俄语。',
       },
       {
         title: '我可以参与开发吗？',
@@ -154,7 +154,7 @@ export const messages = {
     features: [
       {
         title: '了解裝置狀態',
-        body: "查看裝置狀態、硬體資訊與裝置擁有者。",
+        body: "查看電量與儲存空間，設定裝置擁有者。",
       },
       {
         title: '直接控制畫面',
@@ -162,7 +162,7 @@ export const messages = {
       },
       {
         title: '管理應用程式',
-        body: "搜尋應用程式、安裝 APK，管理已安裝的軟體。",
+        body: "安裝前確認 APK 資訊，也可搜尋已安裝的應用程式並查看詳細資料。",
       },
       {
         title: '整理裝置檔案',
@@ -186,7 +186,7 @@ export const messages = {
       },
       {
         title: '應用程式支援哪些語言？',
-        body: '桌面應用程式支援英文和簡體中文。官網與 README 提供八種語言。',
+        body: 'ADM 支援英文、簡體中文、繁體中文、日文、法文、德文、西班牙文和俄文。',
       },
       {
         title: '我可以參與開發嗎？',
@@ -222,7 +222,7 @@ export const messages = {
     features: [
       {
         title: 'デバイスを知る',
-        body: "デバイス情報、バッテリー、ストレージ、所有者設定を確認。",
+        body: "バッテリーとストレージを確認し、デバイス所有者を設定。",
       },
       {
         title: '画面を直接操作',
@@ -230,7 +230,7 @@ export const messages = {
       },
       {
         title: 'アプリを管理',
-        body: "アプリの検索、APK のインストール、インストール済みアプリの管理。",
+        body: "インストール前に APK を確認。アプリの検索や詳細の表示も可能。",
       },
       {
         title: 'ファイルを整理',
@@ -254,7 +254,7 @@ export const messages = {
       },
       {
         title: 'アプリの表示言語は？',
-        body: 'デスクトップアプリは英語と簡体字中国語に対応しています。このサイトと README は 8 言語で提供しています。',
+        body: 'ADM は英語、簡体字中国語、繁体字中国語、日本語、フランス語、ドイツ語、スペイン語、ロシア語に対応しています。',
       },
       {
         title: '開発に参加できますか？',
@@ -290,7 +290,7 @@ export const messages = {
     features: [
       {
         title: 'Connaissez votre appareil',
-        body: "Informations, batterie, stockage et propriétaire de l’appareil.",
+        body: "Consultez la batterie et le stockage, et configurez le propriétaire de l’appareil.",
       },
       {
         title: 'Prenez les commandes',
@@ -298,7 +298,7 @@ export const messages = {
       },
       {
         title: 'Gérez les applications',
-        body: "Recherchez des applications, installez des APK et gérez les paquets.",
+        body: "Vérifiez les APK avant installation et consultez les détails des applications installées.",
       },
       {
         title: 'Organisez vos fichiers',
@@ -322,7 +322,7 @@ export const messages = {
       },
       {
         title: 'Quelles langues l’application prend-elle en charge ?',
-        body: 'L’application est disponible en anglais et en chinois simplifié. Ce site et le README sont disponibles en huit langues.',
+        body: 'ADM est disponible en anglais, chinois simplifié, chinois traditionnel, japonais, français, allemand, espagnol et russe.',
       },
       {
         title: 'Puis-je contribuer ?',
@@ -358,7 +358,7 @@ export const messages = {
     features: [
       {
         title: 'Dein Gerät kennenlernen',
-        body: "Gerätedetails, Akku, Speicher und Geräteeigentümer im Blick.",
+        body: "Akkustand und Speicher prüfen, Geräteeigentümer einrichten.",
       },
       {
         title: 'Die Steuerung übernehmen',
@@ -366,7 +366,7 @@ export const messages = {
       },
       {
         title: 'Apps im Griff behalten',
-        body: "Apps suchen, APKs installieren und installierte Pakete verwalten.",
+        body: "APKs vor der Installation prüfen, Apps suchen und Details ansehen.",
       },
       {
         title: 'Dateien organisieren',
@@ -390,7 +390,7 @@ export const messages = {
       },
       {
         title: 'Welche Sprachen unterstützt die App?',
-        body: 'Die Desktop-App unterstützt Englisch und vereinfachtes Chinesisch. Diese Website und die README sind in acht Sprachen verfügbar.',
+        body: 'ADM unterstützt Englisch, vereinfachtes und traditionelles Chinesisch, Japanisch, Französisch, Deutsch, Spanisch und Russisch.',
       },
       {
         title: 'Kann ich mitwirken?',
@@ -426,7 +426,7 @@ export const messages = {
     features: [
       {
         title: 'Conoce tu dispositivo',
-        body: "Consulta el dispositivo, la batería, el almacenamiento y el propietario.",
+        body: "Consulta la batería y el almacenamiento y configura el propietario del dispositivo.",
       },
       {
         title: 'Toma el control',
@@ -434,7 +434,7 @@ export const messages = {
       },
       {
         title: 'Organiza tus aplicaciones',
-        body: "Busca aplicaciones, instala APK y administra los paquetes.",
+        body: "Revisa los APK antes de instalarlos y consulta los detalles de las aplicaciones.",
       },
       {
         title: 'Pon tus archivos en orden',
@@ -458,7 +458,7 @@ export const messages = {
       },
       {
         title: '¿Qué idiomas admite la aplicación?',
-        body: 'La aplicación de escritorio está disponible en inglés y chino simplificado. Esta web y el README ofrecen ocho idiomas.',
+        body: 'ADM está disponible en inglés, chino simplificado, chino tradicional, japonés, francés, alemán, español y ruso.',
       },
       {
         title: '¿Puedo contribuir?',
@@ -494,7 +494,7 @@ export const messages = {
     features: [
       {
         title: 'Узнайте своё устройство',
-        body: "Сведения об устройстве, батарее, памяти и владельце.",
+        body: "Проверяйте заряд и память, настраивайте владельца устройства.",
       },
       {
         title: 'Управляйте экраном',
@@ -502,7 +502,7 @@ export const messages = {
       },
       {
         title: 'Управляйте приложениями',
-        body: "Ищите приложения, устанавливайте APK и управляйте пакетами.",
+        body: "Проверяйте APK до установки и просматривайте сведения о приложениях.",
       },
       {
         title: 'Наведите порядок в файлах',
@@ -526,7 +526,7 @@ export const messages = {
       },
       {
         title: 'Какие языки поддерживает приложение?',
-        body: 'Настольное приложение поддерживает английский и упрощённый китайский. Этот сайт и README доступны на восьми языках.',
+        body: 'ADM доступен на английском, упрощённом и традиционном китайском, японском, французском, немецком, испанском и русском языках.',
       },
       {
         title: 'Можно участвовать в разработке?',
