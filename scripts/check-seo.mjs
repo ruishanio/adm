@@ -45,7 +45,7 @@ for (const locale of locales) {
   const alternates = nodes.filter(node => node.tagName === 'link' && attr(node, 'rel') === 'alternate');
   assert.equal(alternates.length, locales.length + 1);
   for (const alternate of [...locales, 'x-default']) {
-    assert.equal(attr(alternates.find(node => attr(node, 'hreflang') === alternate), 'href'), `${SITE_URL}${localePath(alternate === 'x-default' ? 'en' : alternate)}`);
+    assert.equal(attr(alternates.find(node => attr(node, 'hreflang') === alternate), 'href'), `${SITE_URL}${(alternate === 'x-default' ? '/' : localePath(alternate))}`);
   }
   const languageLinks = nodes.filter(node => attr(node, 'data-locale'));
   assert.equal(languageLinks.length, locales.length);
@@ -94,5 +94,16 @@ assert.equal(localeFromUrl(legacy), 'ja');
 assert.equal(localizedUrl(legacy, 'ja').href, `${SITE_URL}/ja/?utm_source=chatgpt.com#download`);
 assert.equal(localeFromUrl(new URL(`${SITE_URL}/zh-CN/`)), 'zh-CN');
 assert.equal(localeFromUrl(new URL(`${SITE_URL}/?lang=__proto__`)), 'en');
-assert.equal(localizedUrl(`${SITE_URL}/ja/#features`, 'en').href, `${SITE_URL}/#features`);
+assert.equal(localizedUrl(`${SITE_URL}/ja/#features`, 'en').href, `${SITE_URL}/en/#features`);
+// 首页识别语言，明确分享的链接优先；手动偏好只影响之后访问首页。
+const rootUrl = new URL(SITE_URL);
+assert.equal(localeFromUrl(rootUrl, undefined, ['it-IT', 'ja-JP']), 'ja');
+assert.equal(localeFromUrl(rootUrl, 'de', ['fr-CA']), 'de');
+assert.equal(localeFromUrl(new URL('/en/', SITE_URL), 'de', ['fr-CA']), 'en');
+assert.equal(localeFromUrl(legacy, 'de', ['fr-CA']), 'ja');
+assert.equal(localeFromUrl(rootUrl, 'invalid', ['it-IT']), 'en');
+for (const [tag, expected] of [['zh-HK', 'zh-TW'], ['zh-Hans-HK', 'zh-CN'], ['zh-Hant-CN', 'zh-TW'], ['zh-SG', 'zh-CN']]) {
+  assert.equal(localeFromUrl(rootUrl, undefined, [tag]), expected);
+}
+assert.equal(await readFile(new URL('index.html', output), 'utf8'), await readFile(new URL('en/index.html', output), 'utf8'));
 console.log(`SEO 检查通过：${locales.length} 个静态语言页面、互链、元信息、结构化数据、资源与站点地图。`);

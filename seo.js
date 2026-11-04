@@ -17,7 +17,7 @@ const titles = {
 const ogLocales = { en: 'en_US', 'zh-CN': 'zh_CN', 'zh-TW': 'zh_TW', ja: 'ja_JP', fr: 'fr_FR', de: 'de_DE', es: 'es_ES', ru: 'ru_RU' };
 
 export function localePath(locale) {
-  return locale === 'en' ? '/' : `/${locale}/`;
+  return `/${locale}/`;
 }
 
 // 首屏、功能切换和分享预览共用同一套本地化截图。
@@ -25,12 +25,24 @@ export function screenshotPath(locale, view = 'workbench') {
   return `/assets/${locale}-${view}.jpg`;
 }
 
-// 兼容分享过的 ?lang= 链接；同一个规范网址始终对应同一种语言，不受本地存储影响。
-export function localeFromUrl(url) {
+/** 根据网址、手动保存的选择和浏览器语言列表，按优先级返回支持的语言。 */
+export function localeFromUrl(url, saved, languages = []) {
   const query = url.searchParams.get('lang');
   if (Object.hasOwn(messages, query)) return query;
   const path = url.pathname.split('/')[1];
-  return Object.hasOwn(messages, path) ? path : 'en';
+  if (Object.hasOwn(messages, path)) return path;
+  if (Object.hasOwn(messages, saved)) return saved;
+  for (const tag of languages) {
+    try {
+      const locale = new Intl.Locale(tag);
+      // 显式文字系统优先；仅有地区时，例如香港或新加坡，按惯用文字匹配。
+      if (locale.language === 'zh') return locale.maximize().script === 'Hant' ? 'zh-TW' : 'zh-CN';
+      if (Object.hasOwn(messages, locale.language)) return locale.language;
+    } catch {
+      // 个别无效语言标记不影响后续候选。
+    }
+  }
+  return 'en';
 }
 
 export function localizedUrl(url, locale) {

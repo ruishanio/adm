@@ -49,8 +49,14 @@ function setLanguage(locale) {
 }
 
 function changeLanguage(locale) {
+  try {
+    localStorage.setItem('adm-website-language', locale);
+  } catch {
+    // 存储不可用时，语言路径仍能保留本次选择。
+  }
   setLanguage(locale);
-  history.pushState(null, '', localizedUrl(location.href, language));
+  const url = localizedUrl(location.href, language);
+  if (url.href !== location.href) history.pushState(null, '', url);
 }
 
 previewTabs.forEach((tab, index) => {
@@ -77,10 +83,21 @@ previewTabs.forEach((tab, index) => {
   });
 });
 
-setLanguage(localeFromUrl(new URL(location.href)));
-// 旧查询参数链接仍能访问，并保留锚点和推广参数；新链接直接使用可预渲染的语言路径。
-history.replaceState(null, '', localizedUrl(location.href, language));
-window.addEventListener('popstate', () => setLanguage(localeFromUrl(new URL(location.href))));
+function applyLocationLanguage() {
+  let saved;
+  try {
+    saved = localStorage.getItem('adm-website-language');
+  } catch {
+    // 禁用本地存储时，仍可按浏览器语言打开首页。
+  }
+  const languages = navigator.languages?.length ? navigator.languages : [navigator.language];
+  setLanguage(localeFromUrl(new URL(location.href), saved, languages));
+  // 首页解析和旧链接规范化不增加历史记录，也不覆盖手动偏好。
+  const url = localizedUrl(location.href, language);
+  if (url.href !== location.href) history.replaceState(history.state, '', url);
+}
+applyLocationLanguage();
+window.addEventListener('popstate', applyLocationLanguage);
 
 // 模型独立异步加载，导航与正文始终可用；失败时保留透明背景的静态模型。
 import('./hero-scene.js')

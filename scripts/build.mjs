@@ -73,6 +73,8 @@ function renderLocale(template, locale) {
 
 const output = new URL('../dist/', import.meta.url);
 const template = await readFile(new URL('index.html', output), 'utf8');
+// 根路径用于自动选择语言；无 JavaScript 时仍提供完整的英文页面。
+await writeFile(new URL('index.html', output), renderLocale(template, 'en'));
 for (const locale of locales) {
   const directory = new URL(`.${localePath(locale)}`, output);
   await mkdir(directory, { recursive: true });
