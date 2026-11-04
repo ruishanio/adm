@@ -131,7 +131,7 @@ ADM 独自のコードは [MIT ライセンス](../../../LICENSE) で公開し�
 
 [Tauri](https://tauri.app/)、[Vue](https://vuejs.org/)、[shadcn-vue](https://www.shadcn-vue.com/)、[Tailwind CSS](https://tailwindcss.com/)、[Lucide](https://lucide.dev/)、[Android SDK Platform-Tools](https://developer.android.com/tools/releases/platform-tools)、[scrcpy](https://github.com/Genymobile/scrcpy) に感謝します。
 
-デバイス操作のデスクトップクライアントは Rust で実装し、Android 側には公式の scrcpy サーバーを使用しています。入手元とライセンスは [サーバーの説明（簡体字中国語）](../../../src-tauri/resources/scrcpy/README.md) を参照してください。配布パッケージには ADB の NOTICE と scrcpy サーバーの Apache-2.0 ライセンスを同梱しています。
+デバイス操作のデスクトップクライアントは Rust で実装し、Android 側にはADM で変更した scrcpy サーバーを使用しています。入手元とライセンスは [サーバーの説明（簡体字中国語）](../../../src-tauri/resources/scrcpy/README.md) を参照してください。配布パッケージには ADB の NOTICE と scrcpy サーバーの Apache-2.0 ライセンスを同梱しています。
 
 Android is a trademark of Google LLC.
 

@@ -21,6 +21,7 @@ const status: ControlStatus = {
   width: 540,
   height: 1080,
   recording: false,
+  compatibility: false,
   recordingNotice: '',
   error: '',
 };

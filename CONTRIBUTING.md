@@ -8,7 +8,7 @@ Read [AGENTS.md](AGENTS.md) before making changes. This guide covers the develop
 
 The frontend uses **Vue 3, TypeScript, Tailwind CSS 4, and shadcn-vue**, with **Tauri 2** as the desktop framework. The Rust backend handles ADB, device operations, and local resources. The interface uses the system WebView and does not bundle Chromium or a Node.js runtime.
 
-For device control, Rust implements sessions, the protocol, input, and MP4 muxing; the frontend decodes video with WebCodecs. The Android side reuses the official scrcpy server. See the [server notes](src-tauri/resources/scrcpy/README.md) for the pinned version, source, and license.
+For device control, Rust implements sessions, the protocol, input, and MP4 muxing; the frontend decodes video with WebCodecs. The Android side uses an ADM build of the scrcpy server. See the [server notes](src-tauri/resources/scrcpy/README.md) for the pinned version, source, and license.
 
 ## Community and feedback
 

@@ -131,7 +131,7 @@ ADM использует **Tauri 2, Vue 3, TypeScript и Rust**. Подгото�
 
 Благодарим проекты [Tauri](https://tauri.app/), [Vue](https://vuejs.org/), [shadcn-vue](https://www.shadcn-vue.com/), [Tailwind CSS](https://tailwindcss.com/), [Lucide](https://lucide.dev/), [Android SDK Platform-Tools](https://developer.android.com/tools/releases/platform-tools) и [scrcpy](https://github.com/Genymobile/scrcpy).
 
-Настольный клиент управления устройством реализован на Rust, а на стороне Android используется официальный сервер scrcpy. Источник и лицензия указаны в [описании сервера на упрощённом китайском](../../../src-tauri/resources/scrcpy/README.md). В пакетах сохраняются файл NOTICE от ADB и лицензия Apache-2.0 сервера scrcpy.
+Настольный клиент управления устройством реализован на Rust, а на стороне Android используется версия сервера scrcpy с изменениями ADM. Источник и лицензия указаны в [описании сервера на упрощённом китайском](../../../src-tauri/resources/scrcpy/README.md). В пакетах сохраняются файл NOTICE от ADB и лицензия Apache-2.0 сервера scrcpy.
 
 Android is a trademark of Google LLC.
 

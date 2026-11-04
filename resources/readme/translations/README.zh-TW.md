@@ -131,7 +131,7 @@ ADM 自有程式碼採用 [MIT 授權](../../../LICENSE)，第三方元件與資
 
 感謝 [Tauri](https://tauri.app/)、[Vue](https://vuejs.org/)、[shadcn-vue](https://www.shadcn-vue.com/)、[Tailwind CSS](https://tailwindcss.com/)、[Lucide](https://lucide.dev/)、[Android SDK Platform-Tools](https://developer.android.com/tools/releases/platform-tools) 和 [scrcpy](https://github.com/Genymobile/scrcpy)。
 
-裝置控制的桌面用戶端以 Rust 實作，Android 端使用官方 scrcpy 伺服器；來源與授權請見 [伺服器說明（簡體中文）](../../../src-tauri/resources/scrcpy/README.md)。發行套件保留 ADB 的 NOTICE 與 scrcpy 伺服器的 Apache-2.0 授權。
+裝置控制的桌面用戶端以 Rust 實作，Android 端使用以 scrcpy 為基礎修改的 ADM 伺服器；來源與授權請見 [伺服器說明（簡體中文）](../../../src-tauri/resources/scrcpy/README.md)。發行套件保留 ADB 的 NOTICE 與 scrcpy 伺服器的 Apache-2.0 授權。
 
 Android is a trademark of Google LLC.
 

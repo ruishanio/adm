@@ -8,6 +8,7 @@ export function createControl(api: Api, canvas: () => HTMLCanvasElement | undefi
   const state = reactive({
     loading: false,
     ready: false,
+    compatibility: false,
     error: '',
     notice: '',
     recording: false,
@@ -45,11 +46,13 @@ export function createControl(api: Api, canvas: () => HTMLCanvasElement | undefi
     state.loading = false;
     state.ready = false;
     state.recording = false;
+    state.compatibility = false;
     state.width = 0;
     state.height = 0;
   }
   function status(next: ControlStatus) {
     if (next.recording && !state.recording) recordedAt = Date.now();
+    state.compatibility = next.compatibility;
     state.recording = next.recording;
     state.elapsed = next.recording ? Math.floor((Date.now() - recordedAt) / 1000) : 0;
     if (next.recordingNotice && next.recordingNotice !== lastNotice) {

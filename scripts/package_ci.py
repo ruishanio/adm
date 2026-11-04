@@ -37,9 +37,7 @@ def prepare(platform):
     pattern = rf"v{re.escape(METADATA['version'])}(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?"
     if os.environ.get("GITHUB_REF_TYPE") == "tag" and not re.fullmatch(pattern, tag):
         raise ValueError(f"tag {tag!r} 必须为 v{METADATA['version']} 或其测试版本后缀")
-    server = ROOT / "src-tauri/resources/scrcpy/scrcpy-server"
-    if hashlib.sha256(server.read_bytes()).hexdigest() != SCRCPY["sha256"]:
-        raise ValueError("scrcpy 服务端的 SHA-256 校验失败")
+    subprocess.run([sys.executable, str(ROOT / "android/scrcpy-server/build.py"), "--check"], check=True)
     suffix, expected = SDK[platform]
     directory = ROOT / "artifacts" / "ci-sdk"
     directory.mkdir(parents=True, exist_ok=True)
@@ -86,7 +84,7 @@ def verify(platform, arch):
         adb_name = "adb.exe"
     required = [executable]
     required += [str(Path(resources) / "scrcpy" / part).replace("\\", "/")
-                 for part in ["scrcpy-server", "version.json", "LICENSE"]]
+                 for part in ["scrcpy-server", "version.json", "LICENSE", "OpenH264-LICENSE.txt", "NDK-Runtime-NOTICE.txt"]]
     required += [
         str(Path(resources) / "platform-tools" / part).replace("\\", "/")
         for part in [adb_name, "NOTICE.txt", "source.properties"]

@@ -3,6 +3,7 @@ use crate::models::Result;
 use serde::Deserialize;
 
 pub const SESSION: u64 = 1 << 63;
+pub const SESSION_COMPATIBILITY: u64 = 2 << 32; // 会话头高 32 位中的模式标记
 pub const CONFIG: u64 = 1 << 62;
 pub const KEY: u64 = 1 << 61;
 pub const MAX_PACKET: usize = 8 * 1024 * 1024;

@@ -131,7 +131,7 @@ ADM's own code is licensed under [MIT](LICENSE), with a [Simplified Chinese refe
 
 Thanks to [Tauri](https://tauri.app/), [Vue](https://vuejs.org/), [shadcn-vue](https://www.shadcn-vue.com/), [Tailwind CSS](https://tailwindcss.com/), [Lucide](https://lucide.dev/), [Android SDK Platform-Tools](https://developer.android.com/tools/releases/platform-tools), and [scrcpy](https://github.com/Genymobile/scrcpy).
 
-The desktop device-control client is implemented in Rust; the Android side reuses the official scrcpy server. See the [server notes](src-tauri/resources/scrcpy/README.md) for its source and license. Release packages retain ADB's NOTICE and the scrcpy server's Apache-2.0 license.
+The desktop device-control client is implemented in Rust; the Android side uses an ADM build of the scrcpy server. See the [server notes](src-tauri/resources/scrcpy/README.md) for its source and license. Release packages retain ADB's NOTICE and the scrcpy server's Apache-2.0 license.
 
 Android is a trademark of Google LLC.
 

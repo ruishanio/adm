@@ -8,7 +8,7 @@
 
 前端使用 **Vue 3、TypeScript、Tailwind CSS 4 与 shadcn-vue**，桌面框架为 **Tauri 2**。Rust 后端处理 ADB、设备操作及本地资源；界面使用系统 WebView，不内置 Chromium 或 Node.js 运行时。
 
-设备控制的桌面端由 Rust 实现会话、协议、输入与 MP4 封装，前端使用 WebCodecs 解码；Android 端复用官方 scrcpy 服务端。具体版本、来源与许可见 [服务端说明](../../../src-tauri/resources/scrcpy/README.md)。
+设备控制的桌面端由 Rust 实现会话、协议、输入与 MP4 封装，前端使用 WebCodecs 解码；Android 端使用基于 scrcpy 修改的 ADM 服务端。具体版本、来源与许可见 [服务端说明](../../../src-tauri/resources/scrcpy/README.md)。
 
 ## 社区协作与反馈
 

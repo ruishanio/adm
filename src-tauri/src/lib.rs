@@ -105,14 +105,9 @@ pub fn self_check() -> Result<Value> {
     if !adb.is_file() {
         return Err("安装目录缺少 ADB".into());
     }
-    use sha2::{Digest, Sha256};
     let control_server = std::fs::read(resources.join("scrcpy/scrcpy-server"))
         .map_err(|_| "安装目录缺少设备控制服务端")?;
-    if format!("{:x}", Sha256::digest(control_server))
-        != "764eb6f79811d5211fe9df341120882ba9994c7a61b897d7bf3fb662e53bc536"
-    {
-        return Err("设备控制服务端校验失败".into());
-    }
+    control::verify_server(&control_server)?;
     let version = adb::Adb::new(adb, cancellation()).simple(&["version"])?;
     if !version.contains("Android Debug Bridge version") {
         return Err("随包 ADB 无法运行".into());

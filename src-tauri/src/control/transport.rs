@@ -7,7 +7,7 @@ use crate::{
     models::{Result, Target},
     parsing::shell_arg,
 };
-use sha2::{Digest, Sha256};
+
 use std::{
     io::{Read, Write},
     net::{Shutdown, TcpStream},
@@ -52,7 +52,13 @@ impl Drop for Owner {
     }
 }
 impl Transport {
-    pub fn connect(adb: Arc<Adb>, target: Target, resources: &Path, max_size: u32) -> Result<Self> {
+    pub fn connect(
+        adb: Arc<Adb>,
+        target: Target,
+        resources: &Path,
+        max_size: u32,
+        prefer_compatibility: bool,
+    ) -> Result<Self> {
         adb.ensure_online(&target)?;
         let bundled = resources.join("scrcpy/scrcpy-server");
         let path = if bundled.is_file() || !cfg!(debug_assertions) {
@@ -61,11 +67,7 @@ impl Transport {
             Path::new(env!("CARGO_MANIFEST_DIR")).join("resources/scrcpy/scrcpy-server")
         };
         let bytes = std::fs::read(&path).map_err(|e| format!("缺少设备控制服务端：{e}"))?;
-        if format!("{:x}", Sha256::digest(&bytes))
-            != "764eb6f79811d5211fe9df341120882ba9994c7a61b897d7bf3fb662e53bc536"
-        {
-            return Err("设备控制服务端校验失败。".into());
-        }
+        super::verify_server(&bytes)?;
         let scid = (uuid::Uuid::new_v4().as_u128() as u32) & 0x7fff_ffff;
         let remote = format!("/data/local/tmp/adm-scrcpy-{scid:08x}.jar");
         let mut owner = Owner {
@@ -91,7 +93,7 @@ impl Transport {
             .parse::<u16>()
             .map_err(|_| "设备控制端口无效。")?;
         let mut command = Command::new(&adb.executable);
-        command.args(adb.target(&target)?).arg("shell").arg(format!("CLASSPATH={} app_process / com.genymobile.scrcpy.Server 5.0.1 scid={scid:08x} log_level=debug tunnel_forward=true audio=false control=true video_codec=h264 max_size={max_size} max_fps=60 video_bit_rate=8000000 video_codec_options=i-frame-interval=1 clipboard_autosync=false send_device_meta=false cleanup=true",shell_arg(&remote)))
+        command.args(adb.target(&target)?).arg("shell").arg(format!("CLASSPATH={} app_process / com.genymobile.scrcpy.Server 5.0.1 scid={scid:08x} adm_compat_start={prefer_compatibility} log_level=debug tunnel_forward=true audio=false control=true video_codec=h264 max_size={max_size} max_fps=60 video_bit_rate=8000000 video_codec_options=i-frame-interval=1 clipboard_autosync=false send_device_meta=false cleanup=true",shell_arg(&remote)))
             .stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped());
         #[cfg(windows)]
         {

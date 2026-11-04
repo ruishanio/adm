@@ -9,3 +9,6 @@ legal/vendor/** -whitespace
 legal/THIRD-PARTY-NOTICES.txt -whitespace
 legal/WINDOWS-INSTALLER.txt -whitespace
 *.crate binary
+
+# 保留 scrcpy 上游许可原文，包括文件末尾的空行。
+android/scrcpy-server/LICENSE -text -whitespace

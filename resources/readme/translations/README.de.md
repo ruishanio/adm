@@ -131,7 +131,7 @@ Der eigene Code von ADM steht unter der [MIT-Lizenz](../../../LICENSE). Komponen
 
 Vielen Dank an [Tauri](https://tauri.app/), [Vue](https://vuejs.org/), [shadcn-vue](https://www.shadcn-vue.com/), [Tailwind CSS](https://tailwindcss.com/), [Lucide](https://lucide.dev/), [Android SDK Platform-Tools](https://developer.android.com/tools/releases/platform-tools) und [scrcpy](https://github.com/Genymobile/scrcpy).
 
-Der Desktop-Client für die Gerätesteuerung ist in Rust implementiert; auf Android kommt der offizielle scrcpy-Server zum Einsatz. Herkunft und Lizenz sind in den [Serverhinweisen auf vereinfachtem Chinesisch](../../../src-tauri/resources/scrcpy/README.md) dokumentiert. Die Pakete enthalten die NOTICE-Datei von ADB und die Apache-2.0-Lizenz des scrcpy-Servers.
+Der Desktop-Client für die Gerätesteuerung ist in Rust implementiert; auf Android kommt der von ADM angepasste scrcpy-Server zum Einsatz. Herkunft und Lizenz sind in den [Serverhinweisen auf vereinfachtem Chinesisch](../../../src-tauri/resources/scrcpy/README.md) dokumentiert. Die Pakete enthalten die NOTICE-Datei von ADB und die Apache-2.0-Lizenz des scrcpy-Servers.
 
 Android is a trademark of Google LLC.
 

@@ -1,7 +1,9 @@
 # scrcpy Android 服务端
 
-固定版本 5.0.1，未修改的官方 Android 服务端。来源与 SHA-256 见 `version.json`，原许可保留在同目录 `LICENSE`。
+ADM 以 [scrcpy v5.0.1](https://github.com/Genymobile/scrcpy/tree/v5.0.1/server) 为基础构建，源码和构建脚本位于 ADM 仓库的 `android/scrcpy-server/`。本版修改了视频编码故障处理，并添加 OpenH264 兼容模式。版本与 SHA-256 记录在 `version.json`。
 
-Copyright (C) 2018–2026 Genymobile。按 Apache-2.0 分发。源码：https://github.com/Genymobile/scrcpy/tree/v5.0.1/server
+- scrcpy，Copyright (C) 2018–2026 Genymobile。Apache-2.0，见 `LICENSE`。
+- OpenH264，Copyright (c) 2013, Cisco Systems。从 [v2.6.0 源码](https://github.com/cisco/openh264/tree/v2.6.0) 构建设备端编码器，见 `OpenH264-LICENSE.txt`。
+- 随 JNI 库链接的 Android NDK 运行库声明见 `NDK-Runtime-NOTICE.txt`。
 
-ADM 自行以 Rust 实现桌面端协议、会话、输入与录像；不分发 scrcpy 的 SDL/FFmpeg 桌面客户端。内部协议与本服务端版本绑定，升级必须同步核对视频会话头和控制消息，并执行设备回归。
+Rust 桌面端处理协议、会话、输入与录像。升级服务端时需验证视频会话头、控制消息和设备兼容模式。

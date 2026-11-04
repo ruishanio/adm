@@ -129,3 +129,89 @@ fn dedicated_control_stream_recording_and_rotation() {
         size.0, size.1, length
     );
 }
+
+/// 对显式指定的故障设备验收：首个真实软编码关键帧、录像重置和同一 transport 二次连接。
+#[test]
+#[ignore = "需要 ADM_CONTROL_COMPAT_SERIAL 指向已知系统编码器故障的 Android x86_64 测试机"]
+fn real_encoder_crash_falls_back_and_reconnects() {
+    let serial = std::env::var("ADM_CONTROL_COMPAT_SERIAL").unwrap();
+    let resources = Path::new(env!("CARGO_MANIFEST_DIR")).join("resources");
+    let control = Control::default();
+    for attempt in 0..2 {
+        let adb = Adb::new(
+            resources
+                .join("platform-tools")
+                .join(if cfg!(windows) { "adb.exe" } else { "adb" }),
+            cancellation(),
+        );
+        let device = adb
+            .devices()
+            .unwrap()
+            .into_iter()
+            .find(|d| d.serial == serial && d.state == "device")
+            .unwrap();
+        let target = Target {
+            serial: serial.clone(),
+            transport_id: device.transport_id,
+        };
+        let (tx, rx) = std::sync::mpsc::channel();
+        let channel = Channel::new(move |response| {
+            if let tauri::ipc::InvokeResponseBody::Raw(packet) = response {
+                let _ = tx.send(packet);
+            }
+            Ok(())
+        });
+        let pid = |adb: &Adb| {
+            adb.simple(&[
+                "-s",
+                &serial,
+                "shell",
+                "getprop",
+                "init.svc_debug_pid.media.swcodec",
+            ])
+            .unwrap()
+        };
+        let before = pid(&adb);
+        let id = control
+            .start(adb, target, &resources, 1600, channel)
+            .unwrap();
+        let session = control.get(&id).unwrap();
+        let packet = rx.recv_timeout(Duration::from_secs(10)).unwrap();
+        let status = session.snapshot();
+        assert!(status.compatibility && status.running && status.width.max(status.height) <= 1280);
+        let config = u32::from_be_bytes(packet[28..32].try_into().unwrap()) as usize;
+        assert!(
+            config > 0
+                && protocol::nals(&packet[32 + config..])
+                    .iter()
+                    .any(|nal| nal[0] & 31 == 5)
+        );
+        session.acknowledge(u64::from_be_bytes(packet[..8].try_into().unwrap()));
+        if attempt == 1 {
+            assert!(!before.trim().is_empty());
+            assert_eq!(
+                before,
+                pid(&session.adb),
+                "同一连接再次打开投屏不应重新触发系统编码器崩溃"
+            );
+        }
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("compat.mp4");
+        session.record(&path).unwrap();
+        let until = Instant::now() + Duration::from_secs(4);
+        while Instant::now() < until {
+            if let Ok(packet) = rx.recv_timeout(Duration::from_millis(200)) {
+                session.acknowledge(u64::from_be_bytes(packet[..8].try_into().unwrap()));
+            }
+        }
+        assert!(session
+            .stop_recording()
+            .recording_notice
+            .contains("录像已保存"));
+        let file = std::fs::File::open(path).unwrap();
+        let len = file.metadata().unwrap().len();
+        let mp4 = mp4::Mp4Reader::read_header(file, len).unwrap();
+        assert!(mp4.tracks()[&1].sample_count() > 0);
+        control.stop(&id);
+    }
+}

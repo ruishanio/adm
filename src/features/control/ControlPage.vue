@@ -342,7 +342,9 @@ onBeforeUnmount(() => {
           ><Volume2 aria-hidden="true"
         /></Button>
       </div>
-      <span class="control-hint">{{ t('点击操作，拖动滑动，右键返回') }}</span>
+      <span class="control-hint">{{
+        s.compatibility ? t('兼容编码') : t('点击操作，拖动滑动，右键返回')
+      }}</span>
     </footer>
     <AppDialog
       v-if="dialog"

@@ -167,6 +167,7 @@ export interface ControlStatus {
   height: number;
   error: string;
   recording: boolean;
+  compatibility: boolean;
   recordingNotice: string;
 }
 export type ControlInput =
