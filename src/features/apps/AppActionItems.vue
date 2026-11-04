@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Copy, Info, Play, Square, Eraser, Trash2 } from '@lucide/vue';
+import AppManagementItems from './AppManagementItems.vue';
+import { Copy, Info, Play } from '@lucide/vue';
 import { DropdownMenuItem, DropdownMenuSeparator } from 'reka-ui';
 import { ContextMenuItem, ContextMenuSeparator } from '@/shared/ui/context-menu/index';
 import type { AppAction, InstalledApp } from '@/shared/api/types';
@@ -25,21 +26,9 @@ const protectedApp = computed(() => props.app.system || props.owner);
     ><Copy aria-hidden="true" />{{ t('复制包名') }}</component
   >
   <component :is="separator" class="app-menu-separator" />
-  <component :is="item" :disabled="busy || protectedApp" @select="emit('action', 'force-stop')"
-    ><Square aria-hidden="true" />{{ t('强制停止应用') }}</component
-  >
-  <component
-    :is="item"
+  <AppManagementItems
     :disabled="busy || protectedApp"
-    class="destructive"
-    @select="emit('action', 'clear-data')"
-    ><Eraser aria-hidden="true" />{{ t('清除应用数据') }}</component
-  >
-  <component
-    :is="item"
-    :disabled="busy || protectedApp"
-    class="destructive"
-    @select="emit('action', 'uninstall')"
-    ><Trash2 aria-hidden="true" />{{ t('卸载应用') }}</component
-  >
+    :dropdown="dropdown"
+    @action="emit('action', $event)"
+  />
 </template>

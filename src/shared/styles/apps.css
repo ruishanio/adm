@@ -206,3 +206,148 @@
   color: var(--muted);
   font-size: 13px;
 }
+
+/* 详情的身份区和页签固定，技术字段较长时只滚动当前面板。 */
+.dialog.app-details-dialog {
+  --app-info-label-width: 104px;
+  width: 520px;
+  /* 设备异步回填不改变窗口位置，长字段和错误只在正文内滚动。 */
+  height: 436px;
+}
+.app-details-dialog > .dialog-body {
+  flex: 1;
+}
+.app-details-dialog > .dialog-body > * {
+  flex-shrink: 0;
+}
+.app-details-dialog:not(:lang(zh)):not(:lang(ja)) {
+  --app-info-label-width: 142px;
+}
+.app-info-identity {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.app-info-identity .installed-app-icon,
+.app-info-identity .installed-app-icon img {
+  width: 40px;
+  height: 40px;
+}
+.app-info-identity .installed-app-icon svg {
+  width: 32px;
+  height: 32px;
+}
+.app-info-heading {
+  flex: 1;
+  min-width: 0;
+}
+.app-info-heading h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+.app-info-package {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.app-info-package .icon-button {
+  color: var(--muted);
+}
+.app-info-package svg {
+  width: 14px;
+  height: 14px;
+}
+.app-info-package .app-copy-done {
+  color: var(--success);
+}
+.app-info-fields {
+  display: grid;
+  grid-template-columns: min(38%, var(--app-info-label-width)) minmax(0, 1fr);
+  gap: 7px 20px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.app-info-target > span {
+  font-size: 12px;
+}
+.app-info-fields dt {
+  color: var(--muted);
+}
+.app-info-heading h3,
+.app-info-package > span,
+.app-info-fields dd {
+  -webkit-user-select: text;
+  user-select: text;
+  overflow-wrap: anywhere;
+}
+.app-info-fields dd {
+  font-variant-numeric: tabular-nums;
+}
+.app-info-actions {
+  display: inline-flex;
+  align-items: center;
+  margin-inline-end: auto;
+  border-radius: var(--radius-control);
+  background: var(--surface-subtle);
+  box-shadow: inset 0 0 0 1px var(--control-edge);
+}
+.app-info-menu {
+  z-index: 60;
+}
+.app-info-actions button {
+  position: relative;
+  padding-inline: 10px;
+  border-color: transparent;
+  border-radius: var(--radius-control) 0 0 var(--radius-control);
+  background: transparent;
+  box-shadow: none;
+  font-size: 12px;
+}
+.app-info-actions .icon-button {
+  min-width: 0;
+  padding: 0;
+  border-radius: 0 var(--radius-control) var(--radius-control) 0;
+}
+.app-info-actions .icon-button::before {
+  content: '';
+  position: absolute;
+  inset: 5px auto 5px -1px;
+  width: 1px;
+  background: var(--control-edge);
+}
+.app-info-actions .icon-button svg {
+  width: 14px;
+  height: 14px;
+}
+.app-info-actions button:hover:not(:disabled),
+.app-info-actions button[aria-expanded='true'] {
+  background: var(--hover);
+}
+.app-details-dialog > .dialog-body > .app-info-sections {
+  min-height: 70px;
+  flex: 1 1 auto;
+  gap: 0;
+}
+.app-info-tabs.tabs {
+  justify-content: flex-start;
+  width: 100%;
+  height: auto;
+  padding: 0 0 6px;
+  border-radius: 0;
+  background: transparent;
+}
+.app-info-panel {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 12px 4px 0 0;
+}
+.app-info-feedback {
+  font-size: 12px;
+}
+.app-info-feedback[role='alert'] {
+  color: var(--error);
+}

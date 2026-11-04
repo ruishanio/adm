@@ -15,7 +15,8 @@ export function appsState() {
       | {
           target: Target;
           deviceName: string;
-          packageName: string;
+          summary: InstalledApp;
+          reading: boolean;
           details?: AppDetails;
           error: string;
           action?: Exclude<AppAction, 'launch'> | 'uninstall';
@@ -81,29 +82,28 @@ export function createApps({
   async function openApp(app: InstalledApp, action?: Exclude<AppAction, 'launch'> | 'uninstall') {
     if (!device.value || !online.value || workspace.busy) return;
     // 弹窗绑定打开时的设备和包名；确认动作不能从之后变化的选中行重新推导目标。
-    const pending = {
+    state.application = {
       target: { ...device.value },
       deviceName: title.value,
-      packageName: app.packageName,
+      summary: { ...app },
+      reading: true,
       action,
       error: '',
       details: undefined as AppDetails | undefined,
     };
-    state.application = pending;
+    const pending = state.application;
     workspace.modal = action === 'uninstall' ? 'app-uninstall' : action ? 'app-confirm' : 'app-details';
     await run(t('读取应用信息'), async () => {
       try {
-        const details = await api.appDetails(pending.target, pending.packageName);
-        if (
-          state.application?.packageName === pending.packageName &&
-          workspace.selected === targetKey(pending.target) &&
-          online.value
-        )
-          state.application.details = details;
+        const details = await api.appDetails(pending.target, pending.summary.packageName);
+        if (state.application === pending && workspace.selected === targetKey(pending.target) && online.value)
+          pending.details = details;
       } catch (error) {
-        if (state.application)
-          state.application.error = error instanceof Error ? error.message : String(error);
-        throw error;
+        // 已关闭或换设备的读取结果不再提示；当前请求的错误只显示在原弹窗内。
+        if (state.application === pending)
+          pending.error = error instanceof Error ? error.message : String(error);
+      } finally {
+        pending.reading = false;
       }
     });
   }

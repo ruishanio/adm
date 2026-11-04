@@ -160,6 +160,16 @@ it('名称优先显示，支持中文名称及包名搜索，系统应用可选�
   await nextTick();
   expect(view.findAll('tbody tr')).toHaveLength(2);
 });
+async function chooseDetailAction(label: string) {
+  document.querySelector<HTMLButtonElement>('.app-info-actions [aria-haspopup="menu"]')!.click();
+  await flushPromises();
+  const item = [...document.querySelectorAll<HTMLElement>('.app-info-menu [role="menuitem"]')].find(
+    (node) => node.textContent?.trim() === label,
+  );
+  expect(item).toBeDefined();
+  item!.click();
+  await flushPromises();
+}
 it('信息页和卸载确认分开，取消不执行卸载，确认携带原设备和版本', async () => {
   const { view, api, w } = await setup();
   await view.get('tbody tr').trigger('dblclick');
@@ -170,7 +180,7 @@ it('信息页和卸载确认分开，取消不执行卸载，确认携带原设�
     button.click();
     await flushPromises();
   };
-  await click('卸载应用');
+  await chooseDetailAction('卸载应用');
   expect(document.body.textContent).toContain('无法撤销');
   const confirmation = document.querySelector('[role="dialog"]')!;
   expect(confirmation.querySelector('.dialog-subject-name')?.textContent).toBe(app.label);
@@ -180,13 +190,110 @@ it('信息页和卸载确认分开，取消不执行卸载，确认携带原设�
   expect(api.uninstallApp).not.toHaveBeenCalled();
   await click('取消');
   expect(w.workspace.state.modal).toBe('app-details');
-  await click('卸载应用');
+  await chooseDetailAction('卸载应用');
   vi.mocked(api.listApps).mockResolvedValue([system]);
   await click('确认卸载');
   expect(api.uninstallApp).toHaveBeenCalledExactlyOnceWith(first, app.packageName, '42', true);
   expect(w.workspace.state.modal).toBeNull();
   expect(w.apps.state.apps).toEqual([system]);
   expect(w.workspace.state.notice?.error).toBeUndefined();
+});
+it('详情页签切换、复制包名与重开回到概览', async () => {
+  const { view, api } = await setup();
+  const open = async () => {
+    await view.get('tbody tr').trigger('dblclick');
+    await flushPromises();
+    return document.querySelector<HTMLElement>('.app-details-dialog')!;
+  };
+  const dialog = await open();
+  expect(dialog.querySelector('h3')?.textContent).toBe(app.label);
+  expect(dialog.querySelector('.app-info-fields')?.textContent).toContain('2.0 (42)');
+  const technical = dialog.querySelectorAll<HTMLButtonElement>('[role="tab"]')[1];
+  expect(technical.getAttribute('aria-selected')).toBe('false');
+  technical.focus();
+  await flushPromises();
+  expect(technical.getAttribute('aria-selected')).toBe('true');
+  const panel = dialog.querySelector('[role="tabpanel"][data-state="active"]')!;
+  expect(panel.textContent).toContain(app.apkPath);
+  expect(panel.textContent).not.toContain('安装来源');
+  dialog.querySelector<HTMLButtonElement>('button[aria-label="复制包名"]')!.click();
+  await flushPromises();
+  expect(api.copyPackage).toHaveBeenCalledExactlyOnceWith(app.packageName);
+  expect(dialog.querySelector('[role="status"]')?.textContent).toBe('包名已复制。');
+  dialog.querySelector<HTMLButtonElement>('[aria-label="关闭对话框"]')!.click();
+  await flushPromises();
+  vi.mocked(api.appDetails).mockResolvedValueOnce({ ...details, label: null });
+  const reopened = await open();
+  expect(reopened.querySelector('h3')?.textContent).toBe(app.packageName);
+  expect(reopened.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toBe('概览');
+});
+it('从详情打开应用并查看反馈，取消清除数据后返回原页签和菜单入口', async () => {
+  const { w, api } = await setup();
+  await w.apps.openApp(app);
+  await flushPromises();
+  document.querySelector<HTMLButtonElement>('.app-info-actions button')!.click();
+  await flushPromises();
+  expect(api.appAction).toHaveBeenCalledExactlyOnceWith(first, app.packageName, '42', 'launch', false);
+  expect(document.querySelector('.app-info-feedback')?.textContent).toBe('已发送打开应用请求。');
+  document.querySelectorAll<HTMLButtonElement>('.app-info-tabs [role="tab"]')[1].focus();
+  await flushPromises();
+  await chooseDetailAction('清除应用数据');
+  expect(document.querySelector('.confirm-dialog')?.textContent).toContain('无法撤销');
+  document.querySelector<HTMLButtonElement>('.confirm-dialog footer button')!.click();
+  await flushPromises();
+  expect(document.querySelector('.app-info-tabs [aria-selected="true"]')?.textContent).toBe('技术信息');
+  expect(document.activeElement).toBe(document.querySelector('.app-info-actions [aria-haspopup="menu"]'));
+  expect(api.appAction).toHaveBeenCalledTimes(1);
+});
+it('慢读取在同一详情面板回填，保留焦点；取得完整详情前不能卸载', async () => {
+  const { w, api } = await setup();
+  let finish!: (value: AppDetails) => void;
+  vi.mocked(api.appDetails).mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+  );
+  const pending = w.apps.openApp(app);
+  await nextTick();
+  await flushPromises();
+  const dialog = document.querySelector<HTMLElement>('.app-details-dialog')!;
+  const fields = dialog.querySelector('.app-info-fields')!;
+  const overview = dialog.querySelector<HTMLButtonElement>('[role="tab"]')!;
+  const manage = dialog.querySelector<HTMLButtonElement>('.app-info-actions [aria-haspopup="menu"]')!;
+  expect(dialog.querySelector('h3')?.textContent).toBe(app.label);
+  expect(fields.textContent).toContain('2.0 (42)');
+  expect(fields.textContent).toContain('读取中…');
+  expect(manage.disabled).toBe(true);
+  overview.focus();
+  finish({ ...details, lastUpdateTime: '2026-11-04 12:00:00' });
+  await pending;
+  await nextTick();
+  expect(document.querySelector('.app-details-dialog .app-info-fields')).toBe(fields);
+  expect(document.activeElement).toBe(overview);
+  expect(fields.textContent).toContain('2026-11-04 12:00:00');
+  expect(manage.disabled).toBe(false);
+  expect(api.uninstallApp).not.toHaveBeenCalled();
+});
+it('关闭尚未读完的详情会停止等待，迟到的错误不会重开弹窗或覆盖提示', async () => {
+  const { w, api } = await setup();
+  let fail!: (reason: Error) => void;
+  vi.mocked(api.appDetails).mockImplementationOnce(
+    () =>
+      new Promise((_, reject) => {
+        fail = reject;
+      }),
+  );
+  const pending = w.apps.openApp(app);
+  await flushPromises();
+  document.querySelector<HTMLButtonElement>('.app-details-dialog [aria-label="关闭对话框"]')!.click();
+  await nextTick();
+  expect(api.cancel).toHaveBeenCalledOnce();
+  fail(new Error('本次读取已取消'));
+  await pending;
+  expect(w.workspace.state.modal).toBeNull();
+  expect(w.apps.state.application).toBeUndefined();
+  expect(w.workspace.state.notice).toBeNull();
 });
 it('同名应用仍按包名区分，名称缺失时保留可搜索的包名', async () => {
   const { view, w, api } = await setup();

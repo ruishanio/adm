@@ -289,5 +289,9 @@ watch(filtered, (apps) => {
       </template>
     </ResizableTable>
   </div>
-  <AppDetailsDialog :return-focus="dialogReturnFocus" />
+  <AppDetailsDialog
+    v-if="appsFeature.state.application"
+    :resources="resources"
+    :return-focus="dialogReturnFocus"
+  />
 </template>

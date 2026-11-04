@@ -186,6 +186,8 @@ onBeforeUnmount(() => {
           s.modal !== 'install' &&
           s.modal !== 'owner-remove' &&
           s.modal !== 'owner-set' &&
+          s.modal !== 'app-details' &&
+          !w.apps.state.application?.reading &&
           !(s.tab === 'info' && w.owner.state.ownerExpanded && w.owner.state.scan?.loading) &&
           (s.busy || s.notice)
         "
