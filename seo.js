@@ -20,6 +20,11 @@ export function localePath(locale) {
   return locale === 'en' ? '/' : `/${locale}/`;
 }
 
+// 首屏、功能切换和分享预览共用同一套本地化截图。
+export function screenshotPath(locale, view = 'workbench') {
+  return `/assets/${locale}-${view}.jpg`;
+}
+
 // 兼容分享过的 ?lang= 链接；同一个规范网址始终对应同一种语言，不受本地存储影响。
 export function localeFromUrl(url) {
   const query = url.searchParams.get('lang');
@@ -47,7 +52,7 @@ export function seoHead(locale, version) {
   const url = `${SITE_URL}${localePath(locale)}`;
   const title = titles[locale];
   const description = messages[locale].heroBody;
-  const image = `${SITE_URL}/assets/${locale.startsWith('zh') ? 'zh-CN' : 'en'}-workbench.jpg`;
+  const image = `${SITE_URL}${screenshotPath(locale)}`;
   const meta = (attribute, key, content) => `<meta data-seo ${attribute}="${key}" content="${escapeHtml(content)}">`;
   const graph = {
     '@context': 'https://schema.org',

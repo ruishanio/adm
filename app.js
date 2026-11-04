@@ -1,6 +1,6 @@
 import { messages } from './i18n.js';
 import { createLanguagePicker } from './language-picker.js';
-import { localeFromUrl, localizedUrl, seoHead } from './seo.js';
+import { localeFromUrl, localizedUrl, screenshotPath, seoHead } from './seo.js';
 
 const languagePicker = createLanguagePicker(document.querySelector('.language-control'), changeLanguage);
 const previewImage = document.querySelector('#preview-image');
@@ -19,10 +19,8 @@ function textAt(locale, key) {
 }
 
 function updatePreview() {
-  const imageLocale = language.startsWith('zh') ? 'zh-CN' : 'en';
-  const imagePath = `/assets/${imageLocale}-${currentView}.jpg`;
   const label = textAt(language, viewLabels[currentView]);
-  previewImage.src = imagePath;
+  previewImage.src = screenshotPath(language, currentView);
   previewImage.alt = `ADM — ${label}`;
   previewTabs.forEach((tab) => {
     const selected = tab.dataset.view === currentView;

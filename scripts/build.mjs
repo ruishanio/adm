@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { messages } from '../i18n.js';
 import { build } from 'vite';
 import { parse, parseFragment, serialize } from 'parse5';
-import { locales, localePath, seoHead, SITE_URL } from '../seo.js';
+import { locales, localePath, screenshotPath, seoHead, SITE_URL } from '../seo.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
@@ -59,7 +59,7 @@ function renderLocale(template, locale) {
       setText(node, names[locale]);
     }
     if (attr(node, 'id') === 'preview-image') {
-      setAttr(node, 'src', `/assets/${locale.startsWith('zh') ? 'zh-CN' : 'en'}-workbench.jpg`);
+      setAttr(node, 'src', screenshotPath(locale));
       setAttr(node, 'alt', `ADM — ${messages[locale].features[0].title}`);
     }
   });

@@ -56,6 +56,15 @@ for (const locale of locales) {
   }
   const data = JSON.parse(text(find('type', 'application/ld+json')));
   const software = data['@graph'].find(node => node['@type'] === 'SoftwareApplication');
+  // 检查实际功能页签对应的资源，避免仅首页截图存在、切换后出现空图。
+  for (const tab of nodes.filter(node => attr(node, 'data-view'))) {
+    await access(new URL(`assets/${locale}-${attr(tab, 'data-view')}.jpg`, output));
+  }
+  const overviewImage = `/assets/${locale}-workbench.jpg`;
+  assert.equal(attr(find('id', 'preview-image'), 'src'), overviewImage);
+  assert.equal(software.screenshot, SITE_URL + overviewImage);
+  assert.equal(attr(find('property', 'og:image'), 'content'), software.screenshot);
+  assert.equal(attr(find('name', 'twitter:image'), 'content'), software.screenshot);
   assert.equal(software.softwareVersion, text(find('class', 'download-version')).replace(/^v/, ''));
   assert.deepEqual(software.inLanguage, ['en', 'zh-CN', 'zh-TW', 'ja', 'fr', 'de', 'es', 'ru']);
   // 可见版本号、发行说明和两个安装包必须指向同一版本。
