@@ -14,6 +14,16 @@ pub fn parse_devices(text: &str) -> Vec<Device> {
         .filter_map(|line| {
             row.captures(line.trim()).map(|m| Device {
                 serial: m[1].into(),
+                network_boot_id: None,
+                // 无线调试的自动发现连接可使用 mDNS 服务名，不一定带端口。
+                network: !line
+                    .split_whitespace()
+                    .any(|field| field.starts_with("usb:"))
+                    && (m[1]
+                        .trim_end_matches('.')
+                        .trim_end_matches(".local")
+                        .ends_with("._adb-tls-connect._tcp")
+                        || (m[1].contains(':') && endpoint(&m[1]).is_ok())),
                 state: m[2].into(),
                 model: model
                     .captures(line)

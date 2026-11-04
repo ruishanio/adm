@@ -4,7 +4,18 @@ const devicesFeature = useDevices();
 
 import { t } from '@/shared/i18n/index';
 import { computed } from 'vue';
-import { Smartphone, Cable, RefreshCw, Plus, Settings2, Search, Pencil, Copy, ListMinus } from '@lucide/vue';
+import {
+  Smartphone,
+  Cable,
+  RefreshCw,
+  Plus,
+  Settings2,
+  Search,
+  Pencil,
+  Copy,
+  ListMinus,
+  Unplug,
+} from '@lucide/vue';
 import { Button } from '@/shared/ui/button/index';
 import { Input } from '@/shared/ui/input/index';
 import {
@@ -16,33 +27,35 @@ import {
 } from '@/shared/ui/context-menu/index';
 import { useWorkspace } from '@/shared/composables/workspace';
 import { type Device } from '@/shared/api/types';
-import { deviceName } from '@/shared/utils/device';
 import { deviceStatus, connection, targetKey } from '@/shared/utils/device';
 import { APP_VERSION } from '@/shared/app-info';
 import DeviceConnectionIcon from '@/features/devices/DeviceConnectionIcon.vue';
 const w = useWorkspace(),
   s = w.state;
-const connected = computed(
-  () => devicesFeature.state.snapshot?.devices.filter((d) => d.state === 'device') || [],
+const connected = computed(() =>
+  devicesFeature.rows.value.filter(({ primary }) => primary.state === 'device'),
 );
 const groups = computed(() =>
   [
     { label: t('已连接'), devices: connected.value },
     {
       label: t('其他设备'),
-      devices: devicesFeature.state.snapshot?.devices.filter((d) => d.state !== 'device') || [],
+      devices: devicesFeature.rows.value.filter(({ primary }) => primary.state !== 'device'),
     },
   ].map((g) => ({
     ...g,
-    filtered: g.devices.filter((d) =>
-      `${deviceName(d, devicesFeature.state.snapshot?.settings)} ${d.serial}`
-        .toLowerCase()
-        .includes(s.query.toLowerCase()),
+    filtered: g.devices.filter(({ members }) =>
+      members.some((d) =>
+        `${devicesFeature.displayName(d)} ${d.serial}`.toLowerCase().includes(s.query.toLowerCase()),
+      ),
     ),
   })),
 );
-function selectDevice(e: MouseEvent, device: Device) {
-  devicesFeature.select(device);
+function isSelected(members: Device[]) {
+  return members.some((d) => targetKey(d) === s.selected);
+}
+function selectDevice(e: MouseEvent, device: Device, members: Device[]) {
+  if (!isSelected(members)) devicesFeature.select(device);
   // macOS WebView 鼠标点击按钮默认不聚焦，显式保留焦点以继续使用方向键。
   (e.currentTarget as HTMLButtonElement).focus({ preventScroll: true });
 }
@@ -71,7 +84,7 @@ function rowKey(e: KeyboardEvent) {
         ><RefreshCw aria-hidden="true"
       /></Button>
     </header>
-    <label v-if="(devicesFeature.state.snapshot?.devices.length || 0) > 5" class="device-search"
+    <label v-if="devicesFeature.rows.value.length > 5" class="device-search"
       ><Search aria-hidden="true" /><Input
         v-model="s.query"
         :aria-label="t('查找设备')"
@@ -88,26 +101,23 @@ function rowKey(e: KeyboardEvent) {
             >{{ connected.length }}</span
           >
         </div>
-        <ContextMenu v-for="d in group.filtered" :key="targetKey(d)">
+        <ContextMenu v-for="{ primary: d, members } in group.filtered" :key="targetKey(d)">
           <ContextMenuTrigger as-child :disabled="!!s.busy"
             ><Button
               variant="ghost"
-              :class="[
-                'device-row',
-                { selected: s.selected === targetKey(d), offline: d.state !== 'device' },
-              ]"
+              :class="['device-row', { selected: isSelected(members), offline: d.state !== 'device' }]"
               :disabled="!!s.busy"
-              :aria-pressed="s.selected === targetKey(d)"
-              :aria-label="`${deviceName(d, devicesFeature.state.snapshot?.settings)} ${connection(d)} ${deviceStatus(d)} ${d.serial}`"
-              :title="`${deviceName(d, devicesFeature.state.snapshot?.settings)}\n${d.serial}\n${connection(d)}\n${deviceStatus(d)}`"
-              @click="selectDevice($event, d)"
+              :aria-pressed="isSelected(members)"
+              :aria-label="`${devicesFeature.displayName(d)} ${connection(d)} ${deviceStatus(d)} ${d.serial}`"
+              :title="`${devicesFeature.displayName(d)}\n${members.map((member) => member.serial).join('\n')}\n${connection(d)}\n${deviceStatus(d)}`"
+              @click="selectDevice($event, d, members)"
               @keydown="rowKey"
             >
               <Smartphone
                 :class="['device-icon', { connected: d.state === 'device' }]"
                 aria-hidden="true"
               /><span class="device-copy"
-                ><span class="device-name">{{ deviceName(d, devicesFeature.state.snapshot?.settings) }}</span
+                ><span class="device-name">{{ devicesFeature.displayName(d) }}</span
                 ><span class="device-caption">
                   <DeviceConnectionIcon :device="d" />
                   <span class="device-identifier">{{ d.serial }}</span>
@@ -123,7 +133,12 @@ function rowKey(e: KeyboardEvent) {
               ><Pencil aria-hidden="true" /><span>{{ t('备注名称…') }}</span></ContextMenuItem
             ><ContextMenuItem @select="w.run(t('复制设备标识'), () => w.api.copySerial(d.serial))"
               ><Copy aria-hidden="true" /><span>{{ t('复制设备标识') }}</span></ContextMenuItem
-            ><ContextMenuSeparator /><ContextMenuItem :disabled="!!s.busy" @select="devicesFeature.hide(d)"
+            ><ContextMenuSeparator /><ContextMenuItem
+              v-if="d.network && d.state === 'device'"
+              :disabled="!!s.busy"
+              @select="devicesFeature.disconnect(members)"
+              ><Unplug aria-hidden="true" /><span>{{ t('断开连接') }}</span></ContextMenuItem
+            ><ContextMenuItem :disabled="!!s.busy" @select="devicesFeature.hide(d)"
               ><ListMinus aria-hidden="true" /><span>{{ t('从列表移除') }}</span></ContextMenuItem
             ></ContextMenuContent
           >

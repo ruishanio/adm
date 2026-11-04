@@ -59,7 +59,7 @@ function setup() {
     return createWorkbench(api);
   })!;
   w.devices.state.snapshot = {
-    devices: [{ serial: 'test', transportId: '1', state: 'device', model: 'Test' }],
+    devices: [{ serial: 'test', transportId: '1', network: false, state: 'device', model: 'Test' }],
     settings: { adbPath: '', endpoint: 'host:5555', deviceNames: {}, hiddenDevices: [], sidebarWidth: 248 },
     adbPath: '/adb',
     platform: 'darwin',
@@ -116,6 +116,49 @@ it('鼠标选择设备保留焦点但隐藏焦点框，键盘操作恢复提示�
   await row.trigger('keydown', { key: 'F2' });
   expect(w.workspace.state.modal).toBeNull();
   expect(view.text()).not.toContain('F2');
+});
+
+it('从未选中的网络设备右键断开，只刷新设备列表并保留当前设备', async () => {
+  const w = setup();
+  const snap = w.devices.state.snapshot!;
+  const network = {
+    serial: '10.0.0.2:5555',
+    transportId: '2',
+    state: 'device',
+    model: 'WiFi',
+    network: true,
+  };
+  const primary = { ...network, networkBootId: 'boot-a' };
+  const discovered = { ...primary, serial: 'adb-A._adb-tls-connect._tcp', transportId: '3' };
+  const other = { ...primary, serial: '10.0.0.3:5555', transportId: '4', networkBootId: 'boot-b' };
+  const usb = snap.devices[0];
+  snap.devices.push(discovered, primary, other);
+  snap.settings.language = 'zh-CN';
+  w.workspace.api.refresh = vi.fn(async () => snap);
+  await w.devices.refresh();
+  vi.mocked(w.workspace.api.refresh).mockResolvedValueOnce({ ...snap, devices: [usb, other] });
+  w.workspace.api.disconnect = vi.fn(async () => {});
+  const view = mount(Sidebar, { global: { provide: w.providers }, attachTo: document.body });
+  cleanups.push(() => view.unmount());
+  await flushPromises();
+  expect(view.findAll('.device-row')).toHaveLength(3);
+  expect(view.findAll('.device-row')[1].text()).toContain(primary.serial);
+  expect(view.findAll('.device-row')[1].attributes('title')).toContain(discovered.serial);
+  await view.findAll('.device-row')[1].trigger('contextmenu', { button: 2, clientX: 30, clientY: 70 });
+  await flushPromises();
+  const item = [...document.querySelectorAll<HTMLElement>('[role="menuitem"]')].find(
+    (entry) => entry.textContent === '断开连接',
+  );
+  expect(item).toBeDefined();
+  item!.click();
+  await flushPromises();
+  expect(vi.mocked(w.workspace.api.disconnect).mock.calls).toEqual([[discovered], [primary]]);
+  expect(w.workspace.state.selected).toBe('test@1');
+  expect(view.findAll('.device-row')).toHaveLength(2);
+  await view.get('.device-row').trigger('contextmenu', { button: 2, clientX: 30, clientY: 40 });
+  await flushPromises();
+  expect(document.querySelector('[role="menu"]')?.textContent).toContain('从列表移除');
+  expect(document.querySelector('[role="menu"]')?.textContent).not.toContain('断开连接');
 });
 
 it('分栏按拖动位移调整，保持两侧最小宽度，释放后保存并停止追踪', async () => {

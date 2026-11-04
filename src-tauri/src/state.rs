@@ -30,6 +30,23 @@ impl Drop for Operation<'_> {
     }
 }
 impl AppState {
+    /// 列表偏好应用到这台设备当前已核实的各条网络连接；未知标识只修改自身。
+    pub(crate) fn device_serials(&self, serial: &str) -> Vec<String> {
+        let devices = self.devices.lock().unwrap();
+        let identity = devices
+            .iter()
+            .find(|d| d.serial == serial)
+            .and_then(|d| d.network_boot_id.as_ref());
+        match identity {
+            Some(id) => devices
+                .iter()
+                .filter(|d| d.network_boot_id.as_ref() == Some(id))
+                .map(|d| d.serial.clone())
+                .collect(),
+            None => vec![serial.to_owned()],
+        }
+    }
+
     /// 在打开原生对话框前取当前语言，避免持有设置锁等待用户操作。
     pub(crate) fn localized(&self, source: &str) -> String {
         crate::platform::i18n::text(&self.store.lock().unwrap().value.language, source).into()

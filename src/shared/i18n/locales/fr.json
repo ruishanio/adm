@@ -191,6 +191,8 @@
   "查找设备": "Rechercher un appareil",
   "备注名称…": "Renommer…",
   "复制设备标识": "Copier l’identifiant",
+  "断开连接": "Déconnecter",
+  "只能断开当前已连接的网络设备，请刷新列表后重试。": "Seul un appareil connecté via le réseau peut être déconnecté. Actualisez la liste et réessayez.",
   "从列表移除": "Retirer de la liste",
   "尚未发现设备": "Aucun appareil trouvé",
   "连接 USB，或添加网络设备": "Connectez en USB ou ajoutez un appareil réseau",

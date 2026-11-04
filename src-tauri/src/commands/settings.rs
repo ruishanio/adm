@@ -20,11 +20,14 @@ impl AppState {
                 if serial.is_empty() || serial.len() > 512 || name.chars().count() > 80 {
                     return Err("设备备注参数无效。".into());
                 }
+                let serials = self.device_serials(&serial);
                 self.update(|s| {
-                    if name.trim().is_empty() {
-                        s.device_names.remove(&serial);
-                    } else {
-                        s.device_names.insert(serial, name.trim().into());
+                    for serial in serials {
+                        if name.trim().is_empty() {
+                            s.device_names.remove(&serial);
+                        } else {
+                            s.device_names.insert(serial, name.trim().into());
+                        }
                     }
                 })?;
                 Ok(Value::Null)
@@ -34,9 +37,12 @@ impl AppState {
                 if serial.is_empty() || serial.len() > 512 {
                     return Err("设备标识无效。".into());
                 }
+                let serials = self.device_serials(&serial);
                 self.update(|s| {
-                    if !s.hidden_devices.contains(&serial) {
-                        s.hidden_devices.push(serial);
+                    for serial in serials {
+                        if !s.hidden_devices.contains(&serial) {
+                            s.hidden_devices.push(serial);
+                        }
                     }
                 })?;
                 Ok(Value::Null)

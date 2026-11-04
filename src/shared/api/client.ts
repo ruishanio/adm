@@ -43,6 +43,7 @@ export const api: Api = {
   refresh: () => call('refresh'),
   details: (t) => call('details', target(t)),
   connect: (address) => call('connect', address),
+  disconnect: (device) => call('disconnect', target(device)),
   pair: (address, code) => call('pair', address, code),
   chooseApk: () => call('chooseApk'),
   dropApk: (path) => call('inspectApk', path),

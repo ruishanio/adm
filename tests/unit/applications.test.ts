@@ -8,8 +8,8 @@ import InstallDialog from '@/features/apps/install/InstallDialog.vue';
 import type { Api, AppDetails, InstalledApp, Snapshot } from '@/shared/api/types';
 import { setLanguage } from '@/shared/i18n/index';
 
-const first = { serial: 'one', transportId: '1', state: 'device', model: '第一台' };
-const second = { serial: 'two', transportId: '2', state: 'device', model: '第二台' };
+const first = { serial: 'one', transportId: '1', network: false, state: 'device', model: '第一台' };
+const second = { serial: 'two', transportId: '2', network: false, state: 'device', model: '第二台' };
 const app: InstalledApp = {
   packageName: 'com.example.notes',
   label: '随手笔记 Notes',

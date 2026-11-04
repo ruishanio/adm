@@ -4,6 +4,8 @@ export interface Target {
   transportId: string;
 }
 export interface Device extends Target {
+  network: boolean;
+  networkBootId?: string;
   state: string;
   model: string;
 }
@@ -204,6 +206,7 @@ export interface Api {
   refresh(): Promise<Snapshot>;
   details(target: Target): Promise<Details>;
   connect(endpoint: string): Promise<void>;
+  disconnect(target: Target): Promise<void>;
   pair(endpoint: string, code: string): Promise<void>;
   chooseApk(): Promise<Apk | null>;
   dropApk(path: string): Promise<Apk>;

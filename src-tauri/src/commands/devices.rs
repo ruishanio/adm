@@ -39,7 +39,11 @@ impl AppState {
                         adb_path = adb.executable.to_string_lossy().into_owned();
                         if self.active.lock().unwrap().is_none() {
                             match adb.devices() {
-                                Ok(list) => *self.devices.lock().unwrap() = list,
+                                Ok(mut list) => {
+                                    let previous = self.devices.lock().unwrap().clone();
+                                    crate::devices::network::identify(&adb, &mut list, &previous);
+                                    *self.devices.lock().unwrap() = list;
+                                }
                                 Err(e) => {
                                     error = Some(e);
                                     self.devices.lock().unwrap().clear();
@@ -71,10 +75,18 @@ impl AppState {
             "connect" => {
                 let (endpoint,): (String,) = decoded(args)?;
                 let endpoint = self.adb(cancel)?.connect(&endpoint)?;
+                let serials = self.device_serials(&endpoint);
                 self.update(|s| {
                     s.endpoint = endpoint.clone();
-                    s.hidden_devices.retain(|v| v != &endpoint);
+                    s.hidden_devices.retain(|v| !serials.contains(v));
                 })?;
+                Ok(Value::Null)
+            }
+            "disconnect" => {
+                let (target,): (Target,) = decoded(args)?;
+                self.adb(cancel)?
+                    .disconnect(&target)
+                    .map_err(|e| self.localized(&e))?;
                 Ok(Value::Null)
             }
             "pair" => {

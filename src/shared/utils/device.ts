@@ -5,7 +5,7 @@ export const deviceName = (d: Device, settings?: Settings) =>
   d.model.replaceAll('_', ' ') ||
   d.serial;
 export const connection = (d: Device) =>
-  d.serial.startsWith('emulator-') ? t('模拟器') : d.serial.includes(':') ? t('网络') : 'USB';
+  d.network ? t('网络') : d.serial.startsWith('emulator-') ? t('模拟器') : 'USB';
 export const deviceStatus = (d: Device) =>
   ({ device: t('已连接'), unauthorized: t('等待授权'), offline: t('离线'), no: t('无访问权限') })[d.state] ||
   d.state;

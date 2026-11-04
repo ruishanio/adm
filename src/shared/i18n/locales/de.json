@@ -191,6 +191,8 @@
   "查找设备": "Geräte suchen",
   "备注名称…": "Umbenennen…",
   "复制设备标识": "Geräte-ID kopieren",
+  "断开连接": "Verbindung trennen",
+  "只能断开当前已连接的网络设备，请刷新列表后重试。": "Nur verbundene Netzwerkgeräte können getrennt werden. Aktualisieren Sie die Liste und versuchen Sie es erneut.",
   "从列表移除": "Aus Liste entfernen",
   "尚未发现设备": "Keine Geräte gefunden",
   "连接 USB，或添加网络设备": "Per USB verbinden oder Netzwerkgerät hinzufügen",

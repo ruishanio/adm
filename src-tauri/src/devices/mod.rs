@@ -5,12 +5,14 @@ use crate::{
 };
 mod admins;
 pub(crate) mod info;
+pub(crate) mod network;
 mod owner;
 
 /// 按业务提供 ADB 操作；调用方显式引入能力，底层客户端不反向依赖业务。
 pub(crate) trait DeviceOperations {
     fn details(&self, device: &Target) -> Result<Details>;
     fn connect(&self, address: &str) -> Result<String>;
+    fn disconnect(&self, device: &Target) -> Result<()>;
     fn pair(&self, address: &str, code: &str) -> Result<()>;
     fn check_owner(&self, device: &Target, name: &str) -> Result<OwnerCheck>;
     fn set_owner(&self, device: &Target, name: &str) -> Result<()>;
@@ -48,6 +50,24 @@ impl DeviceOperations for Adb {
             return Err("连接请求已发出，但设备未就绪；请确认调试授权后刷新。".into());
         }
         Ok(address)
+    }
+    fn disconnect(&self, device: &Target) -> Result<()> {
+        self.target(device)?;
+        // disconnect 是按地址执行的主机命令；执行前重新匹配传输编号，且绝不省略设备参数。
+        let connected = self.devices()?.into_iter().any(|d| {
+            d.network
+                && d.state == "device"
+                && d.serial == device.serial
+                && d.transport_id == device.transport_id
+        });
+        if !connected {
+            return Err("只能断开当前已连接的网络设备，请刷新列表后重试。".into());
+        }
+        let output = self.simple(&["disconnect", &device.serial])?;
+        if output.trim() != format!("disconnected {}", device.serial) {
+            return Err(friendly_error(&output));
+        }
+        Ok(())
     }
     fn pair(&self, address: &str, code: &str) -> Result<()> {
         let address = endpoint(address)?;

@@ -8,8 +8,8 @@ import { type Api, type DeviceFile } from '@/shared/api/types';
 import { targetKey } from '@/shared/utils/device';
 
 const devices = [
-  { serial: 'one', transportId: '1', state: 'device', model: 'One' },
-  { serial: 'two', transportId: '2', state: 'device', model: 'Two' },
+  { serial: 'one', transportId: '1', network: false, state: 'device', model: 'One' },
+  { serial: 'two', transportId: '2', network: false, state: 'device', model: 'Two' },
 ];
 const file: DeviceFile = { name: 'old.txt', path: '/sdcard/old.txt', type: 'file', size: 1, modified: 1 };
 const scopes: ReturnType<typeof effectScope>[] = [];

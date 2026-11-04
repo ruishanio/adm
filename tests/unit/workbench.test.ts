@@ -5,8 +5,8 @@ import { createWorkbench } from '@/app/workbench';
 import { type Api, type Snapshot } from '@/shared/api/types';
 import { targetKey } from '@/shared/utils/device';
 import { language, setLanguage } from '@/shared/i18n/index';
-const first = { serial: 'one', transportId: '1', model: '第一台', state: 'device' };
-const second = { serial: 'two', transportId: '2', model: '第二台', state: 'device' };
+const first = { serial: 'one', transportId: '1', model: '第一台', network: false, state: 'device' };
+const second = { serial: 'two', transportId: '2', model: '第二台', network: false, state: 'device' };
 let snapshot: Snapshot, api: Api;
 const scopes: ReturnType<typeof effectScope>[] = [];
 beforeEach(() => {
@@ -67,6 +67,25 @@ it('文件页切换设备等待信息读取后再读取新目录', async () => {
   await vi.waitFor(() => expect(w.files.state.files[0]?.name).toBe('two.txt'));
   w.devices.select(first);
   await vi.waitFor(() => expect(w.files.state.files[0]?.name).toBe('one.txt'));
+});
+it('合并后保留当前传输，失去该传输时只接回已核实的在线成员', async () => {
+  const mdns = { ...first, serial: 'adb-A._adb-tls-connect._tcp', network: true, networkBootId: 'boot-a' };
+  const ip = { ...mdns, serial: '10.0.0.2:5555', transportId: '20' };
+  snapshot.devices = [mdns];
+  const scope = effectScope();
+  scopes.push(scope);
+  const w = scope.run(() => createWorkbench(api))!;
+  await w.devices.refresh();
+  snapshot.devices = [mdns, ip, second];
+  await w.devices.refresh();
+  expect(w.devices.rows.value.map((row) => row.primary.serial)).toEqual([ip.serial, second.serial]);
+  expect(w.workspace.state.selected).toBe(targetKey(mdns));
+  snapshot.devices = [ip, second];
+  await w.devices.refresh();
+  expect(w.workspace.state.selected).toBe(targetKey(ip));
+  snapshot.devices = [{ ...ip, transportId: '99' }, second];
+  await w.devices.refresh();
+  expect(w.devices.device.value).toBeUndefined();
 });
 it('首次保存确定的语言，后续刷新不重新识别或覆盖手动选择', async () => {
   const w = await ready();

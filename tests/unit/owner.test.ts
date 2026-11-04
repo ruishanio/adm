@@ -10,7 +10,7 @@ import type { Api, OwnerRemovalCheck } from '@/shared/api/types';
 import { setLanguage } from '@/shared/i18n';
 
 const ADMIN = 'com.example.manager/com.example.manager.Admin';
-const target = { serial: 'one', transportId: '1', state: 'device', model: '测试设备' };
+const target = { serial: 'one', transportId: '1', network: false, state: 'device', model: '测试设备' };
 const cleanups: (() => void)[] = [];
 afterEach(() => {
   cleanups

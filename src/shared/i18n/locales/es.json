@@ -191,6 +191,8 @@
   "查找设备": "Buscar dispositivos",
   "备注名称…": "Renombrar…",
   "复制设备标识": "Copiar ID del dispositivo",
+  "断开连接": "Desconectar",
+  "只能断开当前已连接的网络设备，请刷新列表后重试。": "Solo se pueden desconectar dispositivos conectados por red. Actualiza la lista y vuelve a intentarlo.",
   "从列表移除": "Quitar de la lista",
   "尚未发现设备": "No se encontraron dispositivos",
   "连接 USB，或添加网络设备": "Conecte por USB o añada un dispositivo de red",

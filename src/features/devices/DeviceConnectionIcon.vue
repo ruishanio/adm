@@ -6,7 +6,7 @@ import type { Device } from '@/shared/api/types';
 const props = defineProps<{ device: Device }>();
 // 与设备连接方式的文字判定一致；网络调试不一定经过 Wi-Fi，因此使用通用网络图标。
 const icon = computed(() =>
-  props.device.serial.startsWith('emulator-') ? Monitor : props.device.serial.includes(':') ? Network : Cable,
+  props.device.network ? Network : props.device.serial.startsWith('emulator-') ? Monitor : Cable,
 );
 </script>
 

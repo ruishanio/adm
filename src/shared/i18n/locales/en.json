@@ -191,6 +191,8 @@
   "查找设备": "Search devices",
   "备注名称…": "Rename…",
   "复制设备标识": "Copy device ID",
+  "断开连接": "Disconnect",
+  "只能断开当前已连接的网络设备，请刷新列表后重试。": "Only a connected network device can be disconnected. Refresh the list and try again.",
   "从列表移除": "Remove from list",
   "尚未发现设备": "No devices found",
   "连接 USB，或添加网络设备": "Connect via USB or add a network device",

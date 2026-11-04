@@ -14,6 +14,9 @@ pub struct Device {
     pub transport_id: String,
     pub state: String,
     pub model: String,
+    pub network: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub network_boot_id: Option<String>,
 }
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]

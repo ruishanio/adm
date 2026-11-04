@@ -47,6 +47,7 @@ struct FakeState {
     users: String,
     accounts: String,
     transport: String,
+    extra_devices: String,
     version: String,
     pull_fail: bool,
     conflict: bool,
@@ -63,6 +64,7 @@ impl Default for FakeState {
             users: "UserInfo{0:Owner:13}".into(),
             accounts: "Accounts: 0".into(),
             transport: "42".into(),
+            extra_devices: String::new(),
             version: "42".into(),
             pull_fail: false,
             conflict: false,
@@ -85,8 +87,8 @@ impl Runner for Fake {
         let has = |value: &str| args.iter().any(|a| a == value);
         let out = if args[0] == "devices" {
             format!(
-                "emulator-5570 device model:SDK transport_id:{}",
-                s.transport
+                "emulator-5570 device model:SDK transport_id:{}\n{}",
+                s.transport, s.extra_devices
             )
         } else if has("device_policy") {
             format!(
@@ -122,6 +124,8 @@ impl Runner for Fake {
             format!("versionCode={}", s.version)
         } else if args[0] == "connect" {
             "failed to connect".into()
+        } else if args[0] == "disconnect" {
+            format!("disconnected {}", args[1])
         } else if args[0] == "pair" {
             assert_eq!(args, ["pair", "localhost:5555"]);
             assert_eq!(input, Some("123456"));
@@ -166,6 +170,39 @@ fn devices_keep_transport() {
     assert_eq!(list[0].transport_id, "42");
     assert_eq!(list[1].state, "unauthorized");
     assert_eq!(list[2].state, "offline");
+}
+#[test]
+fn disconnect_only_targets_the_current_network_transport() {
+    let (adb, runner) = fake();
+    let endpoint = "172.16.23.248:55566";
+    let mdns = "adb-ABC-XYZ._adb-tls-connect._tcp";
+    runner.0.lock().unwrap().extra_devices = format!(
+        "{endpoint} device transport_id:5\n{mdns} device transport_id:6\nusb:123 device usb:1-2 transport_id:7\n10.0.0.1:5555 offline transport_id:8"
+    );
+    for (serial, id, allowed) in [
+        (endpoint, "5", true),
+        (mdns, "6", true),
+        (endpoint, "99", false),
+        ("emulator-5570", "42", false),
+        ("usb:123", "7", false),
+        ("10.0.0.1:5555", "8", false),
+        ("", "5", false),
+    ] {
+        let target = Target {
+            serial: serial.into(),
+            transport_id: id.into(),
+        };
+        assert_eq!(adb.disconnect(&target).is_ok(), allowed, "{serial}@{id}");
+    }
+    let state = runner.0.lock().unwrap();
+    let calls: Vec<_> = state
+        .calls
+        .iter()
+        .filter(|args| args[0] == "disconnect")
+        .collect();
+    assert_eq!(calls.len(), 2);
+    assert_eq!(calls[0].as_slice(), ["disconnect", endpoint]);
+    assert_eq!(calls[1].as_slice(), ["disconnect", mdns]);
 }
 #[test]
 fn endpoint_rejects_unsafe_input() {
