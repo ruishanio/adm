@@ -188,17 +188,16 @@ fn parse_xml(data: &[u8]) -> Result<Element> {
                 let raw = r.u32(at + 8)?;
                 let value_type = data[at + 15];
                 let value = r.u32(at + 16)?;
-                let text = if raw != u32::MAX {
-                    string(&strings, raw)?
-                } else {
-                    match value_type {
-                        3 => string(&strings, value)?,
-                        4 => f32::from_bits(value).to_string(),
-                        0x1c..=0x1f => format!("#{value:08x}"),
-                        0x12 => (value != 0).to_string(),
-                        0x10 | 0x11 => value.to_string(),
-                        _ => format!("@0x{value:x}"),
-                    }
+                // 布尔值和资源引用使用系统读取的编译值，即使清单同时保留了原始文本。
+                let text = match value_type {
+                    0x12 => (value != 0).to_string(),
+                    0x01 => format!("@0x{value:x}"),
+                    _ if raw != u32::MAX => string(&strings, raw)?,
+                    3 => string(&strings, value)?,
+                    4 => f32::from_bits(value).to_string(),
+                    0x1c..=0x1f => format!("#{value:08x}"),
+                    0x10 | 0x11 => value.to_string(),
+                    _ => format!("@0x{value:x}"),
                 };
                 element.attributes.insert(
                     if ns.is_empty() {
@@ -240,9 +239,9 @@ fn parse_xml(data: &[u8]) -> Result<Element> {
 
 #[cfg(test)]
 pub fn parse_manifest(data: &[u8]) -> Result<Apk> {
-    manifest_info(&parse_xml(data)?)
+    manifest_info(&parse_xml(data)?, None)
 }
-fn manifest_info(root: &Element) -> Result<Apk> {
+fn manifest_info(root: &Element, resources: Option<&resources::Table<'_>>) -> Result<Apk> {
     if root.name != "manifest" {
         return Err(INVALID.into());
     }
@@ -258,7 +257,8 @@ fn manifest_info(root: &Element) -> Result<Apk> {
     }
     let number = |s: &str| s.parse::<u32>().unwrap_or(0) as u64;
     let mut admins = vec![];
-    if let Some(app) = root.children.iter().find(|c| c.name == "application") {
+    let application = root.children.iter().find(|c| c.name == "application");
+    if let Some(app) = application {
         for receiver in &app.children {
             if receiver.name == "receiver"
                 && receiver.attr("permission") == "android.permission.BIND_DEVICE_ADMIN"
@@ -290,14 +290,18 @@ fn manifest_info(root: &Element) -> Result<Apk> {
         .filter(|s| !s.is_empty())
         .unwrap_or("未声明")
         .into();
+    // 只认 application 的 android:testOnly；不根据调试签名、文件名或接收器数量推断。
+    let test_only = application.is_some_and(|app| {
+        let value = app.attr("testOnly");
+        value == "true"
+            || (value.starts_with('@')
+                && resources.and_then(|table| table.resolve(value)).as_deref() == Some("true"))
+    });
     Ok(Apk {
         id: String::new(),
         file_name: String::new(),
         package_name: pkg.clone(),
-        label: root
-            .children
-            .iter()
-            .find(|c| c.name == "application")
+        label: application
             .map(|app| app.attr("label"))
             .filter(|v| !v.is_empty() && !v.starts_with('@'))
             .map(str::to_owned),
@@ -311,6 +315,7 @@ fn manifest_info(root: &Element) -> Result<Apk> {
             | number(root.attr("versionCode")))
         .to_string(),
         minimum_sdk,
+        test_only,
         size: 0,
         admins,
     })
@@ -367,12 +372,12 @@ pub fn read_apk(path: &Path, cancel: &Cancel) -> Result<ApkRecord> {
         .map_err(|_| "无法解压 APK 清单。")?;
     drop(entry);
     let root = parse_xml(&data)?;
-    let mut info = manifest_info(&root)?;
     // 图标或名称资源缺失不影响合法 APK 的安装；所有预览均在本机读取，不向设备写入文件。
     let table_data = resources::read_entry(&mut zip, "resources.arsc", 32 * 1024 * 1024).ok();
     let table = table_data
         .as_deref()
         .and_then(|data| resources::Table::parse(data).ok());
+    let mut info = manifest_info(&root, table.as_ref())?;
     if let Some(app) = root.children.iter().find(|c| c.name == "application") {
         if let Some(table) = &table {
             info.label = table
@@ -405,6 +410,7 @@ mod preview_tests {
             Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/Fixtures/apk-preview/preview.apk");
         let apk = read_apk(&path, &cancellation()).unwrap();
         assert_eq!(apk.info.label.as_deref(), Some("ADM 预览测试"));
+        assert!(!apk.info.test_only);
         let icon = apk.info.icon.unwrap();
         assert!(icon.starts_with("data:image/svg+xml,"));
         assert!(icon.contains("%23%32%34%36%62%35%35%66%66"));

@@ -153,7 +153,7 @@ fn dedicated_application_management() {
     );
     let owner = adb.details(&target).unwrap().owner;
     let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        adb.install(&target, &apk.info, &apk.path, true).unwrap();
+        adb.install(&target, &apk.info, &apk.path).unwrap();
         assert!(adb
             .list_apps(&target)
             .unwrap()
@@ -304,7 +304,7 @@ fn dedicated_emulator() {
     let had_network = adb.devices().unwrap().iter().any(|d| d.serial == endpoint);
     // 无论断言是否成功都清理本次夹具；只有通过上面的无既存状态检查才进入此范围。
     let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        adb.install(&target, &apk.info, &apk.path, true).unwrap();
+        adb.install(&target, &apk.info, &apk.path).unwrap();
         assert!(
             adb.check_owner(&target, &apk.info.admins[0])
                 .unwrap()
@@ -331,7 +331,6 @@ fn dedicated_emulator() {
             },
             &apk.info,
             &apk.path,
-            true,
         )
         .unwrap();
         println!("通过：回环 TCP 连接与覆盖安装");

@@ -3,14 +3,14 @@ use std::path::Path;
 
 /// 按业务提供 ADB 操作；调用方显式引入能力，底层客户端不反向依赖业务。
 pub(crate) trait InstallOperations {
-    fn install(&self, device: &Target, apk: &Apk, path: &Path, allow_test: bool) -> Result<()>;
+    fn install(&self, device: &Target, apk: &Apk, path: &Path) -> Result<()>;
 }
 impl InstallOperations for Adb {
-    fn install(&self, device: &Target, apk: &Apk, path: &Path, allow_test: bool) -> Result<()> {
+    fn install(&self, device: &Target, apk: &Apk, path: &Path) -> Result<()> {
         self.ensure_online(device)?;
         let mut args = self.target(device)?;
         args.extend(["install".into(), "-r".into()]);
-        if allow_test {
+        if apk.test_only {
             args.push("-t".into());
         }
         args.extend([

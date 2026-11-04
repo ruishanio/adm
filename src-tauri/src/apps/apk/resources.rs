@@ -128,6 +128,7 @@ impl<'a> Table<'a> {
         for (_, kind, data) in values.into_iter().take(256) {
             let decoded = match kind {
                 1 => self.resolve_inner(&format!("@0x{data:x}"), stack, budget),
+                0x12 => vec![(data != 0).to_string()],
                 3 => self
                     .strings
                     .get(data as usize)

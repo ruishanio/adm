@@ -7,7 +7,6 @@ import type { FeatureContext } from '@/shared/composables/workspace';
 export function installState() {
   return {
     apk: undefined as Apk | undefined,
-    allowTest: false,
     ownerAfter: false,
     adminComponent: '',
     dragging: false,
@@ -24,7 +23,7 @@ export function createInstall(
   const state = reactive(installState());
   let session = 0;
   function reset() {
-    // 每次打开都是独立安装会话，关闭后不沿用文件、测试安装选项或所有者配置意向。
+    // 每次打开都是独立安装会话，关闭后不沿用文件或所有者配置意向。
     session++;
     Object.assign(state, installState());
   }
@@ -109,7 +108,7 @@ export function createInstall(
       adminComponent = state.ownerAfter ? state.adminComponent : undefined,
       pending = session;
     await run(t('正在安装到 {name}', { name: title.value }), async () => {
-      await api.install(target, apk.id, state.allowTest);
+      await api.install(target, apk.id);
       if (pending !== session || workspace.selected !== targetKey(target) || !online.value) return;
       workspace.modal = null;
       await hooks.installed(target, adminComponent);

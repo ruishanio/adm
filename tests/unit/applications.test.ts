@@ -99,6 +99,7 @@ async function setup() {
       versionName: '2.0',
       versionCode: '42',
       minimumSdk: '23',
+      testOnly: false,
       admins: [],
     })),
     dropApk: vi.fn(async () => ({
@@ -109,6 +110,7 @@ async function setup() {
       versionName: '2.0',
       versionCode: '42',
       minimumSdk: '23',
+      testOnly: false,
       admins: [],
     })),
     install: vi.fn(async () => {}),
@@ -392,19 +394,16 @@ it('安装入口打开弹窗，取消不安装且保留列表搜索，关闭后�
 it('同次会话取消文件选择保留当前文件，关闭后重开清空文件、选项和错误', async () => {
   const { w, api } = await setup();
   await w.install.chooseApk();
-  w.install.state.allowTest = true;
   w.install.state.ownerAfter = true;
   vi.mocked(api.chooseApk).mockResolvedValueOnce(null);
   await w.install.chooseApk();
   expect(w.install.state.apk?.fileName).toBe('test.apk');
-  expect(w.install.state.allowTest).toBe(true);
   w.workspace.state.notice = { error: true, text: '上次安装失败' };
   w.install.closeInstall();
   expect(w.install.state.apk).toBeUndefined();
   w.install.openInstall();
   await flushPromises();
   expect(document.querySelector<HTMLInputElement>('#install-apk-file')?.value).toBe('');
-  expect(w.install.state.allowTest).toBe(false);
   expect(w.install.state.ownerAfter).toBe(false);
   expect(w.workspace.state.notice).toBeNull();
   expect(api.install).not.toHaveBeenCalled();
@@ -482,7 +481,7 @@ it('安装时不能关闭弹窗，可停止等待；失败保留安装包，重�
   await w.install.install();
   await flushPromises();
   expect(w.workspace.state.modal).toBeNull();
-  expect(api.install).toHaveBeenLastCalledWith(first, 'apk', false);
+  expect(api.install).toHaveBeenLastCalledWith(first, 'apk');
   expect(api.listApps).toHaveBeenCalledTimes(before + 1);
   expect(w.apps.state.appsLoaded).toBe(true);
   expect(w.workspace.state.notice?.text).toContain('安装成功');

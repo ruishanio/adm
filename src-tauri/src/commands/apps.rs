@@ -46,7 +46,7 @@ impl AppState {
                 encoded(self.inspect(path, &cancel)?)
             }
             "install" => {
-                let (target, id, allow_test): (Target, String, bool) = decoded(args)?;
+                let (target, id): (Target, String) = decoded(args)?;
                 let record = self.apk.lock().unwrap().clone().ok_or("请先选择安装包。")?;
                 if record.info.id != id {
                     return Err("安装包已变化，请重新选择。".into());
@@ -55,7 +55,7 @@ impl AppState {
                     return Err("APK 文件内容已变化，请重新选择并核对。".into());
                 }
                 self.adb(cancel)?
-                    .install(&target, &record.info, &record.path, allow_test)?;
+                    .install(&target, &record.info, &record.path)?;
                 Ok(Value::Null)
             }
             "listApps" => {

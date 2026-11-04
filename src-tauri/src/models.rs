@@ -85,6 +85,7 @@ pub struct Apk {
     pub version_name: String,
     pub version_code: String,
     pub minimum_sdk: String,
+    pub test_only: bool,
     pub size: u64,
     pub admins: Vec<String>,
 }

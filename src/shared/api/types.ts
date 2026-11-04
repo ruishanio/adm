@@ -66,6 +66,7 @@ export interface Apk {
   versionName: string;
   versionCode: string;
   minimumSdk: string;
+  testOnly: boolean;
   size: number;
   admins: string[];
 }
@@ -206,7 +207,7 @@ export interface Api {
   pair(endpoint: string, code: string): Promise<void>;
   chooseApk(): Promise<Apk | null>;
   dropApk(path: string): Promise<Apk>;
-  install(target: Target, apkId: string, allowTest: boolean): Promise<void>;
+  install(target: Target, apkId: string): Promise<void>;
   listApps(target: Target): Promise<InstalledApp[]>;
   appDetails(target: Target, packageName: string): Promise<AppDetails>;
   appIcons(target: Target, packages: string[]): Promise<Record<string, string>>;

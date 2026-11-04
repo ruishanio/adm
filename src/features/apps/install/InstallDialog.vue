@@ -125,14 +125,6 @@ const properties = computed(() => [
         <h3>{{ t('高级选项') }}</h3>
         <label class="checkbox">
           <Checkbox
-            v-model="installFeature.state.allowTest"
-            :disabled="!!s.busy"
-            :aria-label="t('允许安装测试包')"
-          />
-          {{ t('允许安装测试包') }} <span class="muted">(testOnly)</span>
-        </label>
-        <label class="checkbox">
-          <Checkbox
             v-model="installFeature.state.ownerAfter"
             :disabled="!!s.busy || !apk?.admins.length"
             :aria-label="t('安装后配置设备所有者')"

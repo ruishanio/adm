@@ -32,6 +32,7 @@ fn apk() -> Apk {
         version_name: "1.0".into(),
         version_code: "42".into(),
         minimum_sdk: "23".into(),
+        test_only: false,
         size: 123,
         admins: vec![ADMIN.into()],
     }
@@ -237,6 +238,7 @@ fn real_binary_manifest() {
     assert_eq!(info.version_code, "42");
     assert_eq!(info.version_name, "1.0");
     assert_eq!(info.minimum_sdk, "23");
+    assert!(info.test_only);
     assert_eq!(
         info.admins,
         ["com.ruinext.androidtool.fixture/com.ruinext.androidtool.fixture.AdminReceiver"]
@@ -276,7 +278,7 @@ fn stale_transport_never_installs() {
     let (adb, f) = fake();
     f.0.lock().unwrap().transport = "99".into();
     assert!(adb
-        .install(&target(), &apk(), Path::new("test.apk"), false)
+        .install(&target(), &apk(), Path::new("test.apk"))
         .unwrap_err()
         .contains("重连"));
     assert!(!f
@@ -290,7 +292,8 @@ fn stale_transport_never_installs() {
 #[test]
 fn install_binds_transport_and_reads_version() {
     let (adb, f) = fake();
-    adb.install(&target(), &apk(), Path::new("test.apk"), true)
+    let test_apk = parse_manifest(MANIFEST).unwrap();
+    adb.install(&target(), &test_apk, Path::new("test.apk"))
         .unwrap();
     assert!(f
         .0
@@ -299,9 +302,18 @@ fn install_binds_transport_and_reads_version() {
         .calls
         .iter()
         .any(|a| a == &["-t", "42", "install", "-r", "-t", "--user", "0", "test.apk"]));
+    adb.install(&target(), &apk(), Path::new("normal.apk"))
+        .unwrap();
+    assert!(f
+        .0
+        .lock()
+        .unwrap()
+        .calls
+        .iter()
+        .any(|a| a == &["-t", "42", "install", "-r", "--user", "0", "normal.apk"]));
     f.0.lock().unwrap().version = "41".into();
     assert!(adb
-        .install(&target(), &apk(), Path::new("test.apk"), false)
+        .install(&target(), &apk(), Path::new("test.apk"))
         .unwrap_err()
         .contains("回读版本不一致"));
 }

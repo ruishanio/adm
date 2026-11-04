@@ -361,6 +361,7 @@ it('单个安装包组件自动拆分并展开相对类名，修改字段撤销�
     versionName: '1',
     versionCode: '1',
     minimumSdk: '23',
+    testOnly: false,
     size: 100,
     admins: ['com.example.manager/.Admin'],
   };
@@ -429,6 +430,7 @@ it('多个安装包组件可切换并填充两个字段，同时撤销上一次�
     versionName: '1',
     versionCode: '1',
     minimumSdk: '23',
+    testOnly: false,
     size: 100,
     admins: [ADMIN, 'com.example.manager/.OtherAdmin'],
   };

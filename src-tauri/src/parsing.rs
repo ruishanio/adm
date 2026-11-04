@@ -204,7 +204,7 @@ pub fn friendly_error(text: &str) -> String {
             "APK 不支持目标设备的 CPU 架构。",
         ),
         ("INSTALL_FAILED_OLDER_SDK", "Android 版本低于 APK 要求。"),
-        ("INSTALL_FAILED_TEST_ONLY", "请在安装选项中允许测试包。"),
+        ("INSTALL_FAILED_TEST_ONLY", "设备拒绝安装此测试包。"),
         (
             "INSTALL_FAILED_USER_RESTRICTED",
             "设备限制阻止安装，请检查设备提示。",
