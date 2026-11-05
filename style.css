@@ -117,7 +117,8 @@ h3 { font-weight: 600; font-size: 16px; letter-spacing: -.2px; }
 .download-version { color: #64758d; font-size: 13px; font-weight: 500; line-height: 1.5; letter-spacing: .2px; font-variant-numeric: tabular-nums; }
 .download-version:hover, .download-version:focus-visible { text-decoration: underline; }
 .download-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; }
-.download-platform { position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: center; gap: 20px 14px; padding-top: 4px; }
+/* 平台说明行数不同时，标题与底部下载按钮仍保持对齐。 */
+.download-platform { position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr); grid-template-rows: 1fr auto; align-items: start; gap: 20px 14px; padding-top: 4px; }
 .download-platform + .download-platform::before { content: ''; position: absolute; top: 4px; bottom: 0; left: -16px; width: 1px; background: #cdd8e7; pointer-events: none; }
 .platform-icon { width: 26px; height: 26px; color: #536b8a; }
 .download-platform h3 { font-size: 19px; font-weight: 550; letter-spacing: -.2px; line-height: 1.4; }
