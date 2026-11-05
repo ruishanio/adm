@@ -195,6 +195,11 @@ def smoke_install(platform, arch):
             subprocess.run([sys.executable, str(ROOT / "scripts/package_dmg.py"),
                             "verify", str(mount), f"{name}.app"], check=True, timeout=120)
             subprocess.run(["codesign", "--verify", "--deep", "--strict", str(app)], check=True)
+            # 正式打包任务的镜像必须携带离线票据，挂载后仍能通过 Gatekeeper。
+            if os.environ.get("ADM_REQUIRE_NOTARIZATION") == "true":
+                subprocess.run(["xcrun", "stapler", "validate", str(installer)], check=True)
+                subprocess.run(["xcrun", "stapler", "validate", str(app)], check=True)
+                subprocess.run(["spctl", "--assess", "--type", "execute", str(app)], check=True)
         finally:
             subprocess.run(["hdiutil", "detach", str(mount)], check=True, timeout=60)
         print("DMG 完整性、只读挂载、应用内容、签名和 Applications 快捷方式验证通过", flush=True)

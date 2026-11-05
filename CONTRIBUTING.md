@@ -72,6 +72,25 @@ The packaging script prepares resources, builds the application, and verifies th
 
 [CI](.github/workflows/ci.yml) runs checks and tests on macOS and Windows. [Package](.github/workflows/package.yml) builds both platforms when a version tag is pushed. A release is published only after both platforms pass distribution and installation verification. Public assets contain an installer and ZIP for each platform. Build records and checksums are stored in the `release-records-<tag>` Actions artifact.
 
+Package also supports **Run workflow** for a build-only validation. Manual runs upload packages to Actions artifacts and never publish a Release, even when a tag is selected.
+
+### macOS signing and notarization
+
+Configure these repository **Actions Secrets** before running Package:
+
+| Secret | Value |
+| --- | --- |
+| `APPLE_CERTIFICATE` | Base64-encoded Developer ID Application `.p12`, including the private key and certificate chain |
+| `APPLE_CERTIFICATE_PASSWORD` | Password used to export the `.p12` |
+| `APPLE_SIGNING_IDENTITY` | Full `Developer ID Application: Organization (TEAMID)` identity |
+| `APPLE_ID` | Apple Account email |
+| `APPLE_PASSWORD` | Apple **app-specific password**, not the account password |
+| `APPLE_TEAM_ID` | Developer team ID matching the certificate |
+
+The macOS job imports credentials into a temporary keychain, signs ADM and bundled native tools with a secure timestamp and hardened runtime, notarizes the application, and staples its ticket before creating the final ZIP and DMG. The DMG is then signed, notarized, and stapled separately. Gatekeeper, ZIP extraction, and DMG mounting are checked before upload. Missing credentials, rejected submissions, and timeouts fail the job; no unsigned fallback is published. The temporary keychain is removed on exit, and signing material is never included in artifacts. Notarization reports are retained in `notarization-<run-id>-<attempt>` artifacts for diagnosis.
+
+Ordinary CI/PR checks and Windows builds do not receive these secrets. Local `npm run package:mac` still uses ad-hoc signing; to run the release signing stage locally, securely provide the six environment variables above and run `python3 scripts/notarize_macos.py`, then `python3 scripts/package_ci.py verify mac arm64` to refresh checksums. Do not put secrets in shell history, tracked files, or logs. See [Apple's notarization workflow](https://developer.apple.com/documentation/security/customizing-the-notarization-workflow).
+
 ## Project structure
 
 | Path                            | Responsibility                                                            |

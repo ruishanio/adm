@@ -1,6 +1,7 @@
 name: Package
 
 on:
+  workflow_dispatch:
   push:
     tags: ['v*']
     branches: ['release/**']
@@ -16,7 +17,7 @@ jobs:
   package:
     name: ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 45
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
@@ -30,10 +31,22 @@ jobs:
             platform: win
             arch: x64
     steps:
-      - name: 检出 tag
+      - name: 检出构建版本
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
+
+      # Secrets 只注入 macOS 的检查/签名步骤，PR 检查和 Windows 构建不接触凭据。
+      - name: 检查 macOS 签名凭据
+        if: matrix.platform == 'mac'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: python3 scripts/notarize_macos.py --check-credentials
 
       - name: 配置 Node.js 与 npm 缓存
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
@@ -70,10 +83,24 @@ jobs:
       - name: 生成应用分发包
         run: node scripts/package.mjs ${{ matrix.platform }}
 
+      - name: macOS 正式签名与 Apple 公证
+        if: matrix.platform == 'mac'
+        timeout-minutes: 50
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: python3 scripts/notarize_macos.py
+
       - name: 验证分发包并生成校验清单
         run: python scripts/package_ci.py verify ${{ matrix.platform }} ${{ matrix.arch }}
 
       - name: 验证安装包内容与安装流程
+        env:
+          ADM_REQUIRE_NOTARIZATION: ${{ matrix.platform == 'mac' && 'true' || 'false' }}
         run: python scripts/package_ci.py smoke-install ${{ matrix.platform }} ${{ matrix.arch }}
 
       - name: 核对 Windows 二进制运行库依赖
@@ -82,7 +109,7 @@ jobs:
 
       # 应用 ZIP 保留内部权限和符号链接；同平台安装包及校验清单一并上传。
       - name: 上传可下载产物
-        if: github.ref_type == 'tag'
+        if: github.ref_type == 'tag' || github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: ADM-${{ github.ref_name }}-${{ matrix.target }}
@@ -96,10 +123,20 @@ jobs:
           compression-level: 0
           retention-days: 30
 
+      - name: 保存 macOS 公证诊断
+        if: always() && matrix.platform == 'mac'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: notarization-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/notarization/*.json
+          if-no-files-found: ignore
+          retention-days: 30
+
   release:
     name: 发布 GitHub Release
     needs: package
-    if: github.ref_type == 'tag'
+    # 手动验证（包括选择 tag）只生成 Actions 附件，不修改 Release。
+    if: github.event_name == 'push' && github.ref_type == 'tag'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     # 仅发布任务拥有写权限；两个平台全部成功才会进入此任务。

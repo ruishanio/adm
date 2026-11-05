@@ -69,6 +69,25 @@ npm run package:win
 
 [CI](../../../.github/workflows/ci.yml) 在 macOS 与 Windows 上执行检查和测试。[Package](../../../.github/workflows/package.yml) 在版本 tag 推送后构建两个平台；分发包与安装验证全部通过后发布 Release。公开附件为两平台的安装包与 ZIP，构建记录和校验清单保存于 Actions 的 `release-records-<tag>` Artifact。
 
+Package 也支持手动 **Run workflow** 验证构建。手动运行只上传 Actions 构建附件，即使选择 tag 也不会发布 Release。
+
+### macOS 签名与公证
+
+运行 Package 前，在仓库 **Actions Secrets** 中配置：
+
+| Secret | 内容 |
+| --- | --- |
+| `APPLE_CERTIFICATE` | Developer ID Application `.p12` 的 Base64，包含私钥和证书链 |
+| `APPLE_CERTIFICATE_PASSWORD` | 导出 `.p12` 时设置的密码 |
+| `APPLE_SIGNING_IDENTITY` | 完整的 `Developer ID Application: 组织名称 (TEAMID)` 身份 |
+| `APPLE_ID` | Apple 账户邮箱 |
+| `APPLE_PASSWORD` | Apple **App 专用密码**，不是账户登录密码 |
+| `APPLE_TEAM_ID` | 与证书一致的开发者团队 ID |
+
+macOS 任务会把凭据导入临时钥匙串，为 ADM 和内置原生工具添加安全时间戳及强化运行时签名，再公证应用、附加票据并生成最终 ZIP 和 DMG；DMG 会独立签名、公证及附加票据。上传前检查 Gatekeeper、ZIP 解压和 DMG 挂载结果。缺少凭据、公证拒绝或超时会直接失败，不会发布未公证的替代包。退出时清理临时钥匙串，签名材料不进入构建附件；公证诊断保存在 `notarization-<run-id>-<attempt>` 附件中。
+
+普通 CI/PR 检查和 Windows 构建不接触上述 Secrets。本地 `npm run package:mac` 仍使用临时签名；需要正式签名时，安全注入上述六项环境变量后运行 `python3 scripts/notarize_macos.py`，最后运行 `python3 scripts/package_ci.py verify mac arm64` 更新校验清单。不要将密码写入 shell 历史、跟踪文件或日志。参见 [Apple 公证流程](https://developer.apple.com/documentation/security/customizing-the-notarization-workflow)。
+
 ## 目录结构
 
 ```text
