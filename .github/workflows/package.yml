@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+# Windows Runner 默认编码可能无法输出中文诊断，与 macOS 统一使用 UTF-8。
+env:
+  PYTHONUTF8: '1'
+
 concurrency:
   group: package-${{ github.ref }}
   cancel-in-progress: ${{ github.ref_type != 'tag' }}

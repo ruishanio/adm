@@ -10,6 +10,10 @@ on:
 permissions:
   contents: read
 
+# Windows Runner 默认编码可能无法输出中文诊断，与 macOS 统一使用 UTF-8。
+env:
+  PYTHONUTF8: '1'
+
 # 同一分支或 PR 的新提交替换旧检查，两个平台仍分别汇报结果。
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
