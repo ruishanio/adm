@@ -12,6 +12,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+import time
 import urllib.request
 import zipfile
 
@@ -67,7 +68,7 @@ def prepare(platform):
     print(f"已校验 {tag}，ADB {SDK_VERSION}: {adb_directory}", flush=True)
 
 
-def verify(platform, arch):
+def verify(platform, arch, with_update=False):
     """验证最终产物的完整性、必需文件和机器架构，输出 SHA-256 与构建来源。"""
     name = METADATA["productName"]
     filename = f"{METADATA['shortName']}-{METADATA['version']}-{platform}-{arch}.zip"
@@ -90,6 +91,7 @@ def verify(platform, arch):
         for part in [adb_name, "NOTICE.txt", "source.properties"]
     ]
     if platform == "win":
+        required += ["ADM-portable.txt"]
         required += [
             str(Path(resources) / "platform-tools" / part).replace("\\", "/")
             for part in ["AdbWinApi.dll", "AdbWinUsbApi.dll"]
@@ -142,10 +144,16 @@ def verify(platform, arch):
                 raise ValueError("DMG 文件格式不正确")
         elif binary.read(2) != b"MZ":
             raise ValueError("Windows 安装程序不是 EXE 文件")
+    paths = [archive_path, installer]
+    if with_update:
+        update = installer if platform == "win" else ROOT / "release" / filename.replace(".zip", ".app.tar.gz")
+        if platform == "mac":
+            paths.append(update)
+        paths.append(Path(str(update) + ".sig"))
     files = [
         {"file": path.name, "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
          "size": path.stat().st_size}
-        for path in [archive_path, installer]
+        for path in paths
     ]
     (ROOT / "release/SHA256SUMS.txt").write_text(
         "".join(f"{entry['sha256']}  {entry['file']}\n" for entry in files), encoding="utf-8"
@@ -163,6 +171,29 @@ def verify(platform, arch):
     }
     (ROOT / "release/build-info.json").write_text(json.dumps(info, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(info), flush=True)
+
+
+def verify_windows_upgrade(install_dir, original, report):
+    """让真实更新器接管临时安装，等待主程序替换并自检；失败则阻止 Release 发布。"""
+    executable = install_dir / "adm.exe"
+    expected = (original / "adm.exe").read_bytes()
+    executable.write_bytes(b"ADM previous executable fixture")
+    report.unlink(missing_ok=True)
+    subprocess.run([sys.executable, str(ROOT / "scripts/updater_ci.py"), "test", "win"],
+                   check=True, env={**os.environ, "ADM_TEST_NSIS_DIR": str(install_dir)}, timeout=600)
+    # NSIS 在 updater 退出后异步完成；读取到完整的新文件并能正常启动才算成功。
+    deadline = time.monotonic() + 120
+    while time.monotonic() < deadline:
+        try:
+            if executable.read_bytes() == expected:
+                subprocess.run([str(executable), "--adm-self-check", str(report)], check=True, timeout=30)
+                if json.loads(report.read_text(encoding="utf-8"))["version"] != METADATA["version"]:
+                    raise ValueError("Windows 更新后的版本错误")
+                return
+        except (OSError, subprocess.CalledProcessError):
+            pass
+        time.sleep(0.5)
+    raise ValueError("Windows 更新后的主程序未就绪")
 
 
 def smoke_install(platform, arch):
@@ -219,6 +250,10 @@ def smoke_install(platform, arch):
                 subprocess.run([str(executable), "--adm-self-check", str(report)], check=True, timeout=30)
                 if json.loads(report.read_text(encoding="utf-8"))["version"] != METADATA["version"]:
                     raise ValueError("安装后的主程序版本错误")
+                if (install_dir / "ADM-portable.txt").exists():
+                    raise ValueError("安装版错误地携带便携版标记")
+                # 在临时安装目录模拟旧主程序，实际走 updater 的 NSIS /UPDATE 交接。
+                verify_windows_upgrade(install_dir, original, report)
                 if not uninstaller.is_file():
                     raise ValueError("安装后缺少卸载程序")
                 subprocess.run([str(install_dir / "platform-tools/adb.exe"), "version"], check=True)
@@ -236,6 +271,7 @@ if __name__ == "__main__":
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--with-update", action="store_true")
     parser.add_argument("action", choices=["prepare", "verify", "smoke-install"])
     parser.add_argument("platform", choices=["mac", "win"])
     parser.add_argument("arch", choices=["arm64", "x64"])
@@ -245,6 +281,6 @@ if __name__ == "__main__":
     if args.action == "prepare":
         prepare(args.platform)
     elif args.action == "verify":
-        verify(args.platform, args.arch)
+        verify(args.platform, args.arch, args.with_update)
     else:
         smoke_install(args.platform, args.arch)

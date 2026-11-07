@@ -18,7 +18,7 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def prepare_assets(root, downloads, output, tag, commit):
+def prepare_assets(root, downloads, output, tag, commit, repository):
     """校验版本、提交和两平台文件，再汇总到新目录；返回可上传附件路径列表。"""
     metadata = json.loads((root / "package.json").read_text(encoding="utf-8"))
     version = metadata["version"]
@@ -26,6 +26,9 @@ def prepare_assets(root, downloads, output, tag, commit):
         raise ValueError("发布 tag 必须匹配 package.json 版本。")
     if not re.fullmatch(r"[0-9a-f]{40}", commit):
         raise ValueError("缺少有效的构建提交 SHA。")
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository):
+        raise ValueError("更新清单的仓库名称无效。")
+    platforms = {}
     copies = []
     public_names = set()
     for platform, arch, installer in [("mac", "arm64", ".dmg"), ("win", "x64", "-setup.exe")]:
@@ -43,8 +46,12 @@ def prepare_assets(root, downloads, output, tag, commit):
         prefix = f"{metadata['shortName']}-{version}-{target}"
         names = {prefix + ".zip", prefix + installer}
         public_names.update(names)
+        payload = prefix + (".app.tar.gz" if platform == "mac" else installer)
+        public_names.add(payload)
+        signature = payload + ".sig"
+        expected_files = names | {payload, signature}
         entries = info.get("files", [])
-        if len(entries) != 2 or {entry["file"] for entry in entries} != names:
+        if len(entries) != len(expected_files) or {entry["file"] for entry in entries} != expected_files:
             raise ValueError(f"{target} 缺少安装包或便携包，或包含意外文件。")
         sums = (directory / "SHA256SUMS.txt").read_text(encoding="utf-8").splitlines()
         if sorted(sums) != sorted(f"{entry['sha256']}  {entry['file']}" for entry in entries):
@@ -55,17 +62,32 @@ def prepare_assets(root, downloads, output, tag, commit):
                 raise ValueError(f"文件大小或类型不正确：{path.name}")
             if digest(path) != entry["sha256"]:
                 raise ValueError(f"SHA-256 校验失败：{path.name}")
-            copies.append((path, path.name))
+            if path.name == signature:
+                value = path.read_text(encoding="ascii").strip()
+                if not value or not re.fullmatch(r"[A-Za-z0-9+/]+={0,2}", value):
+                    raise ValueError(f"更新签名无效：{signature}")
+                platforms["darwin-aarch64" if platform == "mac" else "windows-x86_64"] = {
+                    "url": f"https://github.com/{repository}/releases/download/{tag}/{payload}", "signature": value,
+                }
+            else:
+                copies.append((path, path.name))
         # 构建信息按平台命名，防止下载合并时覆盖另一个平台的来源信息。
         copies.append((info_path, f"build-info-{target}.json"))
     # 全部输入验证后再创建目录，不将缺失平台或旧目录残留当作可发布附件。
     output.mkdir(parents=True, exist_ok=False)
     for source, name in copies:
         shutil.copyfile(source, output / name)
+    # 使用带 tag 的不可变下载地址；latest 只用于发现清单，避免跨版本下载。
+    manifest = {"version": version, "platforms": platforms}
+    notes = root / ".github/release-notes" / f"{tag}.md"
+    if notes.is_file():
+        manifest["notes"] = notes.read_text(encoding="utf-8").replace("{{commit}}", commit).strip()
+    (output / "latest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    public_names.add("latest.json")
     assets = sorted(output.iterdir())
     sums_path = output / "SHA256SUMS.txt"
     sums_path.write_text("".join(f"{digest(path)}  {path.name}\n" for path in assets), encoding="utf-8")
-    # 构建信息和汇总校验清单保留在 CI；Release 只公开已验证的安装包与 ZIP。
+    # Release 公开四个安装/便携包、macOS 更新包与清单，构建记录保留在 Actions。
     return [path for path in assets if path.name in public_names]
 
 
@@ -118,7 +140,7 @@ def publish(repository, tag, commit, assets):
             "- macOS Apple Silicon：下载 `.dmg` 安装，或使用应用 ZIP。\n"
             "- Windows x64：下载 `-setup.exe` 安装，或使用便携 ZIP。\n"
             "- 附件旁可查看 SHA-256；构建记录和校验清单保留在 Actions 产物中。\n\n"
-            "macOS 使用 ad-hoc 签名，尚未公证；Windows 尚未代码签名。\n\n"
+            "macOS 版已通过 Developer ID 签名与 Apple 公证。Windows 更新包通过 ADM 更新签名校验，安装程序尚未使用 Authenticode 代码签名。\n\n"
             f"构建提交：`{commit}`\n", encoding="utf-8",
         )
         gh("release", "create", tag, "--repo", repository, "--verify-tag", "--draft",
@@ -151,7 +173,7 @@ def main():
     tag, commit = os.environ.get("GITHUB_REF_NAME", ""), os.environ.get("GITHUB_SHA", "")
     if os.environ.get("GITHUB_REF_TYPE") != "tag":
         raise ValueError("仅允许为已有 tag 汇总发布产物。")
-    assets = prepare_assets(ROOT, args.artifacts, args.output, tag, commit)
+    assets = prepare_assets(ROOT, args.artifacts, args.output, tag, commit, os.environ["GITHUB_REPOSITORY"])
     print("附件已验证：\n" + "\n".join(path.name for path in assets), flush=True)
     if args.publish:
         url = publish(os.environ["GITHUB_REPOSITORY"], tag, commit, assets)

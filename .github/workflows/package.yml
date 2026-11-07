@@ -40,7 +40,7 @@ jobs:
         with:
           persist-credentials: false
 
-      # Secrets 只注入 macOS 的检查/签名步骤，PR 检查和 Windows 构建不接触凭据。
+      # Apple 凭据仅注入 macOS 检查和公证步骤；更新签名密钥只注入最终更新包签名步骤。
       - name: 检查 macOS 签名凭据
         if: matrix.platform == 'mac'
         env:
@@ -99,8 +99,19 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: python3 scripts/notarize_macos.py
 
+      - name: 签名最终更新包
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: python scripts/updater_ci.py sign ${{ matrix.platform }}
+
+      - name: 测试已签名的 macOS 更新与篡改拒绝
+        if: matrix.platform == 'mac'
+        env:
+          ADM_REQUIRE_NOTARIZATION: ${{ matrix.platform == 'mac' && 'true' || 'false' }}
+        run: python scripts/updater_ci.py test ${{ matrix.platform }}
+
       - name: 验证分发包并生成校验清单
-        run: python scripts/package_ci.py verify ${{ matrix.platform }} ${{ matrix.arch }}
+        run: python scripts/package_ci.py verify ${{ matrix.platform }} ${{ matrix.arch }} --with-update
 
       - name: 验证安装包内容与安装流程
         env:
@@ -121,6 +132,8 @@ jobs:
             release/ADM-*.zip
             release/ADM-*.dmg
             release/ADM-*-setup.exe
+            release/ADM-*.app.tar.gz
+            release/ADM-*.sig
             release/SHA256SUMS.txt
             release/build-info.json
           if-no-files-found: error

@@ -32,9 +32,11 @@ class ReleaseTests(unittest.TestCase):
             directory.mkdir(parents=True)
             self.directories.append(directory)
             files = []
-            for suffix in [".zip", installer]:
+            payload = ".app.tar.gz" if platform == "mac" else installer
+            suffixes = [".zip", installer] + ([".app.tar.gz"] if platform == "mac" else []) + [payload + ".sig"]
+            for suffix in suffixes:
                 path = directory / f"ADM-0.1.0-{target}{suffix}"
-                path.write_bytes(f"{target}{suffix}".encode())
+                path.write_bytes(b"dGVzdA==" if suffix.endswith(".sig") else f"{target}{suffix}".encode())
                 files.append({"file": path.name, "size": path.stat().st_size, "sha256": release.digest(path)})
             (directory / "build-info.json").write_text(json.dumps({
                 "product": "ADM", "framework": "Tauri 2", "version": "0.1.0", "tag": TAG,
@@ -45,7 +47,7 @@ class ReleaseTests(unittest.TestCase):
             )
 
     def prepare(self):
-        return release.prepare_assets(self.root, self.downloads, self.output, TAG, COMMIT)
+        return release.prepare_assets(self.root, self.downloads, self.output, TAG, COMMIT, REPOSITORY)
 
     def remote(self, assets, draft=True):
         return {"html_url": URL, "draft": draft, "assets": [
@@ -53,16 +55,25 @@ class ReleaseTests(unittest.TestCase):
              "state": "uploaded", "digest": f"sha256:{release.digest(path)}"} for path in assets
         ]}
 
-    def test_only_packages_are_published_and_audit_files_stay_in_ci(self):
+    def test_manifest_matches_verified_packages_and_audit_files_stay_in_ci(self):
         assets = self.prepare()
         self.assertEqual({path.name for path in assets}, {
             "ADM-0.1.0-mac-arm64.dmg", "ADM-0.1.0-mac-arm64.zip",
             "ADM-0.1.0-win-x64-setup.exe", "ADM-0.1.0-win-x64.zip",
+            "ADM-0.1.0-mac-arm64.app.tar.gz", "latest.json",
         })
         for target in ["mac-arm64", "win-x64"]:
             self.assertTrue((self.output / f"build-info-{target}.json").is_file())
         lines = (self.output / "SHA256SUMS.txt").read_text().splitlines()
-        self.assertEqual(len(lines), 6)
+        manifest = json.loads((self.output / "latest.json").read_text())
+        self.assertEqual(manifest["version"], "0.1.0")
+        for target, asset in [("darwin-aarch64", "ADM-0.1.0-mac-arm64.app.tar.gz"),
+                              ("windows-x86_64", "ADM-0.1.0-win-x64-setup.exe")]:
+            self.assertEqual(manifest["platforms"][target], {
+                "url": f"https://github.com/{REPOSITORY}/releases/download/{TAG}/{asset}",
+                "signature": "dGVzdA==",
+            })
+        self.assertEqual(len(lines), 8)
         for line in lines:
             expected, name = line.split("  ")
             self.assertEqual(release.digest(self.output / name), expected)

@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { cp, mkdir, readFile, rm } from 'node:fs/promises';
+import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 const platform = process.argv[2];
 if (!['mac', 'win'].includes(platform) || process.argv.length !== 3)
@@ -23,7 +23,7 @@ run(process.execPath, [
   '--bundles',
   platform === 'mac' ? 'app' : 'nsis',
   '--ci',
-  // Windows 只发布 NSIS，且没有自动更新器；保留原始二进制，确保安装版与便携版可逐字节核对。
+  // 更新器直接识别 NSIS 安装包；保留相同主程序，通过便携包独有的标记区分安装方式。
   ...(platform === 'win' ? ['--no-binary-patching'] : []),
 ]);
 const metadata = JSON.parse(await readFile('package.json', 'utf8'));
@@ -50,6 +50,7 @@ if (platform === 'mac') {
   await rm(zip, { force: true });
   run('ditto', ['-c', '-k', '--sequesterRsrc', '--keepParent', join(destination, app), zip]);
 } else {
+  await writeFile(join(destination, 'ADM-portable.txt'), 'ADM portable for Windows x64\n');
   await cp(join(build, 'adm.exe'), join(destination, 'adm.exe'));
   await cp('src-tauri/resources/platform-tools', join(destination, 'platform-tools'), { recursive: true });
   await cp('src-tauri/resources/scrcpy', join(destination, 'scrcpy'), { recursive: true });

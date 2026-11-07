@@ -67,9 +67,15 @@ npm run package:win
 
 打包脚本会准备资源、构建应用并验证分发包。macOS DMG 的窗口、图标位置和英文安装引导由 [layout.json](../../../resources/dmg/layout.json) 管理；DMG 构建工具隔离在 `artifacts/dmg-tools/`，不随应用分发。
 
-[CI](../../../.github/workflows/ci.yml) 在 macOS 与 Windows 上执行检查和测试。[Package](../../../.github/workflows/package.yml) 在版本 tag 推送后构建两个平台；分发包与安装验证全部通过后发布 Release。公开附件为两平台的安装包与 ZIP，构建记录和校验清单保存于 Actions 的 `release-records-<tag>` Artifact。
+[CI](../../../.github/workflows/ci.yml) 在 macOS 与 Windows 上执行检查和测试。[Package](../../../.github/workflows/package.yml) 在版本 tag 推送后构建两个平台；分发包与安装验证全部通过后发布 Release。公开附件包含两平台原有的四份下载文件、macOS 更新包和 `latest.json` 更新清单，构建记录和校验清单保存于 Actions 的 `release-records-<tag>` Artifact。
 
 Package 也支持手动 **Run workflow** 验证构建。手动运行只上传 Actions 构建附件，即使选择 tag 也不会发布 Release。
+
+### 桌面更新签名
+
+ADM 从同一仓库的 `releases/latest/download/latest.json` 检查稳定版本。macOS 更新包从已公证的应用生成，Windows 安装版复用 NSIS 安装程序，便携版提供对应版本的 ZIP 下载。
+
+在仓库 Actions Secrets 设置 `TAURI_SIGNING_PRIVATE_KEY`，其公钥必须与 `src-tauri/tauri.conf.json` 一致。请安全备份私钥，后续版本需要用同一把密钥签名。CI 仅在签名步骤读取私钥，上传前会测试更新器验签、安装与篡改拒绝。
 
 ### macOS 签名与公证
 

@@ -70,9 +70,15 @@ Build packages on their respective operating systems. Installers and application
 
 The packaging script prepares resources, builds the application, and verifies the distribution files. The macOS DMG window, icon positions, and English installation instructions are configured in [layout.json](resources/dmg/layout.json). DMG build tools are isolated in `artifacts/dmg-tools/` and are not distributed with the app.
 
-[CI](.github/workflows/ci.yml) runs checks and tests on macOS and Windows. [Package](.github/workflows/package.yml) builds both platforms when a version tag is pushed. A release is published only after both platforms pass distribution and installation verification. Public assets contain an installer and ZIP for each platform. Build records and checksums are stored in the `release-records-<tag>` Actions artifact.
+[CI](.github/workflows/ci.yml) runs checks and tests on macOS and Windows. [Package](.github/workflows/package.yml) builds both platforms when a version tag is pushed. A release is published only after both platforms pass distribution and installation verification. Public assets contain an installer and ZIP for each platform, the macOS updater archive, and the stable update feed (`latest.json`). Build records and checksums are stored in the `release-records-<tag>` Actions artifact.
 
 Package also supports **Run workflow** for a build-only validation. Manual runs upload packages to Actions artifacts and never publish a Release, even when a tag is selected.
+
+### Desktop update signing
+
+The updater reads `https://github.com/ruishanio/adm/releases/latest/download/latest.json`. The release job verifies both platform builds before publishing. Each platform signs its final update with the version from `package.json`. macOS uses the notarized app archive. Windows uses the NSIS installer. Portable Windows users are directed to the versioned ZIP.
+
+Configure the repository Actions secret `TAURI_SIGNING_PRIVATE_KEY` with the private key matching the public key in `src-tauri/tauri.conf.json`. Keep a secure backup of this key for future versions. Its contents are used only by the update-signing step. Each platform verifies the signed artifact locally before upload.
 
 ### macOS signing and notarization
 
