@@ -92,6 +92,11 @@ impl AppState {
                 saved?;
                 Ok(Value::Null)
             }
+            "setAdbSource" => {
+                let (source,): (AdbSource,) = decoded(args)?;
+                self.update(|s| s.adb_source = source)?;
+                Ok(Value::Null)
+            }
             "chooseAdb" => {
                 decoded_empty(args)?;
                 let chosen = app
@@ -107,23 +112,30 @@ impl AppState {
                         .to_string_lossy()
                         .to_lowercase();
                     if name != if cfg!(windows) { "adb.exe" } else { "adb" } {
-                        return Err("请选择官方 platform-tools 中的 adb。".into());
+                        return Err(self.localized("请选择官方 platform-tools 中的 adb。"));
                     }
                     if !adb::Adb::new(path.clone(), cancel)
                         .simple(&["version"])?
                         .contains("Android Debug Bridge")
                     {
-                        return Err("该程序不是有效的 ADB。".into());
+                        return Err(self.localized("该程序不是有效的 ADB。"));
                     }
-                    self.update(|s| s.adb_path = path.to_string_lossy().into_owned())?;
+                    self.update(|s| {
+                        s.adb_source = AdbSource::System;
+                        s.adb_path = path.to_string_lossy().into_owned();
+                    })?;
                     Ok(json!(true))
                 } else {
                     Ok(json!(false))
                 }
             }
-            "resetAdb" => {
+            "searchSystemAdb" => {
                 decoded_empty(args)?;
-                self.update(|s| s.adb_path.clear())?;
+                // 清除手选路径后，下一次刷新按系统目录搜索，不回退到内置文件。
+                self.update(|s| {
+                    s.adb_source = AdbSource::System;
+                    s.adb_path.clear();
+                })?;
                 Ok(Value::Null)
             }
             _ => Err("不支持的操作。".into()),

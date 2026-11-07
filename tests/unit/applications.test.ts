@@ -71,6 +71,7 @@ async function setup() {
     devices: [first, second],
     settings: {
       language: 'zh-CN',
+      adbSource: 'bundled',
       adbPath: '',
       endpoint: '',
       deviceNames: {},

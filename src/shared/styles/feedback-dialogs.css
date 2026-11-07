@@ -274,13 +274,3 @@
 .usb-guide li + li {
   margin-top: 8px;
 }
-.path-display {
-  font-family: 'SFMono-Regular', Consolas, monospace;
-  font-size: 12px;
-  background: var(--surface-subtle);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-control);
-  padding: 8px 12px;
-  overflow-wrap: anywhere;
-  margin: 12px 0;
-}

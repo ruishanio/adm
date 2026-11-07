@@ -145,8 +145,10 @@ export interface LogApp {
   label: string | null;
   uid: string;
 }
+export type AdbSource = 'bundled' | 'system';
 export interface Settings {
   language?: Locale | '';
+  adbSource: AdbSource;
   adbPath: string;
   endpoint: string;
   deviceNames: Record<string, string>;
@@ -241,7 +243,8 @@ export interface Api {
   hide(serial: string): Promise<void>;
   restore(): Promise<void>;
   chooseAdb(): Promise<boolean>;
-  resetAdb(): Promise<void>;
+  setAdbSource(source: AdbSource): Promise<void>;
+  searchSystemAdb(): Promise<void>;
   sidebarWidth(width: number): Promise<void>;
   language(value: Locale): Promise<void>;
   cancel(): Promise<void>;

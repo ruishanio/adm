@@ -1,8 +1,3 @@
-.settings-buttons {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-}
 .settings-dialog {
   width: 660px;
   height: 430px;
@@ -69,9 +64,88 @@
 .settings-content .field-hint {
   margin-block: 10px;
 }
-.settings-content .path-display {
-  max-height: 130px;
-  overflow: auto;
+.adb-source-group {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.adb-source-group legend {
+  padding: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+.adb-intro {
+  margin: 4px 0 12px;
+  color: var(--muted);
+}
+.adb-source-group label {
+  display: grid;
+  grid-template-columns: 15px minmax(0, 1fr);
+  column-gap: 9px;
+  align-items: start;
+  padding-block: 8px;
+  cursor: pointer;
+}
+.adb-option-copy {
+  display: grid;
+  gap: 2px;
+}
+.adb-option-copy strong {
+  font-weight: 600;
+}
+.adb-option-copy > span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.adb-source-group label:has(input:disabled) {
+  color: var(--disabled);
+  cursor: default;
+}
+.adb-source-group input {
+  width: 15px;
+  height: 15px;
+  margin: 2px 0 0;
+  flex: none;
+  appearance: auto;
+  accent-color: var(--accent);
+  cursor: inherit;
+}
+.adb-file-section {
+  margin-top: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.adb-path-caption {
+  margin: 0;
+  font-weight: 600;
+}
+.adb-file-location {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 8px;
+  color: var(--muted);
+}
+.adb-file-location > svg {
+  width: 15px;
+  height: 15px;
+  margin-top: 1px;
+  flex: none;
+}
+.adb-file-path {
+  min-width: 0;
+  margin: 0;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  -webkit-user-select: text;
+  user-select: text;
+}
+.adb-system-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
 }
 .settings-content [data-slot='tabs-content'] {
   margin: 0;

@@ -34,11 +34,19 @@ export function createDevices({ state: workspace, api, run }: WorkspaceCore) {
   const displayName = (d: Device) => remark(d) || deviceName(d);
   const title = computed(() => (device.value ? displayName(device.value) : t('选择一台设备')));
   let initial = true,
-    refreshing = false,
     detailRequest = '';
-  async function refresh(reloadDetails = false) {
-    if (refreshing) return;
-    refreshing = true;
+  let pendingRefresh: Promise<void> | undefined;
+  function refresh(reloadDetails = false) {
+    return (pendingRefresh ??= readSnapshot(reloadDetails).finally(() => {
+      pendingRefresh = undefined;
+    }));
+  }
+  async function refreshAfterAdbChange() {
+    // 若打开设置前的轮询仍在进行，先等旧快照结束，再用新来源刷新，避免把旧路径显示回来。
+    await pendingRefresh;
+    await refresh(true);
+  }
+  async function readSnapshot(reloadDetails: boolean) {
     try {
       const next = await api.refresh();
       const previous = device.value;
@@ -80,8 +88,6 @@ export function createDevices({ state: workspace, api, run }: WorkspaceCore) {
       if (state.snapshot.error) workspace.notice = { text: state.snapshot.error, error: true };
     } catch (error) {
       workspace.notice = { text: String(error), error: true };
-    } finally {
-      refreshing = false;
     }
   }
 
@@ -152,6 +158,7 @@ export function createDevices({ state: workspace, api, run }: WorkspaceCore) {
     online,
     title,
     refresh,
+    refreshAfterAdbChange,
     select,
     editName,
     hide,

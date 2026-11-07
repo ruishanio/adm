@@ -157,10 +157,18 @@ pub struct DeviceFile {
     pub size: u64,
     pub modified: i64,
 }
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum AdbSource {
+    #[default]
+    Bundled,
+    System,
+}
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct Settings {
     pub language: String,
+    pub adb_source: AdbSource,
     #[serde(alias = "AdbPath")]
     pub adb_path: String,
     #[serde(alias = "Endpoint")]
@@ -176,6 +184,7 @@ impl Default for Settings {
     fn default() -> Self {
         Self {
             language: String::new(),
+            adb_source: AdbSource::Bundled,
             adb_path: String::new(),
             endpoint: String::new(),
             device_names: BTreeMap::new(),

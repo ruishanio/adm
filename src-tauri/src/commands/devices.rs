@@ -34,7 +34,8 @@ impl AppState {
                 let store = self.store.lock().unwrap().value.clone();
                 let mut error = None;
                 let mut adb_path = String::new();
-                match self.adb(cancellation()) {
+                // 从同一份偏好读取来源与执行路径，避免切换期间把旧路径配到新来源上。
+                match self.adb_with_settings(&store, cancellation()) {
                     Ok(adb) => {
                         adb_path = adb.executable.to_string_lossy().into_owned();
                         if self.active.lock().unwrap().is_none() {

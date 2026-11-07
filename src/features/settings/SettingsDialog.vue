@@ -10,22 +10,12 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/shared/ui/tabs/index
 import AppDialog from '@/shared/ui/AppDialog.vue';
 import AppSelect from '@/shared/ui/AppSelect.vue';
 import { useWorkspace } from '@/shared/composables/workspace';
+import AdbPanel from '@/features/settings/AdbPanel.vue';
 import AboutPanel from '@/features/settings/AboutPanel.vue';
 import { language, setLanguage, isLocale, languageOptions } from '@/shared/i18n/index';
 const w = useWorkspace(),
   s = w.state;
 const section = ref('general');
-async function choose() {
-  await w.run(t('检查 ADB'), async () => {
-    if (await w.api.chooseAdb()) await devicesFeature.refresh();
-  });
-}
-async function reset() {
-  await w.run(t('恢复默认 ADB'), async () => {
-    await w.api.resetAdb();
-    await devicesFeature.refresh();
-  });
-}
 async function restore() {
   await w.run(t('恢复设备列表'), async () => {
     await w.api.restore();
@@ -68,17 +58,7 @@ async function changeLanguage(next: string) {
           </p>
         </TabsContent>
         <TabsContent value="adb">
-          <p class="field-hint">{{ t('优先使用随应用附带的 ADB，也可指定本机 platform-tools。') }}</p>
-          <div class="path-display mono">{{ devicesFeature.state.snapshot?.adbPath || t('未找到 ADB') }}</div>
-          <div class="settings-buttons">
-            <Button variant="outline" :disabled="!!s.busy" @click="choose">{{ t('选择 ADB…') }}</Button
-            ><Button
-              variant="outline"
-              :disabled="!!s.busy || !devicesFeature.state.snapshot?.settings.adbPath"
-              @click="reset"
-              >{{ t('恢复默认') }}</Button
-            >
-          </div>
+          <AdbPanel />
         </TabsContent>
         <TabsContent value="devices">
           <p class="field-hint">
@@ -98,7 +78,9 @@ async function changeLanguage(next: string) {
         <TabsContent value="about">
           <AboutPanel :version="devicesFeature.state.snapshot?.version" />
         </TabsContent>
-        <p v-if="s.notice?.error" class="inline-result error" role="alert">{{ s.notice.text }}</p>
+        <p v-if="section !== 'adb' && s.notice?.error" class="inline-result error" role="alert">
+          {{ s.notice.text }}
+        </p>
       </div>
     </Tabs>
   </AppDialog>

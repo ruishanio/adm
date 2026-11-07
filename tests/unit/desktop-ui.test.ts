@@ -7,6 +7,7 @@ import DeviceInfoPage from '@/features/devices/DeviceInfoPage.vue';
 import ConnectionDialog from '@/features/devices/ConnectionDialog.vue';
 import SidebarDivider from '@/app/layout/SidebarDivider.vue';
 import Sidebar from '@/features/devices/Sidebar.vue';
+import AdbPanel from '@/features/settings/AdbPanel.vue';
 import SettingsDialog from '@/features/settings/SettingsDialog.vue';
 import FilesPage from '@/features/files/FilesPage.vue';
 import { createWorkbench } from '@/app/workbench';
@@ -60,7 +61,14 @@ function setup() {
   })!;
   w.devices.state.snapshot = {
     devices: [{ serial: 'test', transportId: '1', network: false, state: 'device', model: 'Test' }],
-    settings: { adbPath: '', endpoint: 'host:5555', deviceNames: {}, hiddenDevices: [], sidebarWidth: 248 },
+    settings: {
+      adbSource: 'bundled',
+      adbPath: '',
+      endpoint: 'host:5555',
+      deviceNames: {},
+      hiddenDevices: [],
+      sidebarWidth: 248,
+    },
     adbPath: '/adb',
     platform: 'darwin',
     version: '0.1.0',
@@ -320,6 +328,66 @@ it('设置语言先保存再即时切换，保存失败保持原偏好', async (
   expect(locale.value).toBe('en');
   expect(select.textContent).toBe('English');
   expect(w.workspace.state.notice?.text).toBe('disk full');
+});
+
+it('系统 ADB 自动搜索，取消选文件不变，手选后可重新搜索并切回内置', async () => {
+  const w = setup();
+  const api = w.workspace.api;
+  const original = w.devices.state.snapshot!;
+  const settings = { ...original.settings, language: 'zh-CN' as const };
+  const systemPath = 'C:/Android/Sdk/platform-tools/adb.exe';
+  const manualPath = 'D:/Tools/platform-tools/adb.exe';
+  api.refresh = vi.fn(async () => ({
+    ...original,
+    devices: [],
+    settings: { ...settings },
+    adbPath: settings.adbSource === 'bundled' ? '/bundled/adb' : settings.adbPath || systemPath,
+  }));
+  api.setAdbSource = vi.fn(async (source) => {
+    settings.adbSource = source;
+  });
+  api.chooseAdb = vi
+    .fn(async () => false)
+    .mockResolvedValueOnce(false)
+    .mockImplementationOnce(async () => {
+      settings.adbPath = manualPath;
+      return true;
+    });
+  api.searchSystemAdb = vi.fn(async () => {
+    settings.adbPath = '';
+  });
+  const view = mount(AdbPanel, { global: { provide: w.providers }, attachTo: document.body });
+  cleanups.push(() => view.unmount());
+  const radio = (source: string) => view.get<HTMLInputElement>(`input[type="radio"][value="${source}"]`);
+  const click = async (label: string) => {
+    if (label === '系统 ADB' || label === '内置 ADB') {
+      radio(label === '系统 ADB' ? 'system' : 'bundled').element.click();
+    } else {
+      await view
+        .findAll('button')
+        .find((button) => button.text() === label)!
+        .trigger('click');
+    }
+    await flushPromises();
+  };
+  await flushPromises();
+  expect(radio('bundled').element.checked).toBe(true);
+  expect(view.find('.adb-file-section').exists()).toBe(false);
+  expect(view.find('.adb-system-actions').exists()).toBe(false);
+  await click('系统 ADB');
+  expect(view.text()).toContain(systemPath);
+  await click('选择文件…');
+  expect(view.text()).toContain(systemPath);
+  await click('选择文件…');
+  expect(view.text()).toContain(manualPath);
+  await click('内置 ADB');
+  expect(view.find('.adb-file-section').exists()).toBe(false);
+  expect(view.find('.adb-system-actions').exists()).toBe(false);
+  await click('系统 ADB');
+  expect(view.text()).toContain(manualPath);
+  await click('自动搜索');
+  expect(view.text()).toContain(systemPath);
+  expect(api.searchSystemAdb).toHaveBeenCalledOnce();
 });
 
 it('路径导航可点击返回父级，直接编辑失败保留输入以便修正', async () => {

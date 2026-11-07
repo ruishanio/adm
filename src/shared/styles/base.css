@@ -115,7 +115,7 @@ button.text-button:hover:not(:disabled) {
   background: none;
   text-decoration: underline;
 }
-input:not([type='checkbox']),
+input:not([type='checkbox'], [type='radio']),
 select {
   width: 100%;
   min-width: 0;
@@ -136,7 +136,7 @@ select:disabled {
   background: var(--surface-subtle);
   color: var(--muted);
 }
-input:not([type='checkbox']):focus,
+input:not([type='checkbox'], [type='radio']):focus,
 textarea:focus {
   border-color: var(--focus);
   box-shadow: none;

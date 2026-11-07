@@ -67,10 +67,17 @@ impl AppState {
         }
     }
     pub(crate) fn adb(&self, cancel: Cancel) -> Result<adb::Adb> {
-        Ok(adb::Adb::new(
-            adb::find_adb(&self.store.lock().unwrap().value.adb_path, &self.resources)?,
-            cancel,
-        ))
+        let settings = self.store.lock().unwrap().value.clone();
+        self.adb_with_settings(&settings, cancel)
+    }
+    pub(crate) fn adb_with_settings(
+        &self,
+        settings: &Settings,
+        cancel: Cancel,
+    ) -> Result<adb::Adb> {
+        let path = adb::find_adb(settings, &self.resources)
+            .map_err(|e| crate::platform::i18n::text(&settings.language, &e).to_owned())?;
+        Ok(adb::Adb::new(path, cancel))
     }
     pub(crate) fn update(&self, apply: impl FnOnce(&mut Settings)) -> Result<()> {
         let mut store = self.store.lock().unwrap();

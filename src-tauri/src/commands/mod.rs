@@ -78,7 +78,9 @@ impl AppState {
                 self.performance_command(&app, &method, args, cancel)
             }
             "rename" | "hide" | "copySerial" | "restore" | "sidebarWidth" | "language"
-            | "chooseAdb" | "resetAdb" => self.settings_command(&app, &method, args, cancel),
+            | "chooseAdb" | "setAdbSource" | "searchSystemAdb" => {
+                self.settings_command(&app, &method, args, cancel)
+            }
             _ => Err("不支持的操作。".into()),
         }
     }

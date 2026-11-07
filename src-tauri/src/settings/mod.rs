@@ -10,7 +10,16 @@ impl SettingsStore {
             .chain(legacy.iter())
             .find(|p| p.is_file())
             .and_then(|p| fs::read(p).ok())
-            .and_then(|s| serde_json::from_slice::<Settings>(&s).ok())
+            .and_then(|s| {
+                let raw = serde_json::from_slice::<serde_json::Value>(&s).ok()?;
+                let legacy = raw.get("adbSource").is_none();
+                let mut settings: Settings = serde_json::from_value(raw).ok()?;
+                // 旧版本只有自选路径；新版选回内置时仍保留此路径，供下次切回系统使用。
+                if legacy && !settings.adb_path.is_empty() {
+                    settings.adb_source = AdbSource::System;
+                }
+                Some(settings)
+            })
             .unwrap_or_default();
         let mut store = Self { value, path };
         store.value.sidebar_width = store.value.sidebar_width.clamp(220., 3000.);

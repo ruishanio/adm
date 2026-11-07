@@ -12,7 +12,14 @@ const scopes: ReturnType<typeof effectScope>[] = [];
 beforeEach(() => {
   snapshot = {
     devices: [first, second],
-    settings: { adbPath: '', endpoint: '', deviceNames: {}, hiddenDevices: [], sidebarWidth: 248 },
+    settings: {
+      adbSource: 'bundled',
+      adbPath: '',
+      endpoint: '',
+      deviceNames: {},
+      hiddenDevices: [],
+      sidebarWidth: 248,
+    },
     adbPath: '/adb',
     platform: 'darwin',
     version: '0.1.0',

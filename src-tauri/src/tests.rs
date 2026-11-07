@@ -550,12 +550,17 @@ fn migrates_legacy_preferences_without_modifying_source() {
     let content = r#"{"AdbPath":"/sdk/adb","Endpoint":"localhost:5555","DeviceNames":{"serial":"工位一"},"HiddenDevices":["old"]}"#;
     fs::write(&old, content).unwrap();
     let mut store = SettingsStore::load(next.clone(), std::slice::from_ref(&old));
+    assert_eq!(store.value.adb_source, crate::models::AdbSource::System);
     assert_eq!(store.value.device_names["serial"], "工位一");
     assert_eq!(store.value.hidden_devices, ["old"]);
     let mut value = store.value.clone();
+    value.adb_source = crate::models::AdbSource::Bundled;
     value.sidebar_width = 300.;
     store.save(value).unwrap();
-    assert_eq!(SettingsStore::load(next, &[]).value.sidebar_width, 300.);
+    let reloaded = SettingsStore::load(next, &[]).value;
+    assert_eq!(reloaded.sidebar_width, 300.);
+    assert_eq!(reloaded.adb_source, crate::models::AdbSource::Bundled);
+    assert_eq!(reloaded.adb_path, "/sdk/adb");
     assert_eq!(fs::read_to_string(old).unwrap(), content);
 }
 fn node(script: &str, args: &[&str], cancel: &Cancel, timeout: u64) -> Result<Output> {
