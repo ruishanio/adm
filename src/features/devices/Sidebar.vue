@@ -4,18 +4,7 @@ const devicesFeature = useDevices();
 
 import { t } from '@/shared/i18n/index';
 import { computed } from 'vue';
-import {
-  Smartphone,
-  Cable,
-  RefreshCw,
-  Plus,
-  Settings2,
-  Search,
-  Pencil,
-  Copy,
-  ListMinus,
-  Unplug,
-} from '@lucide/vue';
+import { Smartphone, RefreshCw, Plus, Settings2, Search, Pencil, Copy, ListMinus, Unplug } from '@lucide/vue';
 import { Button } from '@/shared/ui/button/index';
 import { Input } from '@/shared/ui/input/index';
 import {
@@ -92,7 +81,11 @@ function rowKey(e: KeyboardEvent) {
     /></label>
     <nav class="device-list" :aria-label="t('设备列表')">
       <template v-for="(group, index) in groups" :key="group.label">
-        <div v-if="index === 0 || group.devices.length" class="device-group-heading">
+        <!-- 列表有离线设备时保留已连接数量；完全为空时只显示连接提示。 -->
+        <div
+          v-if="devicesFeature.rows.value.length && (index === 0 || group.devices.length)"
+          class="device-group-heading"
+        >
           <h2 class="group-title">{{ group.label }}</h2>
           <span
             v-if="index === 0"
@@ -148,7 +141,7 @@ function rowKey(e: KeyboardEvent) {
         v-if="devicesFeature.state.snapshot && !devicesFeature.state.snapshot.devices.length"
         class="sidebar-empty"
       >
-        <Cable aria-hidden="true" :size="24" />
+        <Smartphone aria-hidden="true" :size="24" :stroke-width="1.5" />
         <p>{{ t('尚未发现设备') }}</p>
         <span>{{ t('连接 USB，或添加网络设备') }}</span>
       </div>

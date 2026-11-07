@@ -251,7 +251,7 @@
   "最小化窗口": "Minimize window",
   "最大化或还原窗口": "Maximize or restore window",
   "关闭窗口": "Close window",
-  "连接 Android 设备，开始管理": "Connect an Android device to get started",
+  "插上 USB 线，或点“{action}”。": "Plug in a USB cable or click “{action}”.",
   "设备操作": "Device actions",
   "停止等待": "Cancel operation",
   "关闭提示": "Dismiss notification",

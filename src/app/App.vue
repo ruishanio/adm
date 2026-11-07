@@ -150,7 +150,9 @@ onBeforeUnmount(() => {
               <span data-tauri-drag-region>{{ w.workspace.device.value.serial }}</span>
             </span>
           </p>
-          <p v-else data-tauri-drag-region>{{ t('连接 Android 设备，开始管理') }}</p>
+          <p v-else data-tauri-drag-region>
+            {{ t('插上 USB 线，或点“{action}”。', { action: t('连接设备') }) }}
+          </p>
         </div>
       </header>
       <Tabs v-model="s.tab" class="work-tabs"
