@@ -57,6 +57,10 @@ export const messages = {
         title: 'Can I contribute?',
         body: "Yes. ADM's own code is MIT-licensed and built with Tauri, Vue, TypeScript, and Rust. Bug reports, translations, and code contributions are welcome on GitHub.",
       },
+      {
+        title: "How do I update ADM?",
+        body: "Install 0.1.8 manually once to enable in-app updates. Then check Settings → About or use the sidebar notification to download updates and choose when to install and restart. Windows portable users download the new ZIP.",
+      },
     ],
     documentation: 'Documentation',
     license: 'MIT License',
@@ -125,6 +129,10 @@ export const messages = {
       {
         title: '我可以参与开发吗？',
         body: '当然。ADM 自有代码采用 MIT 许可，使用 Tauri、Vue、TypeScript 与 Rust 构建。欢迎在 GitHub 反馈问题、完善翻译或贡献代码。',
+      },
+      {
+        title: "如何更新 ADM？",
+        body: "先手动安装一次 0.1.8，即可启用应用内更新。之后可从「设置 → 关于」或侧栏的新版本提示下载更新，并选择安装和重启的时机。Windows 便携版需下载新版 ZIP。",
       },
     ],
     documentation: '使用文档',
@@ -195,6 +203,10 @@ export const messages = {
         title: '我可以參與開發嗎？',
         body: '當然。ADM 自有程式碼採用 MIT 授權，使用 Tauri、Vue、TypeScript 與 Rust 建置。歡迎在 GitHub 回報問題、完善翻譯或貢獻程式碼。',
       },
+      {
+        title: "如何更新 ADM？",
+        body: "先手動安裝一次 0.1.8，即可啟用應用程式內更新。之後可從「設定 → 關於」或側邊欄的新版本提示下載更新，並選擇安裝和重新啟動的時機。Windows 可攜版需下載新版 ZIP。",
+      },
     ],
     documentation: '使用文件',
     license: 'MIT 授權',
@@ -263,6 +275,10 @@ export const messages = {
       {
         title: '開発に参加できますか？',
         body: 'はい。ADM 独自のコードは MIT ライセンスで、Tauri、Vue、TypeScript、Rust を使用しています。GitHub での不具合報告、翻訳、コードの貢献を歓迎します。',
+      },
+      {
+        title: "ADM を更新するには？",
+        body: "まず 0.1.8 を手動でインストールすると、アプリ内更新が利用できます。その後は「設定 → このアプリについて」またはサイドバーの通知から更新をダウンロードし、インストールと再起動のタイミングを選べます。Windows ポータブル版は新しい ZIP をダウンロードしてください。",
       },
     ],
     documentation: 'ドキュメント',
@@ -333,6 +349,10 @@ export const messages = {
         title: 'Puis-je contribuer ?',
         body: 'Oui. Le code propre à ADM est sous licence MIT et utilise Tauri, Vue, TypeScript et Rust. Les rapports de bugs, traductions et contributions de code sont les bienvenus sur GitHub.',
       },
+      {
+        title: "Comment mettre à jour ADM ?",
+        body: "Installez d’abord la version 0.1.8 manuellement pour activer les mises à jour intégrées. Ensuite, passez par Paramètres → À propos ou la notification latérale pour télécharger une mise à jour, puis choisissez quand l’installer et redémarrer. Pour la version portable Windows, téléchargez le nouveau ZIP.",
+      },
     ],
     documentation: 'Documentation',
     license: 'Licence MIT',
@@ -401,6 +421,10 @@ export const messages = {
       {
         title: 'Kann ich mitwirken?',
         body: 'Ja. Der eigene Code von ADM steht unter der MIT-Lizenz und nutzt Tauri, Vue, TypeScript und Rust. Fehlerberichte, Übersetzungen und Code-Beiträge auf GitHub sind willkommen.',
+      },
+      {
+        title: "Wie aktualisiere ich ADM?",
+        body: "Installieren Sie zunächst 0.1.8 manuell, um Updates in der App zu aktivieren. Danach laden Sie Updates über Einstellungen → Über oder den Hinweis in der Seitenleiste herunter und wählen den Zeitpunkt für Installation und Neustart. Für die portable Windows-Version laden Sie die neue ZIP-Datei herunter.",
       },
     ],
     documentation: 'Dokumentation',
@@ -471,6 +495,10 @@ export const messages = {
         title: '¿Puedo contribuir?',
         body: 'Sí. El código propio de ADM tiene licencia MIT y utiliza Tauri, Vue, TypeScript y Rust. Se agradecen informes de errores, traducciones y contribuciones de código en GitHub.',
       },
+      {
+        title: "¿Cómo actualizo ADM?",
+        body: "Instala primero la versión 0.1.8 manualmente para activar las actualizaciones integradas. Después, descarga las actualizaciones desde Configuración → Acerca de o el aviso de la barra lateral y elige cuándo instalar y reiniciar. Para la versión portátil de Windows, descarga el nuevo ZIP.",
+      },
     ],
     documentation: 'Documentación',
     license: 'Licencia MIT',
@@ -539,6 +567,10 @@ export const messages = {
       {
         title: 'Можно участвовать в разработке?',
         body: 'Да. Собственный код ADM распространяется под MIT и использует Tauri, Vue, TypeScript и Rust. Приветствуются сообщения об ошибках, переводы и вклад в код на GitHub.',
+      },
+      {
+        title: "Как обновить ADM?",
+        body: "Сначала установите версию 0.1.8 вручную, чтобы включить обновления в приложении. Затем загружайте обновления через «Настройки → О программе» или уведомление на боковой панели и выбирайте время установки и перезапуска. Для портативной версии Windows нужно скачать новый ZIP.",
       },
     ],
     documentation: 'Документация',
