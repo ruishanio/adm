@@ -13,6 +13,7 @@ use std::{
     sync::{atomic::Ordering, Mutex},
 };
 pub(crate) struct AppState {
+    pub(crate) pending_update: Mutex<Option<crate::commands::updates::PendingUpdate>>,
     pub(crate) store: Mutex<settings::SettingsStore>,
     pub(crate) devices: Mutex<Vec<Device>>,
     pub(crate) apk: Mutex<Option<apk::ApkRecord>>,
@@ -93,6 +94,7 @@ impl AppState {
     }
     pub(crate) fn new(store: settings::SettingsStore, resources: PathBuf) -> Self {
         Self {
+            pending_update: Mutex::default(),
             store: Mutex::new(store),
             devices: Mutex::new(vec![]),
             apk: Mutex::new(None),

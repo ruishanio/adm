@@ -170,6 +170,13 @@ impl Control {
             }
         }
     }
+    pub(crate) fn is_recording(&self) -> bool {
+        self.active
+            .lock()
+            .unwrap()
+            .as_ref()
+            .is_some_and(|session| session.snapshot().recording)
+    }
     pub fn stop_all(&self) {
         if let Some(s) = self.active.lock().unwrap().take() {
             s.close();

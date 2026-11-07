@@ -245,11 +245,35 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-2);
 }
 .sidebar-settings .quiet {
   color: var(--muted);
   padding: 0 5px;
   font-size: 12px;
+}
+.sidebar-settings .sidebar-update-button {
+  min-width: 0;
+  height: auto;
+  flex-shrink: 1;
+  padding: 3px 8px;
+  background: var(--accent-soft);
+  border: 0;
+  color: var(--accent-hover);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.sidebar-update-button:hover:not(:disabled) {
+  background: var(--selection);
+}
+.sidebar-update-button:active:not(:disabled) {
+  background: var(--pressed);
+}
+.sidebar-settings .sidebar-update-button:disabled {
+  color: var(--disabled);
+  background: var(--surface-subtle);
 }
 .sidebar-settings > span {
   color: var(--muted);

@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { useDevices } from '@/features/devices/state';
+import { useUpdates } from '@/features/settings/updates';
+const updates = useUpdates();
 const devicesFeature = useDevices();
 
 import { t } from '@/shared/i18n/index';
@@ -153,7 +155,15 @@ function rowKey(e: KeyboardEvent) {
       <div class="sidebar-settings">
         <Button variant="ghost" class="quiet" :disabled="!!s.busy" @click="s.modal = 'settings'"
           ><Settings2 aria-hidden="true" />{{ t('设置') }}</Button
-        ><span>v{{ devicesFeature.state.snapshot?.version || APP_VERSION }}</span>
+        ><Button
+          v-if="updates.state.update"
+          variant="ghost"
+          class="sidebar-update-button"
+          :title="t('查看更新')"
+          :disabled="!!s.busy"
+          @click="s.modal = 'update'"
+          >{{ t('有新版本') }}</Button
+        ><span v-else>v{{ devicesFeature.state.snapshot?.version || APP_VERSION }}</span>
       </div>
     </footer>
   </aside>

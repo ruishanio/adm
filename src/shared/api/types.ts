@@ -187,7 +187,16 @@ export type ControlInput =
   | { kind: 'text'; text: string }
   | { kind: 'rotate' }
   | { kind: 'screen'; on: boolean };
+export interface AppUpdate {
+  version: string;
+  notes?: string | null;
+  portable: boolean;
+}
 export interface Api {
+  checkUpdate(): Promise<AppUpdate | null>;
+  downloadUpdate(version: string): Promise<void>;
+  installUpdate(version: string): Promise<void>;
+  openPortableUpdate(version: string): Promise<void>;
   startControl(target: Target, maxSize: number, video: (packet: ArrayBuffer) => void): Promise<string>;
   stopControl(id: string): Promise<void>;
   controlStatus(id: string): Promise<ControlStatus>;

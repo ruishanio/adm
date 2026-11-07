@@ -75,7 +75,7 @@ async function changeLanguage(next: string) {
             >{{ t('恢复已移除设备') }}</Button
           >
         </TabsContent>
-        <TabsContent value="about">
+        <TabsContent value="about" class="settings-about">
           <AboutPanel :version="devicesFeature.state.snapshot?.version" />
         </TabsContent>
         <p v-if="section !== 'adb' && s.notice?.error" class="inline-result error" role="alert">

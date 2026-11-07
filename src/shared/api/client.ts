@@ -19,6 +19,10 @@ async function call<K extends keyof Commands>(
 }
 // 前端仅暴露业务调用；本地路径、ADB 进程与文件读写均由 Rust 校验并执行。
 export const api: Api = {
+  checkUpdate: () => call('checkUpdate'),
+  downloadUpdate: (version) => call('downloadUpdate', version),
+  installUpdate: (version) => call('installUpdate', version),
+  openPortableUpdate: (version) => call('openPortableUpdate', version),
   startControl: (t, maxSize, onPacket) => {
     const video = new Channel<ArrayBuffer>();
     video.onmessage = onPacket;

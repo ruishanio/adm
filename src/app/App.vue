@@ -39,6 +39,7 @@ import DeviceLogsPage from '@/features/logs/DeviceLogsPage.vue';
 import ControlPage from '@/features/control/ControlPage.vue';
 import PerformancePage from '@/features/performance/PerformancePage.vue';
 import ConnectionDialog from '@/features/devices/ConnectionDialog.vue';
+import UpdateDialog from '@/features/settings/UpdateDialog.vue';
 import SettingsDialog from '@/features/settings/SettingsDialog.vue';
 import AppDialog from '@/shared/ui/AppDialog.vue';
 import DialogDeviceTarget from '@/shared/ui/DialogDeviceTarget.vue';
@@ -49,6 +50,8 @@ useFocusMode();
 let unlisten: (() => void) | undefined,
   unlistenResize: (() => void) | undefined,
   disposed = false;
+let checkTimer: number | undefined;
+let unlistenProgress: (() => void) | undefined;
 const fullscreen = ref(false);
 const initialPlatform = /Mac/.test(navigator.platform) ? 'darwin' : 'win32';
 const tabs = computed(() => [
@@ -66,6 +69,15 @@ onMounted(async () => {
   w.start();
   if (isTauri()) {
     const appWindow = getCurrentWindow();
+    if (import.meta.env.PROD) {
+      void w.updates.check(true);
+      checkTimer = window.setInterval(() => void w.updates.check(true), 60 * 60 * 1000);
+    }
+    const stopProgress = await appWindow.listen<number>('adm-update-progress', ({ payload }) => {
+      if (w.updates.state.phase === 'downloading') w.updates.state.progress = payload;
+    });
+    if (disposed) stopProgress();
+    else unlistenProgress = stopProgress;
     // 区分普通铺满和系统全屏：只有 macOS 独立全屏收起顶部，Windows 始终保留。
     const syncWindowState = async () => {
       const next = await appWindow.isFullscreen();
@@ -88,6 +100,8 @@ onMounted(async () => {
 });
 onBeforeUnmount(() => {
   disposed = true;
+  clearInterval(checkTimer);
+  unlistenProgress?.();
   unlisten?.();
   unlistenResize?.();
   w.dispose();
@@ -213,7 +227,14 @@ onBeforeUnmount(() => {
       </div>
     </main>
     <InstallDialog v-if="s.modal === 'install'" />
-    <ConnectionDialog v-if="s.modal === 'connect'" /><SettingsDialog v-if="s.modal === 'settings'" />
+    <ConnectionDialog v-if="s.modal === 'connect'" /><SettingsDialog
+      v-if="s.modal === 'settings' || s.modal === 'settings-update'"
+    />
+    <UpdateDialog
+      v-if="s.modal === 'update' || s.modal === 'settings-update'"
+      :version="w.devices.state.snapshot?.version"
+      @close="s.modal = s.modal === 'settings-update' ? 'settings' : null"
+    />
     <AppDialog
       v-if="s.modal === 'rename' || s.modal === 'folder'"
       :title="s.modal === 'rename' ? t('备注名称') : t('新建文件夹')"

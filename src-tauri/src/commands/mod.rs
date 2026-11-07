@@ -6,6 +6,7 @@ mod files;
 mod logs;
 mod performance;
 mod settings;
+pub(crate) mod updates;
 use crate::{adb::process::cancellation, models::Result, state::AppState};
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::{json, Value};
@@ -22,6 +23,12 @@ impl AppState {
             decoded_empty(args)?;
             self.cancel();
             return Ok(Value::Null);
+        }
+        if matches!(
+            method.as_str(),
+            "checkUpdate" | "downloadUpdate" | "installUpdate" | "openPortableUpdate"
+        ) {
+            return self.update_command(&app, &method, args);
         }
         // 连续只读会话不抢占安装/文件任务；其他命令沿用同一个互斥与取消生命周期。
         let operation = if matches!(

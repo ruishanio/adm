@@ -11,6 +11,8 @@ export function workspaceState() {
     modal: null as
       | 'connect'
       | 'settings'
+      | 'update'
+      | 'settings-update'
       | 'rename'
       | 'folder'
       | 'file-rename'

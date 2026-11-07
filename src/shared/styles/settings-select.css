@@ -1,6 +1,6 @@
 .settings-dialog {
-  width: 660px;
-  height: 430px;
+  width: 720px;
+  height: 440px;
 }
 .settings-layout {
   display: flex;
@@ -10,9 +10,11 @@
   gap: 0;
 }
 .settings-navigation {
-  width: 150px;
+  /* 以当前语言最长的分类名定宽；短标签保留一致的最小宽度。 */
+  width: max-content;
+  min-width: 168px;
   height: auto;
-  flex: 0 0 150px;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -29,7 +31,7 @@
   min-height: 32px;
   height: auto;
   padding: 7px 10px;
-  white-space: normal;
+  white-space: nowrap;
   text-align: left;
   line-height: 18px;
   border: 0;
@@ -150,6 +152,9 @@
 .settings-content [data-slot='tabs-content'] {
   margin: 0;
   outline: none;
+}
+.settings-about[data-state='active'] {
+  height: 100%;
 }
 .app-select-trigger {
   width: 100%;

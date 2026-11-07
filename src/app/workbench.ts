@@ -1,4 +1,5 @@
 import { effectScope, watch, provide } from 'vue';
+import { createUpdates, updatesKey } from '@/features/settings/updates';
 import { language } from '@/shared/i18n';
 import type { Api } from '@/shared/api/types';
 import { invalidateAppOptions } from '@/shared/api/app-options';
@@ -49,10 +50,11 @@ export function createWorkbench(api: Api) {
       () => invalidateAppOptions(api),
       { flush: 'sync' },
     );
-    return { workspace, devices, apps, files, owner, install };
+    return { workspace, devices, apps, files, owner, install, updates: createUpdates(api) };
   })!;
   const { workspace, devices, apps, files, owner, install } = modules;
   const providers = {
+    [updatesKey as symbol]: modules.updates,
     [workspaceKey as symbol]: workspace,
     [devicesKey as symbol]: devices,
     [appsKey as symbol]: apps,
