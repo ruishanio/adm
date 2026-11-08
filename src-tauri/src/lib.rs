@@ -52,10 +52,20 @@ pub fn run() {
                 app.handle(),
                 &store.value.language,
             )?)?;
+            #[cfg(target_os = "macos")]
+            if let Some(window) = app.get_webview_window("main") {
+                platform::window_chrome::configure(&window)?;
+            }
             app.manage(Arc::new(AppState::new(store, app.path().resource_dir()?)));
             Ok(())
         })
         .on_window_event(|window, event| {
+            #[cfg(target_os = "macos")]
+            if window.label() == "main" && matches!(event, WindowEvent::Resized(_)) {
+                if let Err(error) = platform::window_chrome::sync_toolbar_visibility(window) {
+                    eprintln!("同步 macOS 窗口工具栏失败：{error}");
+                }
+            }
             let Some(state) = window.try_state::<Arc<AppState>>() else {
                 return;
             };
