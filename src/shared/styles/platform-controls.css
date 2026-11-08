@@ -156,19 +156,24 @@ button[data-slot='checkbox'] svg {
   background: var(--line);
 }
 .native-drag-area {
+  display: none;
   position: absolute;
   top: 0;
   left: 0;
   height: var(--titlebar-height);
-  width: 100%;
+  width: var(--sidebar-width);
   z-index: 5;
   user-select: none;
+}
+.darwin .native-drag-area {
+  display: block;
 }
 .window-controls {
   position: absolute;
   top: 0;
   right: 0;
   height: 32px;
+  width: var(--window-controls-width);
   display: flex;
   z-index: 10;
 }

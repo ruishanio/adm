@@ -1,5 +1,7 @@
 .app {
-  --titlebar-height: 32px;
+  --titlebar-height: 0px;
+  --sidebar-heading-height: 56px;
+  --window-controls-width: 138px;
   position: relative;
   height: 100dvh;
   display: grid;
@@ -7,6 +9,11 @@
   grid-template-rows: minmax(0, 1fr);
   background: var(--surface);
   overflow: hidden;
+}
+/* macOS 只在侧栏上方保留系统按钮区域，工作区摘要直接参与顶部布局。 */
+.app.darwin {
+  --titlebar-height: 44px;
+  --sidebar-heading-height: 32px;
 }
 .win32,
 :root[data-platform='win32'] {
@@ -32,7 +39,7 @@
   gap: 10px;
   padding: 0 8px;
   margin-bottom: 6px;
-  min-height: 32px;
+  min-height: var(--sidebar-heading-height);
   user-select: none;
 }
 .sidebar-heading h1 {
@@ -326,11 +333,14 @@
   display: flex;
   gap: 12px;
   align-items: center;
-  margin-top: var(--titlebar-height);
   padding: 8px 20px;
   min-height: 64px;
   /* 沿用现有设备摘要作为窗口拖动区，标签、刷新和列表保持正常点击。 */
   user-select: none;
+}
+/* Windows 标题区与设备摘要共用一行，长名称和摘要必须避开右上窗口按钮。 */
+.win32 .device-header {
+  padding-right: calc(var(--window-controls-width) + 20px);
 }
 .device-symbol {
   width: 28px;

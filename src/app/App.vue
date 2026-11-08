@@ -139,7 +139,9 @@ onBeforeUnmount(() => {
         /></Button>
       </div>
       <header class="device-header" data-tauri-drag-region>
-        <div class="device-symbol"><Smartphone aria-hidden="true" /></div>
+        <div class="device-symbol" data-tauri-drag-region>
+          <Smartphone aria-hidden="true" data-tauri-drag-region />
+        </div>
         <div class="device-title" data-tauri-drag-region>
           <h1 :title="w.workspace.title.value" data-tauri-drag-region>{{ w.workspace.title.value }}</h1>
           <p v-if="w.workspace.device.value" class="device-summary" data-tauri-drag-region>
