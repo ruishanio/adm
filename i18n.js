@@ -59,7 +59,7 @@ export const messages = {
       },
       {
         title: "How do I update ADM?",
-        body: "Install 0.1.8 manually once to enable in-app updates. Then check Settings → About or use the sidebar notification to download updates and choose when to install and restart. Windows portable users download the new ZIP.",
+        body: "ADM 0.1.8 and later support in-app updates. Check Settings → About or use the sidebar notification to download the latest version, then choose when to install and restart. Users of older versions need to install the latest version manually; Windows portable users download the new ZIP.",
       },
     ],
     documentation: 'Documentation',
@@ -132,7 +132,7 @@ export const messages = {
       },
       {
         title: "如何更新 ADM？",
-        body: "先手动安装一次 0.1.8，即可启用应用内更新。之后可从「设置 → 关于」或侧栏的新版本提示下载更新，并选择安装和重启的时机。Windows 便携版需下载新版 ZIP。",
+        body: "ADM 0.1.8 及后续版本支持应用内更新。可从「设置 → 关于」或侧栏的新版本提示下载最新版，并选择安装和重启的时机。更早版本需手动安装最新版；Windows 便携版需下载新版 ZIP。",
       },
     ],
     documentation: '使用文档',
@@ -205,7 +205,7 @@ export const messages = {
       },
       {
         title: "如何更新 ADM？",
-        body: "先手動安裝一次 0.1.8，即可啟用應用程式內更新。之後可從「設定 → 關於」或側邊欄的新版本提示下載更新，並選擇安裝和重新啟動的時機。Windows 可攜版需下載新版 ZIP。",
+        body: "ADM 0.1.8 及後續版本支援應用程式內更新。可從「設定 → 關於」或側邊欄的新版本提示下載最新版，並選擇安裝和重新啟動的時機。更早版本需手動安裝最新版；Windows 可攜版需下載新版 ZIP。",
       },
     ],
     documentation: '使用文件',
@@ -278,7 +278,7 @@ export const messages = {
       },
       {
         title: "ADM を更新するには？",
-        body: "まず 0.1.8 を手動でインストールすると、アプリ内更新が利用できます。その後は「設定 → このアプリについて」またはサイドバーの通知から更新をダウンロードし、インストールと再起動のタイミングを選べます。Windows ポータブル版は新しい ZIP をダウンロードしてください。",
+        body: "ADM 0.1.8 以降はアプリ内更新に対応しています。「設定 → このアプリについて」またはサイドバーの通知から最新版をダウンロードし、インストールと再起動のタイミングを選べます。それ以前のバージョンは最新版を手動でインストールしてください。Windows ポータブル版は新しい ZIP をダウンロードしてください。",
       },
     ],
     documentation: 'ドキュメント',
@@ -351,7 +351,7 @@ export const messages = {
       },
       {
         title: "Comment mettre à jour ADM ?",
-        body: "Installez d’abord la version 0.1.8 manuellement pour activer les mises à jour intégrées. Ensuite, passez par Paramètres → À propos ou la notification latérale pour télécharger une mise à jour, puis choisissez quand l’installer et redémarrer. Pour la version portable Windows, téléchargez le nouveau ZIP.",
+        body: "ADM 0.1.8 et les versions ultérieures prennent en charge les mises à jour intégrées. Téléchargez la dernière version via Paramètres → À propos ou la notification latérale, puis choisissez quand l’installer et redémarrer. Pour les versions plus anciennes, installez manuellement la dernière version ; pour la version portable Windows, téléchargez le nouveau ZIP.",
       },
     ],
     documentation: 'Documentation',
@@ -424,7 +424,7 @@ export const messages = {
       },
       {
         title: "Wie aktualisiere ich ADM?",
-        body: "Installieren Sie zunächst 0.1.8 manuell, um Updates in der App zu aktivieren. Danach laden Sie Updates über Einstellungen → Über oder den Hinweis in der Seitenleiste herunter und wählen den Zeitpunkt für Installation und Neustart. Für die portable Windows-Version laden Sie die neue ZIP-Datei herunter.",
+        body: "ADM unterstützt ab Version 0.1.8 Updates in der App. Laden Sie die neueste Version über Einstellungen → Über oder den Hinweis in der Seitenleiste herunter und wählen Sie den Zeitpunkt für Installation und Neustart. Bei älteren Versionen installieren Sie die neueste Version manuell; für die portable Windows-Version laden Sie die neue ZIP-Datei herunter.",
       },
     ],
     documentation: 'Dokumentation',
@@ -497,7 +497,7 @@ export const messages = {
       },
       {
         title: "¿Cómo actualizo ADM?",
-        body: "Instala primero la versión 0.1.8 manualmente para activar las actualizaciones integradas. Después, descarga las actualizaciones desde Configuración → Acerca de o el aviso de la barra lateral y elige cuándo instalar y reiniciar. Para la versión portátil de Windows, descarga el nuevo ZIP.",
+        body: "ADM 0.1.8 y las versiones posteriores admiten actualizaciones integradas. Descarga la última versión desde Configuración → Acerca de o el aviso de la barra lateral y elige cuándo instalar y reiniciar. Si usas una versión anterior, instala la última versión manualmente; para la versión portátil de Windows, descarga el nuevo ZIP.",
       },
     ],
     documentation: 'Documentación',
@@ -570,7 +570,7 @@ export const messages = {
       },
       {
         title: "Как обновить ADM?",
-        body: "Сначала установите версию 0.1.8 вручную, чтобы включить обновления в приложении. Затем загружайте обновления через «Настройки → О программе» или уведомление на боковой панели и выбирайте время установки и перезапуска. Для портативной версии Windows нужно скачать новый ZIP.",
+        body: "ADM 0.1.8 и более поздние версии поддерживают обновление в приложении. Загрузите последнюю версию через «Настройки → О программе» или уведомление на боковой панели и выберите время установки и перезапуска. Для более ранних версий установите последнюю версию вручную; для портативной версии Windows скачайте новый ZIP.",
       },
     ],
     documentation: 'Документация',
