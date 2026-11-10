@@ -18,6 +18,7 @@
 </p>
 
 <p align="center">
+  <a href="https://adm.ruishanio.com">官网</a> |
   <a href="https://github.com/ruishanio/adm/releases/latest">下载 ADM</a> |
   <a href="#功能">功能</a> |
   <a href="#快速开始">上手</a> |
@@ -73,7 +74,7 @@ ADM 是一款基于 ADB 的开源桌面工具，支持 macOS Apple Silicon 和 W
 - **Windows**：运行安装向导；缺少 WebView2 时，安装器会联网下载。
 - 两个平台均提供 ZIP。Windows ZIP 需已有 WebView2，解压后运行 `adm.exe`。`Source code` 是源码，不是安装包。
 
-macOS 构建尚未公证，Windows 构建尚未代码签名，首次打开可能遇到系统安全提示。当前提供的构建目标为上表两项。
+最新官方 macOS 版本已完成 Developer ID 签名与 Apple 公证。Windows 安装程序暂未使用 Authenticode 代码签名，运行时可能出现系统安全提示。当前提供的预编译安装包仅支持上表两种平台。
 
 ## 快速开始
 
@@ -88,9 +89,16 @@ macOS 构建尚未公证，Windows 构建尚未代码签名，首次打开可能
 ## 常见问题
 
 <details>
+<summary>如何更新 ADM？</summary>
+
+ADM 0.1.8 及后续版本支持应用内更新。可从「设置 → 关于」或侧栏的新版本提示下载最新版，并选择安装和重启的时机。更早版本需手动安装最新版；Windows 便携版需下载新版 ZIP。
+
+</details>
+
+<details>
 <summary>设备未连接，或投屏黑屏怎么办？</summary>
 
-先解锁设备并确认 USB 调试授权；无线连接请检查网络是否互通、地址与端口是否正确。投屏还依赖设备的 H.264 编码器和系统 WebView 的 WebCodecs 支持，部分旧模拟器可能无法编码，受防截屏保护的页面也可能黑屏。可返回普通页面，再点击「重新连接」。
+先解锁设备并确认 USB 调试授权；无线连接请检查网络是否互通、地址与端口是否正确。投屏需要系统 WebView 支持 WebCodecs。运行 Android 6.0 及以上版本的 x86_64 设备如果遇到系统 H.264 编码器故障，ADM 会自动切换到兼容编码。受防截屏保护的页面仍可能黑屏，可返回普通页面，再点击「重新连接」。
 
 </details>
 

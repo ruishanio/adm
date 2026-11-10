@@ -18,6 +18,7 @@
 </p>
 
 <p align="center">
+  <a href="https://adm.ruishanio.com">官網</a> |
   <a href="https://github.com/ruishanio/adm/releases/latest">下載 ADM</a> |
   <a href="#功能">功能</a> |
   <a href="#快速開始">開始使用</a> |
@@ -73,7 +74,7 @@ ADM 是一款以 ADB 為基礎的開源桌面工具，支援 macOS Apple Silicon
 - **Windows**：執行安裝精靈；若缺少 WebView2，安裝程式會連線下載。
 - 兩個平台均提供 ZIP。Windows ZIP 需要已安裝 WebView2，解壓縮後執行 `adm.exe`。`Source code` 是原始碼封存檔，不是安裝程式。
 
-macOS 版本尚未通過公證，Windows 版本尚未進行程式碼簽署，首次開啟時可能出現系統安全提示。目前提供的預先編譯版本僅涵蓋上表兩項。
+最新官方 macOS 版本已完成 Developer ID 簽署與 Apple 公證。Windows 安裝程式尚未使用 Authenticode 程式碼簽署，執行時可能出現系統安全提示。目前提供的預先編譯套件僅支援上表兩種平台。
 
 ## 快速開始
 
@@ -88,9 +89,16 @@ macOS 版本尚未通過公證，Windows 版本尚未進行程式碼簽署，首
 ## 常見問題
 
 <details>
+<summary>如何更新 ADM？</summary>
+
+ADM 0.1.8 及後續版本支援應用程式內更新。可從「設定 → 關於」或側邊欄的新版本提示下載最新版，並選擇安裝和重新啟動的時機。更早版本需手動安裝最新版；Windows 可攜版需下載新版 ZIP。
+
+</details>
+
+<details>
 <summary>裝置無法連線，或螢幕鏡像顯示黑畫面？</summary>
 
-請先解鎖裝置並確認 USB 偵錯授權；無線連線請檢查網路是否互通，以及位址和連接埠是否正確。螢幕鏡像還需要裝置上可正常使用的 H.264 編碼器，以及系統 WebView 的 WebCodecs 支援。部分舊版模擬器可能無法編碼，受螢幕擷取保護的畫面也可能顯示黑畫面。可返回一般畫面，再點選重新連線。
+請先解鎖裝置並確認 USB 偵錯授權；無線連線請檢查網路是否互通，以及位址和連接埠是否正確。螢幕鏡像需要系統 WebView 支援 WebCodecs。執行 Android 6.0 及以上版本的 x86_64 裝置若發生系統 H.264 編碼器故障，ADM 會自動切換至相容編碼。受螢幕擷取保護的畫面仍可能顯示黑畫面，可返回一般畫面，再點選重新連線。
 
 </details>
 

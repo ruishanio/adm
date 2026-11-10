@@ -18,6 +18,7 @@
 </p>
 
 <p align="center">
+  <a href="https://adm.ruishanio.com">Sitio web</a> |
   <a href="https://github.com/ruishanio/adm/releases/latest">Descargar ADM</a> |
   <a href="#funciones">Funciones</a> |
   <a href="#primeros-pasos">Primeros pasos</a> |
@@ -73,7 +74,7 @@ Abre la **[última versión](https://github.com/ruishanio/adm/releases/latest)**
 - **Windows**: ejecuta el instalador. Si falta WebView2, se descargará durante la instalación.
 - También hay paquetes ZIP para ambas plataformas. El ZIP de Windows requiere WebView2 instalado; descomprímelo y ejecuta `adm.exe`. Los archivos `Source code` contienen código fuente, no instaladores.
 
-La versión de macOS no está notarizada y la de Windows no tiene firma de código, por lo que el sistema puede mostrar un aviso de seguridad al iniciarla por primera vez. Actualmente se ofrecen paquetes precompilados para las dos plataformas indicadas.
+La última versión oficial para macOS está firmada con Developer ID y notarizada por Apple. El instalador de Windows aún no tiene firma Authenticode, por lo que Windows puede mostrar un aviso de seguridad al ejecutarlo. Actualmente se ofrecen paquetes precompilados para las dos plataformas indicadas.
 
 ## Primeros pasos
 
@@ -88,9 +89,16 @@ No necesitas instalar Android Studio, Java, FFmpeg ni el cliente de escritorio d
 ## Preguntas frecuentes
 
 <details>
+<summary>¿Cómo actualizo ADM?</summary>
+
+ADM 0.1.8 y las versiones posteriores admiten actualizaciones integradas. Descarga la última versión desde Configuración → Acerca de o el aviso de la barra lateral y elige cuándo instalar y reiniciar. Si usas una versión anterior, instala la última versión manualmente; para la versión portátil de Windows, descarga el nuevo ZIP.
+
+</details>
+
+<details>
 <summary>¿Por qué no se conecta el dispositivo o la pantalla aparece en negro?</summary>
 
-Primero desbloquea el dispositivo y autoriza la depuración USB. Para conexiones inalámbricas, comprueba la comunicación de red, la dirección y el puerto. La duplicación de pantalla también necesita un codificador H.264 funcional en el dispositivo y compatibilidad con WebCodecs en el WebView del sistema. Algunos emuladores antiguos no pueden codificar vídeo, y las pantallas protegidas contra capturas pueden verse en negro. Vuelve a una pantalla sin protección y prueba **Reconnect**.
+Primero desbloquea el dispositivo y autoriza la depuración USB. Para conexiones inalámbricas, comprueba la comunicación de red, la dirección y el puerto. La duplicación de pantalla necesita compatibilidad con WebCodecs en el WebView del sistema. Si falla el codificador H.264 del sistema en un dispositivo x86_64 con Android 6.0 o posterior, ADM cambia automáticamente a un codificador de compatibilidad. Las pantallas protegidas contra capturas pueden seguir viéndose en negro. Vuelve a una pantalla sin protección y prueba **Reconnect**.
 
 </details>
 

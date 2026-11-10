@@ -18,6 +18,7 @@
 </p>
 
 <p align="center">
+  <a href="https://adm.ruishanio.com">Website</a> |
   <a href="https://github.com/ruishanio/adm/releases/latest">Download ADM</a> |
   <a href="#features">Features</a> |
   <a href="#getting-started">Get started</a> |
@@ -73,7 +74,7 @@ Open the **[latest release](https://github.com/ruishanio/adm/releases/latest)** 
 - **Windows**: Run the installer. It downloads WebView2 if the runtime is missing.
 - ZIP packages are also available for both platforms. The Windows ZIP requires WebView2 to be installed; extract it and run `adm.exe`. `Source code` archives are not installers.
 
-macOS builds are not notarized, and Windows builds are not code-signed, so your system may show a security prompt on first launch. Prebuilt packages currently target the two platforms listed above.
+The latest official macOS release is signed with Developer ID and notarized by Apple. The Windows installer is not yet Authenticode-signed, so Windows may show a security prompt when you run it. Prebuilt packages currently target the two platforms listed above.
 
 ## Getting started
 
@@ -88,9 +89,16 @@ You do not need to install Android Studio, Java, FFmpeg, or the scrcpy desktop c
 ## FAQ
 
 <details>
+<summary>How do I update ADM?</summary>
+
+ADM 0.1.8 and later support in-app updates. Check Settings → About or use the sidebar notification to download the latest version, then choose when to install and restart. Users of older versions need to install the latest version manually; Windows portable users download the new ZIP.
+
+</details>
+
+<details>
 <summary>Why is my device disconnected, or the mirrored screen black?</summary>
 
-Unlock the device and approve USB debugging first. For wireless connections, check network reachability and the address and port. Mirroring also requires a working H.264 encoder on the device and WebCodecs support in the system WebView. Some older emulators cannot encode video, and protected screens may appear black. Return to an unprotected screen and try **Reconnect**.
+Unlock the device and approve USB debugging first. For wireless connections, check network reachability and the address and port. Mirroring requires WebCodecs support in the system WebView. If the system H.264 encoder fails on an x86_64 device running Android 6.0 or later, ADM automatically switches to a compatibility encoder. Protected screens may still appear black; return to an unprotected screen and try **Reconnect**.
 
 </details>
 

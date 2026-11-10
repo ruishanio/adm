@@ -18,6 +18,7 @@
 </p>
 
 <p align="center">
+  <a href="https://adm.ruishanio.com">Site officiel</a> |
   <a href="https://github.com/ruishanio/adm/releases/latest">Télécharger ADM</a> |
   <a href="#fonctionnalités">Fonctionnalités</a> |
   <a href="#premiers-pas">Premiers pas</a> |
@@ -73,7 +74,7 @@ Ouvrez la **[dernière version](https://github.com/ruishanio/adm/releases/latest
 - **Windows** : lancez le programme d'installation. Il télécharge WebView2 si nécessaire.
 - Des archives ZIP sont également disponibles pour les deux plateformes. La version ZIP pour Windows nécessite WebView2 : décompressez l'archive et lancez `adm.exe`. Les archives `Source code` ne sont pas des programmes d'installation.
 
-La version macOS n'est pas notariée et la version Windows ne possède pas de signature de code. Un avertissement de sécurité peut donc apparaître au premier lancement. Les paquets précompilés ciblent actuellement les deux plateformes indiquées ci-dessus.
+La dernière version officielle pour macOS est signée avec Developer ID et notariée par Apple. L'installateur Windows ne possède pas encore de signature Authenticode ; Windows peut donc afficher un avertissement de sécurité lors de son exécution. Les paquets précompilés ciblent actuellement les deux plateformes indiquées ci-dessus.
 
 ## Premiers pas
 
@@ -88,9 +89,16 @@ Il n'est pas nécessaire d'installer Android Studio, Java, FFmpeg ou le client d
 ## Questions fréquentes
 
 <details>
+<summary>Comment mettre à jour ADM ?</summary>
+
+ADM 0.1.8 et les versions ultérieures prennent en charge les mises à jour intégrées. Téléchargez la dernière version via Paramètres → À propos ou la notification latérale, puis choisissez quand l’installer et redémarrer. Pour les versions plus anciennes, installez manuellement la dernière version ; pour la version portable Windows, téléchargez le nouveau ZIP.
+
+</details>
+
+<details>
 <summary>Pourquoi l'appareil ne se connecte-t-il pas, ou pourquoi son écran est-il noir ?</summary>
 
-Déverrouillez d'abord l'appareil et autorisez le débogage USB. En connexion sans fil, vérifiez que les appareils peuvent communiquer sur le réseau, ainsi que l'adresse et le port. L'affichage de l'écran nécessite un encodeur H.264 fonctionnel sur l'appareil et la prise en charge de WebCodecs par la WebView du système. Certains anciens émulateurs ne peuvent pas encoder la vidéo, et les écrans protégés contre la capture peuvent rester noirs. Revenez à un écran non protégé et essayez **Reconnect**.
+Déverrouillez d'abord l'appareil et autorisez le débogage USB. En connexion sans fil, vérifiez que les appareils peuvent communiquer sur le réseau, ainsi que l'adresse et le port. L'affichage de l'écran nécessite la prise en charge de WebCodecs par la WebView du système. Si l'encodeur H.264 du système échoue sur un appareil x86_64 sous Android 6.0 ou ultérieur, ADM passe automatiquement à un encodeur de compatibilité. Les écrans protégés contre la capture peuvent toujours rester noirs. Revenez à un écran non protégé et essayez **Reconnect**.
 
 </details>
 

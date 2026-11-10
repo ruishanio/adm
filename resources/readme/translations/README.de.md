@@ -18,6 +18,7 @@
 </p>
 
 <p align="center">
+  <a href="https://adm.ruishanio.com">Website</a> |
   <a href="https://github.com/ruishanio/adm/releases/latest">ADM herunterladen</a> |
   <a href="#funktionen">Funktionen</a> |
   <a href="#erste-schritte">Erste Schritte</a> |
@@ -73,7 +74,7 @@ USB- und Netzwerkverbindungen, Wechsel zwischen mehreren Geräten sowie anpassba
 - **Windows**: Führe das Installationsprogramm aus. Falls WebView2 fehlt, wird es heruntergeladen.
 - Für beide Plattformen gibt es auch ZIP-Pakete. Das Windows-ZIP setzt installiertes WebView2 voraus. Entpacke es und starte `adm.exe`. Die Archive unter `Source code` enthalten Quellcode, keine Installationspakete.
 
-Die macOS-Version ist nicht notarisiert, und die Windows-Version ist nicht codesigniert. Beim ersten Start kann daher eine Sicherheitsmeldung erscheinen. Fertige Pakete werden derzeit für die beiden oben genannten Plattformen angeboten.
+Die aktuelle offizielle macOS-Version ist mit Developer ID signiert und von Apple notarisiert. Das Windows-Installationsprogramm besitzt noch keine Authenticode-Signatur; beim Ausführen kann Windows daher eine Sicherheitsmeldung anzeigen. Fertige Pakete werden derzeit für die beiden oben genannten Plattformen angeboten.
 
 ## Erste Schritte
 
@@ -88,9 +89,16 @@ Für ADM musst du Android Studio, Java, FFmpeg oder den scrcpy-Desktop-Client ni
 ## Häufige Fragen
 
 <details>
+<summary>Wie aktualisiere ich ADM?</summary>
+
+ADM unterstützt ab Version 0.1.8 Updates in der App. Lade die neueste Version über Einstellungen → Über oder den Hinweis in der Seitenleiste herunter und wähle den Zeitpunkt für Installation und Neustart. Bei älteren Versionen installierst du die neueste Version manuell; für die portable Windows-Version lädst du die neue ZIP-Datei herunter.
+
+</details>
+
+<details>
 <summary>Warum wird mein Gerät nicht verbunden oder der Bildschirm schwarz angezeigt?</summary>
 
-Entsperre zuerst das Gerät und erlaube USB-Debugging. Prüfe bei drahtlosen Verbindungen die Erreichbarkeit im Netzwerk sowie Adresse und Port. Die Bildschirmübertragung benötigt außerdem einen funktionsfähigen H.264-Encoder auf dem Gerät und WebCodecs-Unterstützung in der System-WebView. Manche älteren Emulatoren können kein Video kodieren; geschützte Bildschirminhalte können ebenfalls schwarz erscheinen. Wechsle zu einem ungeschützten Bildschirm und versuche **Reconnect**.
+Entsperre zuerst das Gerät und erlaube USB-Debugging. Prüfe bei drahtlosen Verbindungen die Erreichbarkeit im Netzwerk sowie Adresse und Port. Die Bildschirmübertragung benötigt WebCodecs-Unterstützung in der System-WebView. Fällt der H.264-Systemencoder auf einem x86_64-Gerät mit Android 6.0 oder neuer aus, wechselt ADM automatisch zum Kompatibilitätsencoder. Geschützte Bildschirminhalte können weiterhin schwarz erscheinen. Wechsle zu einem ungeschützten Bildschirm und versuche **Reconnect**.
 
 </details>
 
