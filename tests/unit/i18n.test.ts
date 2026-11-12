@@ -17,12 +17,16 @@ it('首次按系统首选语言初始化，不支持时回退英语，已保存�
   expect(resolveLocale('', ['en-US', 'zh-CN'])).toBe('en');
   expect(resolveLocale('', ['fr-FR', 'zh-CN'])).toBe('fr');
   expect(resolveLocale('', ['zh-TW'])).toBe('zh-TW');
-  expect(resolveLocale('', ['ko-KR', 'zh-CN'])).toBe('en');
+  expect(resolveLocale('', ['ko-KR', 'zh-CN'])).toBe('ko');
+  expect(resolveLocale('', ['it-IT', 'ko-KR'])).toBe('en');
+  expect(resolveLocale('ko', ['en-US'])).toBe('ko');
   expect(resolveLocale('zh-CN', ['en-US'])).toBe('zh-CN');
 });
 it('语言切换替换完整文案且不再次解释参数内容', () => {
   setLanguage('en');
   expect(t('目标：{name}', { name: '工位 {name}' })).toBe('Target: 工位 {name}');
+  setLanguage('ko');
+  expect(t('目标：{name}', { name: 'Phone {name}' })).toBe('대상: Phone {name}');
   setLanguage('zh-CN');
   expect(t('目标：{name}', { name: 'Phone' })).toBe('目标：Phone');
 });
@@ -33,6 +37,8 @@ it.each([
   ['zh-MO', 'zh-TW'],
   ['zh-SG', 'zh-CN'],
   ['ja-JP', 'ja'],
+  ['ko-KR', 'ko'],
+  ['ko_KR', 'ko'],
   ['fr-CA', 'fr'],
   ['de-AT', 'de'],
   ['es-MX', 'es'],
@@ -41,13 +47,14 @@ it.each([
 ])('系统语言 %s 正确归一为 %s', (system, expected) => {
   expect(resolveLocale(undefined, [system])).toBe(expected);
 });
-it('八种语言完整覆盖相同文案与具名参数，避免翻译丢失设备或数量', () => {
+it('九种语言完整覆盖相同文案与具名参数，避免翻译丢失设备或数量', () => {
   const slots = (s: string) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
   expect(languageOptions.map(({ value }) => value)).toEqual([
     'en',
     'zh-CN',
     'zh-TW',
     'ja',
+    'ko',
     'fr',
     'de',
     'es',

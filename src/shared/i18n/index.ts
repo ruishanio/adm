@@ -2,6 +2,7 @@ import { readonly, ref, watch } from 'vue';
 import english from './locales/en.json';
 import traditionalChinese from './locales/zh-TW.json';
 import japanese from './locales/ja.json';
+import korean from './locales/ko.json';
 import french from './locales/fr.json';
 import german from './locales/de.json';
 import spanish from './locales/es.json';
@@ -16,6 +17,7 @@ export const catalogs = {
   'zh-CN': Object.fromEntries(Object.keys(english).map((key) => [key, key])) as Messages,
   'zh-TW': traditionalChinese,
   ja: japanese,
+  ko: korean,
   fr: french,
   de: german,
   es: spanish,
@@ -29,6 +31,7 @@ export const languageOptions: { value: Locale; label: string }[] = [
   { value: 'zh-CN', label: '简体中文' },
   { value: 'zh-TW', label: '繁體中文' },
   { value: 'ja', label: '日本語' },
+  { value: 'ko', label: '한국어' },
   { value: 'fr', label: 'Français' },
   { value: 'de', label: 'Deutsch' },
   { value: 'es', label: 'Español' },

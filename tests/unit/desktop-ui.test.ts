@@ -292,6 +292,7 @@ it('设置语言先保存再即时切换，保存失败保持原偏好', async (
       '简体中文',
       '繁體中文',
       '日本語',
+      '한국어',
       'Français',
       'Deutsch',
       'Español',
@@ -311,6 +312,7 @@ it('设置语言先保存再即时切换，保存失败保持原偏好', async (
   for (const [label, code, general] of [
     ['繁體中文', 'zh-TW', '一般'],
     ['日本語', 'ja', '一般'],
+    ['한국어', 'ko', '일반'],
     ['Français', 'fr', 'Général'],
     ['Deutsch', 'de', 'Allgemein'],
     ['Español', 'es', 'General'],

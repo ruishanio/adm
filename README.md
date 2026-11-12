@@ -11,6 +11,7 @@
   <a href="resources/readme/translations/README.zh-CN.md" lang="zh-CN">简体中文</a> |
   <a href="resources/readme/translations/README.zh-TW.md" lang="zh-TW">繁體中文</a> |
   <a href="resources/readme/translations/README.ja.md" lang="ja">日本語</a> |
+  <a href="resources/readme/translations/README.ko.md" lang="ko">한국어</a> |
   <a href="resources/readme/translations/README.fr.md" lang="fr">Français</a> |
   <a href="resources/readme/translations/README.de.md" lang="de">Deutsch</a> |
   <a href="resources/readme/translations/README.es.md" lang="es">Español</a> |
@@ -31,7 +32,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License"></a>
 </p>
 
-ADM is an open-source desktop tool built around ADB for macOS Apple Silicon and Windows x64. Connect a phone, tablet, or emulator to manage apps and files, control its screen, and inspect performance and logs. ADB is included in release packages. The app interface supports English, Simplified Chinese, Traditional Chinese, Japanese, French, German, Spanish, and Russian. Choose a language in Settings → General; it is saved and takes effect immediately.
+ADM is an open-source desktop tool built around ADB for macOS Apple Silicon and Windows x64. Connect a phone, tablet, or emulator to manage apps and files, control its screen, and inspect performance and logs. ADB is included in release packages. The app interface supports English, Simplified Chinese, Traditional Chinese, Japanese, Korean, French, German, Spanish, and Russian. Choose a language in Settings → General; it is saved and takes effect immediately.
 
 ![ADM workspace with the device list, device information, and six feature tabs](resources/readme/en/workbench.jpg)
 

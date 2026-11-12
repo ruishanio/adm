@@ -2,7 +2,7 @@
   "name": "android-device-manager",
   "productName": "ADM",
   "shortName": "ADM",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "private": true,
   "description": "Desktop Android device management via ADB",
   "author": "Ruishanio",

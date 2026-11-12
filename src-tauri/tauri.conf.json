@@ -58,7 +58,7 @@
       },
       "nsis": {
         "installMode": "currentUser",
-        "languages": ["SimpChinese", "English"],
+        "languages": ["SimpChinese", "English", "Korean"],
         "displayLanguageSelector": false,
         "compression": "zlib"
       }

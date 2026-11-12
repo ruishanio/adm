@@ -11,6 +11,7 @@
   <a href="README.zh-CN.md" lang="zh-CN">简体中文</a> |
   <a href="README.zh-TW.md" lang="zh-TW">繁體中文</a> |
   <a href="README.ja.md" lang="ja">日本語</a> |
+  <a href="README.ko.md" lang="ko">한국어</a> |
   <a href="README.fr.md" lang="fr">Français</a> |
   <a href="README.de.md" lang="de">Deutsch</a> |
   <strong>Español</strong> |
@@ -31,7 +32,7 @@
   <a href="../../../LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License"></a>
 </p>
 
-ADM es una herramienta de escritorio de código abierto basada en ADB para macOS Apple Silicon y Windows x64. Conecta un teléfono, una tableta o un emulador para gestionar aplicaciones y archivos, controlar la pantalla y consultar el rendimiento y los registros. Los paquetes de distribución incluyen ADB. La interfaz está disponible en inglés, chino simplificado, chino tradicional, japonés, francés, alemán, español y ruso. Elija el idioma en Ajustes → General; se guarda y se aplica al instante.
+ADM es una herramienta de escritorio de código abierto basada en ADB para macOS Apple Silicon y Windows x64. Conecta un teléfono, una tableta o un emulador para gestionar aplicaciones y archivos, controlar la pantalla y consultar el rendimiento y los registros. Los paquetes de distribución incluyen ADB. La interfaz está disponible en inglés, chino simplificado, chino tradicional, japonés, coreano, francés, alemán, español y ruso. Elija el idioma en Ajustes → General; se guarda y se aplica al instante.
 
 ![Espacio de trabajo de ADM con la lista de dispositivos, su información y seis pestañas de funciones](../../../resources/readme/en/workbench.jpg)
 

@@ -11,6 +11,7 @@
   <strong>简体中文</strong> |
   <a href="README.zh-TW.md" lang="zh-TW">繁體中文</a> |
   <a href="README.ja.md" lang="ja">日本語</a> |
+  <a href="README.ko.md" lang="ko">한국어</a> |
   <a href="README.fr.md" lang="fr">Français</a> |
   <a href="README.de.md" lang="de">Deutsch</a> |
   <a href="README.es.md" lang="es">Español</a> |
@@ -31,7 +32,7 @@
   <a href="../../../LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License"></a>
 </p>
 
-ADM 是一款基于 ADB 的开源桌面工具，支持 macOS Apple Silicon 和 Windows x64。连接手机、平板或模拟器，即可管理应用与文件、操作设备画面、查看性能与日志。发布包内置 ADB，界面支持 English、简体中文、繁體中文、日本語、Français、Deutsch、Español 和 Русский，可在“设置 → 通用”中切换，即时生效并保存。
+ADM 是一款基于 ADB 的开源桌面工具，支持 macOS Apple Silicon 和 Windows x64。连接手机、平板或模拟器，即可管理应用与文件、操作设备画面、查看性能与日志。发布包内置 ADB，界面支持 English、简体中文、繁體中文、日本語、한국어、Français、Deutsch、Español 和 Русский，可在“设置 → 通用”中切换，即时生效并保存。
 
 ![ADM 工作台：设备列表、设备信息与六个功能标签页](../../../resources/readme/workbench.jpg)
 
