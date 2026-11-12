@@ -54,6 +54,9 @@ for (const locale of locales) {
     assert.equal(attr(link, 'href'), localePath(attr(link, 'data-locale')));
     assert.equal(attr(link, 'aria-selected'), String(attr(link, 'data-locale') === locale));
   }
+  assert.equal(attr(find('data-i18n', 'documentation'), 'href'), locale === 'en'
+    ? `${REPOSITORY_URL}#readme`
+    : `${REPOSITORY_URL}/blob/master/resources/readme/translations/README.${locale}.md`);
   const data = JSON.parse(text(find('type', 'application/ld+json')));
   const software = data['@graph'].find(node => node['@type'] === 'SoftwareApplication');
   // 检查实际功能页签对应的资源，避免仅首页截图存在、切换后出现空图。
@@ -66,7 +69,7 @@ for (const locale of locales) {
   assert.equal(attr(find('property', 'og:image'), 'content'), software.screenshot);
   assert.equal(attr(find('name', 'twitter:image'), 'content'), software.screenshot);
   assert.equal(software.softwareVersion, text(find('class', 'download-version')).replace(/^v/, ''));
-  assert.deepEqual(software.inLanguage, ['en', 'zh-CN', 'zh-TW', 'ja', 'fr', 'de', 'es', 'ru']);
+  assert.deepEqual(software.inLanguage, ['en', 'zh-CN', 'zh-TW', 'ja', 'ko', 'fr', 'de', 'es', 'ru']);
   // 可见版本号、发行说明和两个安装包必须指向同一版本。
   const tag = `v${software.softwareVersion}`;
   assert.equal(software.releaseNotes, `${REPOSITORY_URL}/releases/tag/${tag}`);
@@ -102,7 +105,7 @@ assert.equal(localeFromUrl(rootUrl, 'de', ['fr-CA']), 'de');
 assert.equal(localeFromUrl(new URL('/en/', SITE_URL), 'de', ['fr-CA']), 'en');
 assert.equal(localeFromUrl(legacy, 'de', ['fr-CA']), 'ja');
 assert.equal(localeFromUrl(rootUrl, 'invalid', ['it-IT']), 'en');
-for (const [tag, expected] of [['zh-HK', 'zh-TW'], ['zh-Hans-HK', 'zh-CN'], ['zh-Hant-CN', 'zh-TW'], ['zh-SG', 'zh-CN']]) {
+for (const [tag, expected] of [['ko-KR', 'ko'], ['ko', 'ko'], ['zh-HK', 'zh-TW'], ['zh-Hans-HK', 'zh-CN'], ['zh-Hant-CN', 'zh-TW'], ['zh-SG', 'zh-CN']]) {
   assert.equal(localeFromUrl(rootUrl, undefined, [tag]), expected);
 }
 assert.equal(await readFile(new URL('index.html', output), 'utf8'), await readFile(new URL('en/index.html', output), 'utf8'));

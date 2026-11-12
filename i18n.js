@@ -1,6 +1,9 @@
 // 官网独立文案；新增内容同时维护全部语言。
 export const messages = {
   en: {
+    homeLabel: "ADM home",
+    previewLabel: "App preview",
+    projectLinksLabel: "Project links",
     skip: 'Skip to content',
     language: 'Language',
     navFeatures: 'Features',
@@ -51,7 +54,7 @@ export const messages = {
       },
       {
         title: 'Which languages does the app support?',
-        body: 'ADM supports English, Simplified Chinese, Traditional Chinese, Japanese, French, German, Spanish, and Russian.',
+        body: 'ADM supports English, Simplified Chinese, Traditional Chinese, Japanese, Korean, French, German, Spanish, and Russian.',
       },
       {
         title: 'Can I contribute?',
@@ -74,6 +77,9 @@ export const messages = {
     explore: 'Explore ADM',
   },
   'zh-CN': {
+    homeLabel: "ADM 首页",
+    previewLabel: "应用预览",
+    projectLinksLabel: "项目链接",
     skip: '跳转到正文',
     language: '语言',
     navFeatures: '功能',
@@ -124,7 +130,7 @@ export const messages = {
       },
       {
         title: '应用支持哪些语言？',
-        body: 'ADM 支持英语、简体中文、繁体中文、日语、法语、德语、西班牙语和俄语。',
+        body: 'ADM 支持英语、简体中文、繁体中文、日语、韩语、法语、德语、西班牙语和俄语。',
       },
       {
         title: '我可以参与开发吗？',
@@ -147,6 +153,9 @@ export const messages = {
     explore: '了解 ADM',
   },
   'zh-TW': {
+    homeLabel: "ADM 首頁",
+    previewLabel: "應用程式預覽",
+    projectLinksLabel: "專案連結",
     skip: '跳至主要內容',
     language: '語言',
     navFeatures: '功能',
@@ -197,7 +206,7 @@ export const messages = {
       },
       {
         title: '應用程式支援哪些語言？',
-        body: 'ADM 支援英文、簡體中文、繁體中文、日文、法文、德文、西班牙文和俄文。',
+        body: 'ADM 支援英文、簡體中文、繁體中文、日文、韓文、法文、德文、西班牙文和俄文。',
       },
       {
         title: '我可以參與開發嗎？',
@@ -220,6 +229,9 @@ export const messages = {
     explore: '了解 ADM',
   },
   ja: {
+    homeLabel: "ADM ホーム",
+    previewLabel: "アプリのプレビュー",
+    projectLinksLabel: "プロジェクトリンク",
     skip: '本文へ移動',
     language: '言語',
     navFeatures: '機能',
@@ -270,7 +282,7 @@ export const messages = {
       },
       {
         title: 'アプリの表示言語は？',
-        body: 'ADM は英語、簡体字中国語、繁体字中国語、日本語、フランス語、ドイツ語、スペイン語、ロシア語に対応しています。',
+        body: 'ADM は英語、簡体字中国語、繁体字中国語、日本語、韓国語、フランス語、ドイツ語、スペイン語、ロシア語に対応しています。',
       },
       {
         title: '開発に参加できますか？',
@@ -292,7 +304,90 @@ export const messages = {
     sceneRotating: "左右の動きを有効にしました",
     explore: 'ADM を詳しく見る',
   },
+  ko: {
+    homeLabel: "ADM 홈",
+    previewLabel: "앱 미리보기",
+    projectLinksLabel: "프로젝트 링크",
+    "skip": "본문으로 건너뛰기",
+    "language": "언어",
+    "navFeatures": "기능",
+    "navStart": "시작하기",
+    "navDownload": "ADM 다운로드",
+    "heroOne": "내 Android를,",
+    "heroTwo": "내 손안에.",
+    "heroBody": "ADM은 macOS와 Windows용 Android 기기 관리 도구입니다. 하나의 작업공간에서 APK 설치, 파일 전송, 화면 미러링과 제어를 모두 할 수 있습니다.",
+    "download": "ADM 다운로드",
+    "source": "소스 코드 보기",
+    "tabDevice": "기기 정보",
+    "tabApps": "앱 관리",
+    "tabFiles": "파일 관리",
+    "featuresHeading": "모든 기기를 하나의 작업공간에서.",
+    "features": [
+      {
+        "title": "기기 상태 확인",
+        "body": "배터리와 저장공간을 확인하고 기기 소유자를 설정하세요."
+      },
+      {
+        "title": "화면을 직접 제어",
+        "body": "화면 미러링, 조작, 스크린샷, 녹화를 한곳에서 하세요."
+      },
+      {
+        "title": "간편한 앱 관리",
+        "body": "설치 전에 APK를 확인하고, 앱을 검색하고, 상세 정보를 살펴보세요."
+      },
+      {
+        "title": "깔끔한 파일 정리",
+        "body": "기기의 파일을 탐색하고 업로드, 다운로드, 정리하세요."
+      }
+    ],
+    "downloadHeading": "ADM 다운로드",
+    "downloadAction": "다운로드",
+    "downloadMac": "macOS용 다운로드",
+    "macVerification": "Developer ID 서명 · Apple 공증",
+    "downloadWindows": "Windows용 다운로드",
+    "faqHeading": "시작하기 전에 알아두세요.",
+    "feedback": "질문이나 아이디어가 있나요?",
+    "faq": [
+      {
+        "title": "어떤 기기를 연결할 수 있나요?",
+        "body": "ADB 접근이 승인된 Android 휴대전화, 태블릿, 에뮬레이터를 USB나 네트워크로 연결할 수 있습니다. IP 연결과 무선 검색이 같은 기기를 찾으면 목록에 한 번만 표시됩니다. 오른쪽 클릭으로 연결을 해제할 수 있습니다. 무선 페어링은 Android 11 이상에서 지원하며 별도의 페어링 포트를 사용합니다."
+      },
+      {
+        "title": "화면 미러링은 어떻게 작동하나요?",
+        "body": "기기 화면을 보고 제어하고 녹화할 수 있으며 소리는 포함되지 않습니다. 데스크톱 환경은 WebCodecs를 지원해야 합니다. Android 6.0 이상을 실행하는 x86_64 기기에서 시스템 인코더가 실패하면 ADM이 자동으로 호환 인코더로 전환합니다. 보호된 콘텐츠는 표시되지 않습니다."
+      },
+      {
+        "title": "어떤 언어를 지원하나요?",
+        "body": "ADM은 영어, 중국어 간체·번체, 일본어, 한국어, 프랑스어, 독일어, 스페인어, 러시아어를 지원합니다."
+      },
+      {
+        "title": "프로젝트에 기여할 수 있나요?",
+        "body": "물론입니다. ADM 자체 코드는 MIT 라이선스를 따르며 Tauri, Vue, TypeScript, Rust로 만들어졌습니다. GitHub에서 버그 신고, 번역, 코드 기여를 환영합니다."
+      },
+      {
+        "title": "ADM은 어떻게 업데이트하나요?",
+        "body": "ADM 0.1.8부터 앱 내 업데이트를 지원합니다. 설정 → 정보 또는 사이드바 알림에서 최신 버전을 다운로드한 후 설치와 재시작 시점을 선택하세요. 이전 버전 사용자는 최신 버전을 직접 설치해야 하며 Windows 포터블 버전 사용자는 새 ZIP을 다운로드해야 합니다."
+      }
+    ],
+    "documentation": "문서",
+    "license": "MIT 라이선스",
+    "sceneDescription": "인터랙티브 ADM 모델입니다. 기기에 마우스를 올리면 기기가 들리고 화면이 꺼집니다.",
+    "sceneHint": "마우스를 치우면 기기가 도크에 돌아갑니다. 터치스크린에서는 탭하여 전환하세요. 방향키로 기기를 선택하고, Escape로 초기화 및 일시 정지하고, Space로 좌우 움직임을 전환할 수 있습니다.",
+    "sceneDevices": [
+      "뒤쪽 기기",
+      "가운데 기기",
+      "앞쪽 기기"
+    ],
+    "sceneLifted": "들림, 화면 꺼짐",
+    "sceneRestored": "모든 기기가 도크에 돌아갔습니다. 움직임이 일시 정지되었습니다.",
+    "scenePaused": "움직임 일시 정지됨",
+    "sceneRotating": "좌우 움직임 활성화됨",
+    "explore": "ADM 살펴보기"
+  },
   fr: {
+    homeLabel: "Accueil ADM",
+    previewLabel: "Aperçu de l’application",
+    projectLinksLabel: "Liens du projet",
     skip: 'Aller au contenu',
     language: 'Langue',
     navFeatures: 'Fonctions',
@@ -343,7 +438,7 @@ export const messages = {
       },
       {
         title: 'Quelles langues l’application prend-elle en charge ?',
-        body: 'ADM est disponible en anglais, chinois simplifié, chinois traditionnel, japonais, français, allemand, espagnol et russe.',
+        body: 'ADM est disponible en anglais, chinois simplifié, chinois traditionnel, japonais, coréen, français, allemand, espagnol et russe.',
       },
       {
         title: 'Puis-je contribuer ?',
@@ -366,6 +461,9 @@ export const messages = {
     explore: 'Découvrir ADM',
   },
   de: {
+    homeLabel: "ADM-Startseite",
+    previewLabel: "App-Vorschau",
+    projectLinksLabel: "Projektlinks",
     skip: 'Zum Inhalt',
     language: 'Sprache',
     navFeatures: 'Funktionen',
@@ -416,7 +514,7 @@ export const messages = {
       },
       {
         title: 'Welche Sprachen unterstützt die App?',
-        body: 'ADM unterstützt Englisch, vereinfachtes und traditionelles Chinesisch, Japanisch, Französisch, Deutsch, Spanisch und Russisch.',
+        body: 'ADM unterstützt Englisch, vereinfachtes und traditionelles Chinesisch, Japanisch, Koreanisch, Französisch, Deutsch, Spanisch und Russisch.',
       },
       {
         title: 'Kann ich mitwirken?',
@@ -439,6 +537,9 @@ export const messages = {
     explore: 'ADM entdecken',
   },
   es: {
+    homeLabel: "Inicio de ADM",
+    previewLabel: "Vista previa de la aplicación",
+    projectLinksLabel: "Enlaces del proyecto",
     skip: 'Ir al contenido',
     language: 'Idioma',
     navFeatures: 'Funciones',
@@ -489,7 +590,7 @@ export const messages = {
       },
       {
         title: '¿Qué idiomas admite la aplicación?',
-        body: 'ADM está disponible en inglés, chino simplificado, chino tradicional, japonés, francés, alemán, español y ruso.',
+        body: 'ADM está disponible en inglés, chino simplificado, chino tradicional, japonés, coreano, francés, alemán, español y ruso.',
       },
       {
         title: '¿Puedo contribuir?',
@@ -512,6 +613,9 @@ export const messages = {
     explore: 'Descubrir ADM',
   },
   ru: {
+    homeLabel: "Главная ADM",
+    previewLabel: "Предпросмотр приложения",
+    projectLinksLabel: "Ссылки проекта",
     skip: 'Перейти к содержимому',
     language: 'Язык',
     navFeatures: 'Возможности',
@@ -562,7 +666,7 @@ export const messages = {
       },
       {
         title: 'Какие языки поддерживает приложение?',
-        body: 'ADM доступен на английском, упрощённом и традиционном китайском, японском, французском, немецком, испанском и русском языках.',
+        body: 'ADM доступен на английском, упрощённом и традиционном китайском, японском, корейском, французском, немецком, испанском и русском языках.',
       },
       {
         title: 'Можно участвовать в разработке?',

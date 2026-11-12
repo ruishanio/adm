@@ -1,6 +1,6 @@
 import { messages } from './i18n.js';
 import { createLanguagePicker } from './language-picker.js';
-import { localeFromUrl, localizedUrl, screenshotPath, seoHead } from './seo.js';
+import { documentationUrl, localeFromUrl, localizedUrl, screenshotPath, seoHead } from './seo.js';
 
 const languagePicker = createLanguagePicker(document.querySelector('.language-control'), changeLanguage);
 const previewImage = document.querySelector('#preview-image');
@@ -44,6 +44,7 @@ function setLanguage(locale) {
   document.querySelectorAll('[data-i18n-aria]').forEach((element) => {
     element.setAttribute('aria-label', textAt(language, element.dataset.i18nAria));
   });
+  document.querySelector('[data-documentation]').href = documentationUrl(language);
   updatePreview();
   heroController?.refreshLabels();
 }

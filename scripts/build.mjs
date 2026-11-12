@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { messages } from '../i18n.js';
 import { build } from 'vite';
 import { parse, parseFragment, serialize } from 'parse5';
-import { locales, localePath, screenshotPath, seoHead, SITE_URL } from '../seo.js';
+import { documentationUrl, locales, localePath, screenshotPath, seoHead, SITE_URL } from '../seo.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
@@ -55,9 +55,10 @@ function renderLocale(template, locale) {
     if (attr(node, 'data-locale')) setAttr(node, 'aria-selected', String(attr(node, 'data-locale') === locale));
     if (attr(node, 'id') === 'language-current') {
       setAttr(node, 'lang', locale);
-      const names = { en: 'English', 'zh-CN': '简体中文', 'zh-TW': '繁體中文', ja: '日本語', fr: 'Français', de: 'Deutsch', es: 'Español', ru: 'Русский' };
+      const names = { en: 'English', 'zh-CN': '简体中文', 'zh-TW': '繁體中文', ja: '日本語', ko: '한국어', fr: 'Français', de: 'Deutsch', es: 'Español', ru: 'Русский' };
       setText(node, names[locale]);
     }
+    if (attr(node, 'data-documentation') !== undefined) setAttr(node, 'href', documentationUrl(locale));
     if (attr(node, 'id') === 'preview-image') {
       setAttr(node, 'src', screenshotPath(locale));
       setAttr(node, 'alt', `ADM — ${messages[locale].features[0].title}`);

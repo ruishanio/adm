@@ -9,12 +9,20 @@ const titles = {
   'zh-CN': 'ADM — macOS 与 Windows 上的 Android 设备管理工具',
   'zh-TW': 'ADM — macOS 與 Windows 上的 Android 裝置管理工具',
   ja: 'ADM — macOS・Windows 向け Android デバイス管理ツール',
+  ko: 'ADM — macOS와 Windows용 Android 기기 관리 도구',
   fr: 'ADM — Gestionnaire Android pour macOS et Windows',
   de: 'ADM — Android-Geräteverwaltung für macOS und Windows',
   es: 'ADM — Gestor de Android para macOS y Windows',
   ru: 'ADM — Менеджер Android для macOS и Windows',
 };
-const ogLocales = { en: 'en_US', 'zh-CN': 'zh_CN', 'zh-TW': 'zh_TW', ja: 'ja_JP', fr: 'fr_FR', de: 'de_DE', es: 'es_ES', ru: 'ru_RU' };
+const ogLocales = { en: 'en_US', 'zh-CN': 'zh_CN', 'zh-TW': 'zh_TW', ja: 'ja_JP', ko: 'ko_KR', fr: 'fr_FR', de: 'de_DE', es: 'es_ES', ru: 'ru_RU' };
+
+// 文档入口跟随页面语言，英语使用根 README，其余语言使用对应译本。
+export function documentationUrl(locale) {
+  return locale === 'en'
+    ? `${REPOSITORY_URL}#readme`
+    : `${REPOSITORY_URL}/blob/master/resources/readme/translations/README.${locale}.md`;
+}
 
 export function localePath(locale) {
   return `/${locale}/`;
