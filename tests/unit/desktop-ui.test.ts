@@ -202,14 +202,28 @@ it('分栏按拖动位移调整，保持两侧最小宽度，释放后保存并�
   await divider.trigger('keydown', { key: 'Home' });
   expect(w.workspace.api.sidebarWidth).toHaveBeenLastCalledWith(248);
 });
-it('连接方式方向键切换，配对与连接地址分开保存', async () => {
+it.each([
+  ['192.168.1.23:37000', '192.168.1.23:'],
+  ['  phone.local:37000  ', 'phone.local:'],
+  ['[fe80::1234%3]:37000', '[fe80::1234%3]:'],
+])('配对 %s 后只带入本次设备地址，补充连接端口后才能连接', async (pairAddress, prefix) => {
   const w = setup();
+  w.workspace.state.modal = 'connect';
+  w.workspace.api.refresh = vi.fn(async () => ({
+    ...w.devices.state.snapshot!,
+    devices: [{ serial: `${prefix}41000`, transportId: '2', network: true, state: 'device', model: 'Phone' }],
+  }));
   const view = mount(ConnectionDialog, {
     global: { provide: w.providers },
     attachTo: document.body,
   });
   cleanups.push(() => view.unmount());
   await flushPromises();
+  const initialAddress = document.querySelector<HTMLInputElement>('#connection-address')!;
+  expect(initialAddress.value).toBe('');
+  initialAddress.value = 'host:5555';
+  initialAddress.dispatchEvent(new Event('input', { bubbles: true }));
+  await nextTick();
   const network =
     document.querySelector<HTMLButtonElement>('[role="tab"][value="network"]') ??
     [...document.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find((e) =>
@@ -222,16 +236,76 @@ it('连接方式方向键切换，配对与连接地址分开保存', async () =
     expect(document.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain('无线配对'),
   );
   const inputs = document.querySelectorAll<HTMLInputElement>('input');
-  inputs[0].value = 'host:37000';
+  inputs[0].value = pairAddress;
   inputs[0].dispatchEvent(new Event('input', { bubbles: true }));
   inputs[1].value = '123456';
   inputs[1].dispatchEvent(new Event('input', { bubbles: true }));
   await nextTick();
   document.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
   await flushPromises();
-  expect(w.workspace.api.pair).toHaveBeenCalledWith('host:37000', '123456');
-  expect(document.querySelector<HTMLInputElement>('input')?.value).toBe('host:5555');
+  expect(w.workspace.api.pair).toHaveBeenCalledWith(pairAddress.trim(), '123456');
+  const address = document.querySelector<HTMLInputElement>('#connection-address')!;
+  expect(address.value).toBe(prefix);
+  expect(document.activeElement).toBe(address);
+  expect(address.selectionStart).toBe(prefix.length);
+  expect(address.selectionEnd).toBe(prefix.length);
+  expect(w.workspace.state.busy).toBe('');
   expect(document.body.textContent).toContain('配对成功');
+  const connectButton = document.querySelector<HTMLButtonElement>('button[form="connect-form"]')!;
+  expect(connectButton.disabled).toBe(true);
+  document.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+  await flushPromises();
+  expect(w.workspace.api.connect).not.toHaveBeenCalled();
+
+  address.value = `${prefix}41000`;
+  address.dispatchEvent(new Event('input', { bubbles: true }));
+  await nextTick();
+  expect(connectButton.disabled).toBe(false);
+  document.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+  await flushPromises();
+  expect(w.workspace.api.connect).toHaveBeenCalledExactlyOnceWith(`${prefix}41000`);
+  expect(w.workspace.state.selected).toBe(`${prefix}41000@2`);
+  expect(w.workspace.state.modal).toBeNull();
+});
+it('配对失败保留配对输入与原连接地址，允许修正后重试', async () => {
+  const w = setup();
+  w.workspace.api.pair = vi.fn(async () => {
+    throw new Error('配对码已失效');
+  });
+  const view = mount(ConnectionDialog, {
+    global: { provide: w.providers },
+    attachTo: document.body,
+  });
+  cleanups.push(() => view.unmount());
+  await flushPromises();
+  const initialAddress = document.querySelector<HTMLInputElement>('#connection-address')!;
+  expect(initialAddress.value).toBe('');
+  initialAddress.value = 'host:5555';
+  initialAddress.dispatchEvent(new Event('input', { bubbles: true }));
+  await nextTick();
+  const tabs = [...document.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+  tabs
+    .find((tab) => tab.textContent?.includes('无线配对'))!
+    .dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  await flushPromises();
+  const inputs = document.querySelectorAll<HTMLInputElement>('input');
+  inputs[0].value = '192.168.1.23:37000';
+  inputs[0].dispatchEvent(new Event('input', { bubbles: true }));
+  inputs[1].value = '123456';
+  inputs[1].dispatchEvent(new Event('input', { bubbles: true }));
+  await nextTick();
+  document.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+  await flushPromises();
+  expect(document.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain('无线配对');
+  expect(document.querySelector('[role="alert"]')?.textContent).toBe('配对码已失效');
+  expect(inputs[0].value).toBe('192.168.1.23:37000');
+  expect(inputs[1].value).toBe('123456');
+  expect(w.workspace.api.connect).not.toHaveBeenCalled();
+  tabs
+    .find((tab) => tab.textContent?.includes('网络连接'))!
+    .dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  await flushPromises();
+  expect(document.querySelector<HTMLInputElement>('#connection-address')?.value).toBe('host:5555');
 });
 it('忙碌时 Escape 不能关闭连接对话框', async () => {
   const w = setup();

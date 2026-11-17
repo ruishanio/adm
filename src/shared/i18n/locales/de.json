@@ -378,7 +378,7 @@
   "安装到此设备": "Auf Gerät installieren",
   "正在配对设备": "Gerät wird gekoppelt",
   "正在连接设备": "Gerät wird verbunden",
-  "配对成功，请填写无线调试主页上的连接地址。": "Gekoppelt. Geben Sie die Verbindungsadresse der Hauptseite für drahtloses Debugging ein.",
+  "配对成功，已填入设备地址。请在冒号后填写无线调试主页上的连接端口。": "Gekoppelt. Die Geräteadresse ist eingetragen. Geben Sie nach dem Doppelpunkt den Verbindungsport von der Hauptseite für drahtloses Debugging ein.",
   "连接方式": "Verbindungsart",
   "网络连接": "Netzwerk",
   "无线配对": "Kopplung",

@@ -378,7 +378,7 @@
   "安装到此设备": "Install on device",
   "正在配对设备": "Pairing device",
   "正在连接设备": "Connecting device",
-  "配对成功，请填写无线调试主页上的连接地址。": "Paired. Enter the connection address shown on the main Wireless debugging screen.",
+  "配对成功，已填入设备地址。请在冒号后填写无线调试主页上的连接端口。": "Paired. The device address is filled in. Enter the connection port after the colon, using the main Wireless debugging screen.",
   "连接方式": "Connection method",
   "网络连接": "Network",
   "无线配对": "Pairing",

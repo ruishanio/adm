@@ -378,7 +378,7 @@
   "安装到此设备": "Instalar en el dispositivo",
   "正在配对设备": "Vinculando dispositivo",
   "正在连接设备": "Conectando dispositivo",
-  "配对成功，请填写无线调试主页上的连接地址。": "Vinculación correcta. Introduzca la dirección de la pantalla principal de depuración inalámbrica.",
+  "配对成功，已填入设备地址。请在冒号后填写无线调试主页上的连接端口。": "Vinculación correcta. Se ha rellenado la dirección del dispositivo. Introduzca después de los dos puntos el puerto de conexión de la pantalla principal de depuración inalámbrica.",
   "连接方式": "Método de conexión",
   "网络连接": "Red",
   "无线配对": "Vinculación",

@@ -3,7 +3,7 @@ import { useDevices } from '@/features/devices/state';
 const devicesFeature = useDevices();
 
 import { t } from '@/shared/i18n/index';
-import { ref } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 import { Cable, Network, Wifi } from '@lucide/vue';
 import AppDialog from '@/shared/ui/AppDialog.vue';
 import { Button } from '@/shared/ui/button/index';
@@ -13,23 +13,30 @@ import { useWorkspace } from '@/shared/composables/workspace';
 import { targetKey } from '@/shared/utils/device';
 const w = useWorkspace(),
   s = w.state;
+// 每次打开从空地址开始，避免把历史设备当作本次连接目标。
 const tab = ref('network'),
-  address = ref(devicesFeature.state.snapshot?.settings.endpoint || ''),
+  address = ref(''),
   pairAddress = ref(''),
   code = ref('');
 const message = ref(''),
   error = ref(false);
+const needsConnectionPort = computed(() => address.value.trim().endsWith(':'));
 async function submit() {
-  if (s.busy) return;
+  if (s.busy || (tab.value === 'network' && needsConnectionPort.value)) return;
   message.value = '';
   error.value = false;
+  let paired = false;
   await w.run(tab.value === 'pair' ? t('正在配对设备') : t('正在连接设备'), async () => {
     try {
       if (tab.value === 'pair') {
-        await w.api.pair(pairAddress.value, code.value);
+        const pairingEndpoint = pairAddress.value.trim();
+        await w.api.pair(pairingEndpoint, code.value);
+        // 配对地址已由后端校验；仅继承主机部分，保留 IPv6 方括号，避免沿用旧设备或配对端口。
+        address.value = pairingEndpoint.replace(/:\d+$/, ':');
         code.value = '';
         tab.value = 'network';
-        message.value = t('配对成功，请填写无线调试主页上的连接地址。');
+        message.value = t('配对成功，已填入设备地址。请在冒号后填写无线调试主页上的连接端口。');
+        paired = true;
       } else {
         await w.api.connect(address.value);
         await devicesFeature.refresh();
@@ -43,6 +50,13 @@ async function submit() {
       throw e;
     }
   });
+  if (paired) {
+    // 等任务结束、输入框恢复可编辑后，将光标放到端口位置，直接继续下一步。
+    await nextTick();
+    const input = document.getElementById('connection-address') as HTMLInputElement | null;
+    input?.focus();
+    input?.setSelectionRange(input.value.length, input.value.length);
+  }
 }
 </script>
 <template>
@@ -91,6 +105,7 @@ async function submit() {
                 :spellcheck="false"
                 aria-describedby="connection-help connection-result" /><Input
                 v-else
+                id="connection-address"
                 v-model="address"
                 autofocus
                 placeholder="192.168.1.100:5555"
@@ -135,9 +150,14 @@ async function submit() {
         ><Button variant="outline" @click="w.api.cancel">{{ t('停止等待') }}</Button></template
       ><template v-else
         ><Button variant="outline" @click="s.modal = null">{{ tab === 'usb' ? t('完成') : t('取消') }}</Button
-        ><Button v-if="tab !== 'usb'" class="primary" type="submit" form="connect-form">{{
-          tab === 'pair' ? t('配对设备') : t('连接')
-        }}</Button></template
+        ><Button
+          v-if="tab !== 'usb'"
+          class="primary"
+          type="submit"
+          form="connect-form"
+          :disabled="tab === 'network' && needsConnectionPort"
+          >{{ tab === 'pair' ? t('配对设备') : t('连接') }}</Button
+        ></template
       >
     </footer>
   </AppDialog>
